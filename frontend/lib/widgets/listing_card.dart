@@ -41,10 +41,10 @@ class ListingCard extends StatelessWidget {
                         ? Image.network(
                             imageUrl,
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const _PlaceholderImage(),
                           )
-                        : const Center(
-                            child: Icon(Icons.image_outlined, size: 38),
-                          ),
+                        : const _PlaceholderImage(),
                   ),
                 ),
               ),
@@ -132,6 +132,19 @@ class ListingCard extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+}
+
+class _PlaceholderImage extends StatelessWidget {
+  const _PlaceholderImage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.grey.shade100,
+      alignment: Alignment.center,
+      child: const Icon(Icons.image_outlined, size: 38),
     );
   }
 }
