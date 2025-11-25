@@ -72,8 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         titleSpacing: 16,
         toolbarHeight: 86,
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
+        backgroundColor: _lightBackground,
+        surfaceTintColor: _lightBackground,
         elevation: 0.3,
         shadowColor: Colors.black12,
         title: Row(
@@ -108,6 +108,8 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            _buildCategoryChips(),
+            const SizedBox(height: 16),
             const Text(
               'Débarrasse-toi du superflu, inspire la communauté,\n'
               'et trouve les bonnes affaires près de chez toi.',
@@ -118,8 +120,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            _buildCategoryChips(),
-            const SizedBox(height: 16),
             Expanded(
               child: FutureBuilder<List<Listing>>(
                 future: _futureListings,
