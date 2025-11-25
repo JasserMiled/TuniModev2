@@ -14,7 +14,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   static const Color _primaryBlue = Color(0xFF0B6EFE);
-  static const Color _lightBackground = Color(0xFFF3F7FF);
+  static const Color _lightBackground = Color(0xFFF6F3EE);
+  static const Color _accentGreen = Color(0xFF2FB280);
 
   late Future<List<Listing>> _futureListings;
   final TextEditingController _searchController = TextEditingController();
@@ -163,78 +164,157 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeroHeader() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0B6EFE), Color(0xFF2A6AFF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withOpacity(0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: const [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.white,
-                child: Icon(Icons.shopping_bag, color: _primaryBlue),
-              ),
-              SizedBox(width: 10),
-              Text(
-                'Bienvenue sur TuniMode',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 720;
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8F5F0),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE7DFD4)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          const Text(
-            'Explorez des pièces tendance, trouvez le look qui vous ressemble et achetez en toute confiance.',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.18),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Flexible(
-                  child: Text(
-                    'Marketplace 100% mode · Paiement sécurisé · Livraison rapide',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
-                  ),
+          child: isWide
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(child: _buildHeroText()),
+                    const SizedBox(width: 18),
+                    _buildHeroImage(height: 260),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeroImage(height: 220),
+                    const SizedBox(height: 16),
+                    _buildHeroText(),
+                  ],
                 ),
-                Icon(Icons.arrow_forward, color: Colors.white),
-              ],
+        );
+      },
+    );
+  }
+
+  Widget _buildHeroText() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: const [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.white,
+              child: Icon(Icons.shopping_bag, color: _primaryBlue),
             ),
+            SizedBox(width: 10),
+            Text(
+              'Bienvenue sur TuniMode',
+              style: TextStyle(
+                color: Color(0xFF3D3D3D),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'Prêt à faire du tri dans tes placards ?',
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF2D2A26),
+            height: 1.2,
           ),
-        ],
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Donne une seconde vie à tes pièces, vends en sécurité et inspire les passionnés de mode en Tunisie.',
+          style: TextStyle(
+            color: Color(0xFF4D4A45),
+            fontSize: 15,
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 10,
+          children: [
+            ElevatedButton.icon(
+              onPressed: _openDashboard,
+              icon: const Icon(Icons.upload_rounded),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _accentGreen,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              label: const Text(
+                'Commencer à vendre',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+            ),
+            OutlinedButton(
+              onPressed: _openLogin,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black87,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                side: const BorderSide(color: Color(0xFFCBC3B3)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Découvrir comment ça marche',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: const [
+            Icon(Icons.location_on_outlined, color: Color(0xFF7D7668)),
+            SizedBox(width: 6),
+            Text(
+              'Explorer des articles proches de chez toi',
+              style: TextStyle(
+                color: Color(0xFF6A6359),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeroImage({required double height}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE9E1D8)),
+        ),
+        child: Image.network(
+          'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&q=80',
+          height: height,
+          width: height * 0.82,
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+        ),
       ),
     );
   }
