@@ -2,6 +2,7 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
+// Authenticate requests by validating JWT tokens sent via the Authorization header.
 function authRequired(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -19,6 +20,8 @@ function authRequired(req, res, next) {
 }
 
 function requireRole(...roles) {
+  // Wrap authorization logic so individual routes can easily restrict access
+  // to the roles they need without duplicating checks.
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({ message: "Accès refusé" });

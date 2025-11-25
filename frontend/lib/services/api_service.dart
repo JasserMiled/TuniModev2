@@ -68,8 +68,15 @@ class ApiService {
     return false;
   }
 
-  static Future<List<Listing>> fetchListings() async {
-    final uri = Uri.parse('$baseUrl/api/listings');
+  static Future<List<Listing>> fetchListings({String? query}) async {
+    final queryParams = <String, String>{};
+    if (query != null && query.trim().isNotEmpty) {
+      queryParams['q'] = query.trim();
+    }
+
+    final uri = queryParams.isEmpty
+        ? Uri.parse('$baseUrl/api/listings')
+        : Uri.parse('$baseUrl/api/listings').replace(queryParameters: queryParams);
     final res = await http.get(uri, headers: _headers());
 
     if (res.statusCode == 200) {
@@ -96,8 +103,9 @@ class ApiService {
     required String title,
     required String description,
     required double price,
-    String? size,
-    String? color,
+    List<String>? sizes,
+    List<String>? colors,
+    String? gender,
     String? condition,
     int? categoryId,
     String? city,
@@ -110,8 +118,9 @@ class ApiService {
         'title': title,
         'description': description,
         'price': price,
-        'size': size,
-        'color': color,
+        'sizes': sizes ?? [],
+        'colors': colors ?? [],
+        'gender': gender,
         'condition': condition,
         'category_id': categoryId,
         'city': city,
