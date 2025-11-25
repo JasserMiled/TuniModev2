@@ -154,7 +154,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             _message!,
                             style: TextStyle(
                               color: _message!.contains("succès")
-                                  ? Colors.green
+                                  ? Colors.blue
                                   : Colors.red,
                             ),
                           ),
