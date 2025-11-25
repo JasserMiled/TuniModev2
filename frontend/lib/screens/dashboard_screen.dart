@@ -1,5 +1,16 @@
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+
+class _PickedImage {
+  final String name;
+  final Uint8List bytes;
+  String? uploadedUrl;
+
+  _PickedImage({required this.name, required this.bytes, this.uploadedUrl});
+}
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -18,9 +29,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String? _gender;
   String _city = '';
   String _condition = '';
+  List<_PickedImage> _images = [];
 
   bool _loading = false;
+  bool _uploadingImages = false;
   String? _message;
+
+  Future<void> _pickImages() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: true,
+      withData: true,
+    );
+
+    if (result != null && result.files.isNotEmpty) {
+      final filesWithBytes =
+          result.files.where((file) => file.bytes != null && file.bytes!.isNotEmpty);
+
+      setState(() {
+        _images = filesWithBytes
+            .map((file) => _PickedImage(name: file.name, bytes: file.bytes!))
+            .toList();
+      });
+    }
+  }
+
+  Future<List<String>?> _uploadSelectedImages() async {
+    if (_images.isEmpty) return [];
+
+    setState(() {
+      _uploadingImages = true;
+    });
+
+    final urls = <String>[];
+
+    for (final image in _images) {
+      if (image.uploadedUrl != null) {
+        urls.add(image.uploadedUrl!);
+        continue;
+      }
+
+      final uploadedUrl =
+          await ApiService.uploadImage(bytes: image.bytes, filename: image.name);
+
+      if (uploadedUrl == null) {
+        setState(() {
+          _uploadingImages = false;
+          _message = "Échec de l'upload de l'image ${image.name}";
+        });
+        return null;
+      }
+
+      image.uploadedUrl = uploadedUrl;
+      urls.add(uploadedUrl);
+    }
+
+    setState(() {
+      _uploadingImages = false;
+    });
+
+    return urls;
+  }
 
   Future<void> _submit() async {
     if (ApiService.authToken == null) {
@@ -38,6 +107,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _message = null;
     });
 
+    final uploadedImages = await _uploadSelectedImages();
+    if (uploadedImages == null) {
+      setState(() {
+        _loading = false;
+      });
+      return;
+    }
+
     List<String> _splitValues(String input) => input
         .split(',')
         .map((v) => v.trim())
@@ -54,6 +131,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       condition: _condition.isEmpty ? null : _condition,
       categoryId: null,
       city: _city.isEmpty ? null : _city,
+      images: uploadedImages,
     );
 
     setState(() {
@@ -67,6 +145,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _gender = null;
         _sizesText = '';
         _colorsText = '';
+        _images = [];
       });
     }
   }
@@ -101,6 +180,71 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               const InputDecoration(labelText: 'Description'),
                           maxLines: 3,
                           onSaved: (v) => _description = v?.trim() ?? '',
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Photos du produit',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            ..._images.asMap().entries.map(
+                              (entry) => Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.memory(
+                                      entry.value.bytes,
+                                      width: 90,
+                                      height: 90,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _images.removeAt(entry.key);
+                                        });
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.5),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        padding: const EdgeInsets.all(4),
+                                        child: const Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: _loading ? null : _pickImages,
+                              icon: const Icon(Icons.photo_library),
+                              label: Text(
+                                _images.isEmpty
+                                    ? 'Ajouter des photos'
+                                    : 'Ajouter d\'autres photos',
+                              ),
+                            ),
+                          ],
                         ),
                         TextFormField(
                           decoration:
@@ -159,6 +303,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ),
                         const SizedBox(height: 8),
+                        if (_uploadingImages)
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                SizedBox(width: 8),
+                                Text('Upload des images...'),
+                              ],
+                            ),
+                          ),
                         _loading
                             ? const CircularProgressIndicator()
                             : ElevatedButton.icon(
