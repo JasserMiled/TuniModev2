@@ -110,7 +110,9 @@ class ListingCard extends StatelessWidget {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-    return '${ApiService.baseUrl}$url';
+
+    final normalized = url.startsWith('/') ? url : '/$url';
+    return '${ApiService.baseUrl}$normalized';
   }
 
   String _buildDetailsLine() {
