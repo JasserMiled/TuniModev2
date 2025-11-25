@@ -69,13 +69,32 @@ class ApiService {
     return false;
   }
 
-  static Future<List<Listing>> fetchListings({String? query, String? gender}) async {
+  static Future<List<Listing>> fetchListings({
+    String? query,
+    String? gender,
+    String? city,
+    double? minPrice,
+    double? maxPrice,
+    int? categoryId,
+  }) async {
     final queryParams = <String, String>{};
     if (query != null && query.trim().isNotEmpty) {
       queryParams['q'] = query.trim();
     }
     if (gender != null && gender.trim().isNotEmpty) {
       queryParams['gender'] = gender.trim().toLowerCase();
+    }
+    if (city != null && city.trim().isNotEmpty) {
+      queryParams['city'] = city.trim();
+    }
+    if (minPrice != null) {
+      queryParams['min_price'] = minPrice.toString();
+    }
+    if (maxPrice != null) {
+      queryParams['max_price'] = maxPrice.toString();
+    }
+    if (categoryId != null) {
+      queryParams['category_id'] = categoryId.toString();
     }
 
     final uri = queryParams.isEmpty

@@ -22,6 +22,9 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Listing>> _futureListings;
   final TextEditingController _searchController = TextEditingController();
   String? _selectedGender;
+  String? _selectedCity;
+  double? _minPrice;
+  double? _maxPrice;
   final List<String> _categories = const [
     'Femmes',
     'Hommes',
@@ -37,14 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _performSearch() {
-    final query = _searchController.text.trim();
-    final gender = _selectedGender;
-    setState(() {
-      _futureListings = ApiService.fetchListings(
-        query: query.isEmpty ? null : query,
-        gender: gender,
-      );
-    });
+    _refreshListings();
   }
 
   void _selectCategory(String category) {
@@ -57,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedGender = normalized;
       _searchController.clear();
-      _futureListings = ApiService.fetchListings(gender: normalized);
+      _refreshListings();
     });
   }
 
@@ -65,11 +61,211 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_selectedGender == null) return;
     setState(() {
       _selectedGender = null;
-      final query = _searchController.text.trim();
+      _refreshListings();
+    });
+  }
+
+  void _clearCityFilter() {
+    if (_selectedCity == null) return;
+    setState(() {
+      _selectedCity = null;
+      _refreshListings();
+    });
+  }
+
+  void _clearPriceFilter() {
+    if (_minPrice == null && _maxPrice == null) return;
+    setState(() {
+      _minPrice = null;
+      _maxPrice = null;
+      _refreshListings();
+    });
+  }
+
+  void _refreshListings() {
+    final query = _searchController.text.trim();
+    setState(() {
       _futureListings = ApiService.fetchListings(
         query: query.isEmpty ? null : query,
+        gender: _selectedGender,
+        city: _selectedCity,
+        minPrice: _minPrice,
+        maxPrice: _maxPrice,
       );
     });
+  }
+
+  void _openQuickFilters() {
+    final TextEditingController cityController =
+        TextEditingController(text: _selectedCity ?? '');
+    double tempMin = _minPrice ?? 0;
+    double tempMax = _maxPrice ?? 500;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            void setPreset(double min, double max) {
+              setModalState(() {
+                tempMin = min;
+                tempMax = max;
+              });
+            }
+
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Filtres rapides',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Ville',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: cityController,
+                    decoration: const InputDecoration(
+                      hintText: 'Ex: Tunis, Sousse, Bizerte...',
+                      prefixIcon: Icon(Icons.location_on_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Plage de prix',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      InputChip(
+                        label: const Text('0 - 50'),
+                        selected: tempMin == 0 && tempMax == 50,
+                        onSelected: (_) => setPreset(0, 50),
+                      ),
+                      InputChip(
+                        label: const Text('50 - 150'),
+                        selected: tempMin == 50 && tempMax == 150,
+                        onSelected: (_) => setPreset(50, 150),
+                      ),
+                      InputChip(
+                        label: const Text('150 - 300'),
+                        selected: tempMin == 150 && tempMax == 300,
+                        onSelected: (_) => setPreset(150, 300),
+                      ),
+                      InputChip(
+                        label: const Text('300+'),
+                        selected: tempMin == 300 && tempMax == 500,
+                        onSelected: (_) => setPreset(300, 500),
+                      ),
+                    ],
+                  ),
+                  RangeSlider(
+                    values: RangeValues(tempMin, tempMax),
+                    onChanged: (values) {
+                      setModalState(() {
+                        tempMin = values.start;
+                        tempMax = values.end;
+                      });
+                    },
+                    min: 0,
+                    max: 500,
+                    divisions: 10,
+                    activeColor: _primaryBlue,
+                    labels: RangeLabels(
+                      '${valuesToCurrency(tempMin)}',
+                      '${valuesToCurrency(tempMax)}',
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setModalState(() {
+                              tempMin = 0;
+                              tempMax = 500;
+                              cityController.clear();
+                            });
+                          },
+                          child: const Text('Réinitialiser'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            final hasPriceFilter = tempMin > 0 || tempMax < 500;
+                            setState(() {
+                              _minPrice = hasPriceFilter ? tempMin : null;
+                              _maxPrice = hasPriceFilter ? tempMax : null;
+                              final city = cityController.text.trim();
+                              _selectedCity = city.isEmpty ? null : city;
+                            });
+                            Navigator.of(context).pop();
+                            _refreshListings();
+                          },
+                          icon: const Icon(Icons.filter_alt),
+                          label: const Text('Appliquer'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _primaryBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String valuesToCurrency(double value) {
+    return '${value.toStringAsFixed(0)} TND';
+  }
+
+  String _formatPriceRange() {
+    final buffer = StringBuffer('Prix : ');
+
+    if (_minPrice != null && _maxPrice != null) {
+      buffer.write('${valuesToCurrency(_minPrice!)} - ${valuesToCurrency(_maxPrice!)}');
+    } else if (_minPrice != null) {
+      buffer.write('dès ${valuesToCurrency(_minPrice!)}');
+    } else if (_maxPrice != null) {
+      buffer.write('jusqu\'à ${valuesToCurrency(_maxPrice!)}');
+    }
+
+    return buffer.toString();
   }
 
   String _formatGenderLabel(String gender) {
@@ -139,19 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildCategoryChips(),
-              if (_selectedGender != null) ...[
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    InputChip(
-                      avatar: const Icon(Icons.wc, size: 18),
-                      label: Text('Genre : ${_formatGenderLabel(_selectedGender!)}'),
-                      onDeleted: _clearGenderFilter,
-                    ),
-                  ],
-                ),
-              ],
+              _buildActiveFilters(),
               const SizedBox(height: 16),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 320),
@@ -335,24 +519,28 @@ class _HomeScreenState extends State<HomeScreen> {
                 onSubmitted: (_) => _performSearch(),
               ),
             ),
-            Container(
-              decoration: BoxDecoration(
-                color: _lavender,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: Row(
-                children: const [
-                  Icon(Icons.filter_alt_outlined, color: _primaryBlue, size: 18),
-                  SizedBox(width: 6),
-                  Text(
-                    'Filtres rapides',
-                    style: TextStyle(
-                      color: Color(0xFF0F172A),
-                      fontWeight: FontWeight.w600,
+            InkWell(
+              onTap: _openQuickFilters,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _lavender,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: Row(
+                  children: const [
+                    Icon(Icons.filter_alt_outlined, color: _primaryBlue, size: 18),
+                    SizedBox(width: 6),
+                    Text(
+                      'Filtres rapides',
+                      style: TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -404,6 +592,51 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildActiveFilters() {
+    final chips = <Widget>[];
+
+    if (_selectedGender != null) {
+      chips.add(
+        InputChip(
+          avatar: const Icon(Icons.wc, size: 18),
+          label: Text('Genre : ${_formatGenderLabel(_selectedGender!)}'),
+          onDeleted: _clearGenderFilter,
+        ),
+      );
+    }
+
+    if (_selectedCity != null) {
+      chips.add(
+        InputChip(
+          avatar: const Icon(Icons.location_on_outlined, size: 18),
+          label: Text('Ville : $_selectedCity'),
+          onDeleted: _clearCityFilter,
+        ),
+      );
+    }
+
+    if (_minPrice != null || _maxPrice != null) {
+      chips.add(
+        InputChip(
+          avatar: const Icon(Icons.sell_outlined, size: 18),
+          label: Text(_formatPriceRange()),
+          onDeleted: _clearPriceFilter,
+        ),
+      );
+    }
+
+    if (chips.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 6,
+        children: chips,
       ),
     );
   }
