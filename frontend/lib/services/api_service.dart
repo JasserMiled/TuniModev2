@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import '../models/listing.dart';
@@ -109,6 +110,7 @@ class ApiService {
     String? condition,
     int? categoryId,
     String? city,
+    List<String>? images,
   }) async {
     final uri = Uri.parse('$baseUrl/api/listings');
     final res = await http.post(
@@ -124,10 +126,35 @@ class ApiService {
         'condition': condition,
         'category_id': categoryId,
         'city': city,
-        'images': [],
+        'images': images ?? [],
       }),
     );
 
     return res.statusCode == 201;
+  }
+
+  static Future<String?> uploadImage({
+    required Uint8List bytes,
+    required String filename,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/upload/image');
+    final request = http.MultipartRequest('POST', uri)
+      ..headers.addAll(_headers(withAuth: true))
+      ..files.add(
+        http.MultipartFile.fromBytes('image', bytes, filename: filename),
+      );
+
+    // Content-Type is managed by MultipartRequest; remove the JSON header if set.
+    request.headers.remove('Content-Type');
+
+    final streamedResponse = await request.send();
+    final responseBody = await streamedResponse.stream.bytesToString();
+
+    if (streamedResponse.statusCode == 201) {
+      final data = jsonDecode(responseBody) as Map<String, dynamic>;
+      return data['url'] as String?;
+    }
+
+    return null;
   }
 }

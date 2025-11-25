@@ -10,6 +10,7 @@ class Listing {
   final String? city;
   final String? categoryName;
   final String? sellerName;
+  final List<String> imageUrls;
 
   Listing({
     required this.id,
@@ -23,6 +24,7 @@ class Listing {
     this.city,
     this.categoryName,
     this.sellerName,
+    this.imageUrls = const [],
   });
 
   factory Listing.fromJson(Map<String, dynamic> json) {

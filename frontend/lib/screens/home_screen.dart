@@ -13,6 +13,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const Color _primaryBlue = Color(0xFF0B6EFE);
+  static const Color _lightBackground = Color(0xFFF7F9FC);
+  static const Color _accentGreen = Color(0xFF24B072);
+  static const Color _lavender = Color(0xFFF1EDFD);
+  static const Color _peach = Color(0xFFFFF4EC);
+
   late Future<List<Listing>> _futureListings;
   final TextEditingController _searchController = TextEditingController();
 
@@ -59,16 +65,54 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: _lightBackground,
       appBar: AppBar(
-        title: const Text('TuniMode'),
+        titleSpacing: 16,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        elevation: 0.3,
+        shadowColor: Colors.black12,
+        title: Row(
+          children: const [
+            Icon(Icons.auto_awesome, color: _primaryBlue),
+            SizedBox(width: 8),
+            Text(
+              'TuniMode',
+              style: TextStyle(
+                color: Color(0xFF0F172A),
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            tooltip: 'Actualiser',
+            icon: const Icon(Icons.refresh, color: _primaryBlue),
             onPressed: _reload,
           ),
-          IconButton(
-            icon: const Icon(Icons.person),
+          TextButton(
             onPressed: _openLogin,
+            child: const Text('Se connecter'),
+          ),
+          const SizedBox(width: 6),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: ElevatedButton.icon(
+              onPressed: _openDashboard,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _primaryBlue,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.storefront_rounded, size: 18),
+              label: const Text('Vendre mes articles'),
+            ),
           ),
         ],
       ),
@@ -144,4 +188,198 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _buildSearchBar() {
+    return Material(
+      elevation: 2,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.blue.shade50),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        child: Row(
+          children: [
+            const Icon(Icons.search, color: _primaryBlue),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Rechercher une marque, une tendance ou une taille...',
+                ),
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _performSearch(),
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                color: _lavender,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Row(
+                children: const [
+                  Icon(Icons.filter_alt_outlined, color: _primaryBlue, size: 18),
+                  SizedBox(width: 6),
+                  Text(
+                    'Filtres rapides',
+                    style: TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            TextButton(
+              onPressed: _performSearch,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: _primaryBlue,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Chercher'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChips() {
+    return SizedBox(
+      height: 42,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _categories.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final category = _categories[index];
+          final isSelected = _searchController.text.trim().toLowerCase() ==
+              category.toLowerCase();
+          return FilterChip(
+            label: Text(category),
+            selected: isSelected,
+            onSelected: (_) => _selectCategory(category),
+            selectedColor: _primaryBlue.withOpacity(0.12),
+            checkmarkColor: _primaryBlue,
+            labelStyle: TextStyle(
+              color: isSelected ? _primaryBlue : Colors.grey[800],
+              fontWeight: FontWeight.w600,
+            ),
+            side: BorderSide(
+              color: isSelected ? _primaryBlue : Colors.grey.shade300,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHighlights() {
+    final cards = [
+      _Highlight(
+        icon: Icons.new_releases_rounded,
+        label: 'Nouveautés quotidiennes',
+        color: _lavender,
+      ),
+      _Highlight(
+        icon: Icons.favorite_border,
+        label: 'Coups de cœur de la communauté',
+        color: _peach,
+      ),
+      _Highlight(
+        icon: Icons.verified_user_outlined,
+        label: 'Transactions sécurisées',
+        color: Colors.white,
+      ),
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: cards
+            .map(
+              (card) => Container(
+                margin: const EdgeInsets.only(right: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: card.color,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(card.icon, color: _primaryBlue, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      card.label,
+                      style: const TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: const [
+        Text(
+          'Derniers articles mis en ligne',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF111827),
+          ),
+        ),
+        Text(
+          'Mis à jour en temps réel',
+          style: TextStyle(
+            color: Color(0xFF64748B),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Highlight {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _Highlight({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
 }

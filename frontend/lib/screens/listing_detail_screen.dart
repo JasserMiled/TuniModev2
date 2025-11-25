@@ -44,10 +44,23 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  height: 200,
+                  height: 220,
                   width: double.infinity,
-                  color: Colors.grey.shade300,
-                  child: const Icon(Icons.image, size: 80),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: listing.imageUrls.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            '${ApiService.baseUrl}${listing.imageUrls.first}',
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                const Icon(Icons.broken_image, size: 60),
+                          ),
+                        )
+                      : const Center(child: Icon(Icons.image, size: 80)),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -61,7 +74,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 Text(
                   '${listing.price.toStringAsFixed(0)} TND',
                   style: TextStyle(
-                    color: Colors.green.shade700,
+                    color: Colors.blue.shade700,
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
                   ),
