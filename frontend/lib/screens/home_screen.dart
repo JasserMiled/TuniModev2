@@ -21,6 +21,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late Future<List<Listing>> _futureListings;
   final TextEditingController _searchController = TextEditingController();
+  final List<String> _categories = const [
+    'Femmes',
+    'Hommes',
+    'Enfants',
+    'Chaussures',
+    'Accessoires',
+  ];
 
   @override
   void initState() {
@@ -44,6 +51,11 @@ class _HomeScreenState extends State<HomeScreen> {
         query: query.isEmpty ? null : query,
       );
     });
+  }
+
+  void _selectCategory(String category) {
+    _searchController.text = category;
+    _performSearch();
   }
 
   @override
@@ -135,19 +147,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  labelText: 'Rechercher une annonce',
-                  suffixIcon: IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: _performSearch,
-                ),
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Rechercher une annonce',
+                suffixIcon: IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: _performSearch,
               ),
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _performSearch(),
             ),
-            const SizedBox(height: 16),
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _performSearch(),
+          ),
+          const SizedBox(height: 8),
+          _buildCategoryChips(),
+          const SizedBox(height: 16),
             Expanded(
               child: FutureBuilder<List<Listing>>(
                 future: _futureListings,
