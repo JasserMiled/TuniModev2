@@ -69,10 +69,13 @@ class ApiService {
     return false;
   }
 
-  static Future<List<Listing>> fetchListings({String? query}) async {
+  static Future<List<Listing>> fetchListings({String? query, String? gender}) async {
     final queryParams = <String, String>{};
     if (query != null && query.trim().isNotEmpty) {
       queryParams['q'] = query.trim();
+    }
+    if (gender != null && gender.trim().isNotEmpty) {
+      queryParams['gender'] = gender.trim().toLowerCase();
     }
 
     final uri = queryParams.isEmpty

@@ -21,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late Future<List<Listing>> _futureListings;
   final TextEditingController _searchController = TextEditingController();
+  String? _selectedGender;
   final List<String> _categories = const [
     'Femmes',
     'Hommes',
@@ -37,9 +38,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _performSearch() {
     final query = _searchController.text.trim();
+    final gender = _selectedGender;
     setState(() {
       _futureListings = ApiService.fetchListings(
         query: query.isEmpty ? null : query,
+        gender: gender,
       );
     });
   }
@@ -47,6 +50,31 @@ class _HomeScreenState extends State<HomeScreen> {
   void _selectCategory(String category) {
     _searchController.text = category;
     _performSearch();
+  }
+
+  void _filterByGender(String gender) {
+    final normalized = gender.trim().toLowerCase();
+    setState(() {
+      _selectedGender = normalized;
+      _searchController.clear();
+      _futureListings = ApiService.fetchListings(gender: normalized);
+    });
+  }
+
+  void _clearGenderFilter() {
+    if (_selectedGender == null) return;
+    setState(() {
+      _selectedGender = null;
+      final query = _searchController.text.trim();
+      _futureListings = ApiService.fetchListings(
+        query: query.isEmpty ? null : query,
+      );
+    });
+  }
+
+  String _formatGenderLabel(String gender) {
+    if (gender.isEmpty) return gender;
+    return '${gender[0].toUpperCase()}${gender.substring(1)}';
   }
 
   @override
@@ -111,6 +139,19 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildCategoryChips(),
+              if (_selectedGender != null) ...[
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    InputChip(
+                      avatar: const Icon(Icons.wc, size: 18),
+                      label: Text('Genre : ${_formatGenderLabel(_selectedGender!)}'),
+                      onDeleted: _clearGenderFilter,
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 16),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 320),
@@ -242,6 +283,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               width: 170,
                               child: ListingCard(
                                 listing: listing,
+                                onGenderTap: _filterByGender,
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(

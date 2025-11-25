@@ -5,12 +5,19 @@ const { authRequired, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
 
+const allowedGenders = ["homme", "femme", "enfant", "unisexe"];
+const normalizeGender = (gender) => {
+  if (gender === undefined || gender === null || gender === "") return null;
+  const lower = String(gender).toLowerCase();
+  return allowedGenders.includes(lower) ? lower : null;
+};
+
 /**
  * GET /api/listings
  */
 router.get("/", async (req, res) => {
   try {
-    const { q, category_id, city, min_price, max_price } = req.query;
+    const { q, category_id, city, min_price, max_price, gender } = req.query;
 
     // Build the WHERE clause dynamically based on the filters provided in the query string.
     // We always enforce that a listing must be active, then append additional conditions
@@ -42,6 +49,13 @@ router.get("/", async (req, res) => {
     if (max_price) {
       conditions.push(`l.price <= $${idx}`);
       params.push(max_price);
+      idx++;
+    }
+
+    const normalizedGender = normalizeGender(gender);
+    if (normalizedGender) {
+      conditions.push(`LOWER(l.gender) = $${idx}`);
+      params.push(normalizedGender);
       idx++;
     }
 
@@ -159,11 +173,7 @@ router.post("/", authRequired, requireRole("pro", "admin"), async (req, res) => 
       return [];
     };
 
-    const allowedGenders = ["homme", "femme", "enfant", "unisexe"];
-    const normalizedGender =
-      typeof gender === "string" && allowedGenders.includes(gender.toLowerCase())
-        ? gender.toLowerCase()
-        : null;
+    const normalizedGender = normalizeGender(gender);
 
     const parsedSizes = normalizeStringArray(sizes);
     const parsedColors = normalizeStringArray(colors);
@@ -261,13 +271,7 @@ router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) =
       return [];
     };
 
-    const allowedGenders = ["homme", "femme", "enfant", "unisexe"];
-    const normalizedGender = (() => {
-      if (gender === undefined) return null;
-      if (gender === null || gender === "") return null;
-      const lower = String(gender).toLowerCase();
-      return allowedGenders.includes(lower) ? lower : null;
-    })();
+    const normalizedGender = normalizeGender(gender);
 
     const parsedSizes = normalizeStringArray(sizes);
     const parsedColors = normalizeStringArray(colors);

@@ -5,11 +5,13 @@ import '../services/api_service.dart';
 class ListingCard extends StatelessWidget {
   final Listing listing;
   final VoidCallback? onTap;
+  final ValueChanged<String>? onGenderTap;
 
   const ListingCard({
     super.key,
     required this.listing,
     this.onTap,
+    this.onGenderTap,
   });
 
   @override
@@ -78,7 +80,10 @@ class ListingCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   if (listing.gender != null)
-                    _buildTag(listing.gender!),
+                    _buildTag(
+                      _formatLabel(listing.gender!),
+                      onTap: () => onGenderTap?.call(listing.gender!),
+                    ),
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -128,8 +133,8 @@ class ListingCard extends StatelessWidget {
     return details.join(' - ');
   }
 
-  Widget _buildTag(String label) {
-    return Container(
+  Widget _buildTag(String label, {VoidCallback? onTap}) {
+    final tag = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
@@ -144,6 +149,19 @@ class ListingCard extends StatelessWidget {
         ),
       ),
     );
+
+    if (onTap == null) return tag;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: tag,
+    );
+  }
+
+  String _formatLabel(String label) {
+    if (label.isEmpty) return label;
+    return '${label[0].toUpperCase()}${label.substring(1)}';
   }
 }
 
