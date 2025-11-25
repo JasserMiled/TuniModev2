@@ -57,17 +57,30 @@ class Listing {
 
     List<String> parseImages(dynamic value) {
       if (value is List) {
-        return value
+        final parsed = value
             .map((item) {
-              if (item is String) return item;
+              if (item is String) {
+                return {'url': item, 'order': 0};
+              }
               if (item is Map<String, dynamic>) {
                 final url = item["url"];
-                if (url != null) return url.toString();
+                final sortOrder = item["sort_order"] ?? item["sortOrder"];
+
+                if (url != null) {
+                  return {
+                    'url': url.toString(),
+                    'order': sortOrder is num ? sortOrder.toInt() : 0,
+                  };
+                }
               }
               return null;
             })
-            .whereType<String>()
+            .whereType<Map<String, dynamic>>()
+            .where((item) => (item['url'] as String).trim().isNotEmpty)
             .toList();
+
+        parsed.sort((a, b) => (a['order'] as int).compareTo(b['order'] as int));
+        return parsed.map((item) => item['url'] as String).toList();
       }
       return [];
     }
