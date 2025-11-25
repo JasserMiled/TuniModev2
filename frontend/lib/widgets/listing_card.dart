@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/listing.dart';
+import '../services/api_service.dart';
 
 class ListingCard extends StatelessWidget {
   final Listing listing;
@@ -13,7 +14,8 @@ class ListingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = listing.imageUrls.isNotEmpty ? listing.imageUrls.first : null;
+    final imageUrl =
+        listing.imageUrls.isNotEmpty ? _resolveImageUrl(listing.imageUrls.first) : null;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -102,6 +104,13 @@ class ListingCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _resolveImageUrl(String url) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return '${ApiService.baseUrl}$url';
   }
 
   String _buildDetailsLine() {
