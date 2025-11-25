@@ -57,31 +57,45 @@ class Listing {
 
     List<String> parseImages(dynamic value) {
       if (value is List) {
-        final parsed = value
-            .map((item) {
-              if (item is String) {
-                return {'url': item, 'order': 0};
-              }
-              if (item is Map<String, dynamic>) {
-                final url = item["url"];
-                final sortOrder = item["sort_order"] ?? item["sortOrder"];
+        final parsed = <Map<String, dynamic>>[];
 
-                if (url != null) {
-                  return {
-                    'url': url.toString(),
-                    'order': sortOrder is num ? sortOrder.toInt() : 0,
-                  };
-                }
-              }
-              return null;
-            })
-            .whereType<Map<String, dynamic>>()
-            .where((item) => (item['url'] as String).trim().isNotEmpty)
-            .toList();
+        for (var i = 0; i < value.length; i++) {
+          final item = value[i];
 
-        parsed.sort((a, b) => (a['order'] as int).compareTo(b['order'] as int));
+          if (item is String) {
+            parsed.add({
+              'url': item,
+              'order': i,
+              'index': i,
+            });
+            continue;
+          }
+
+          if (item is Map<String, dynamic>) {
+            final url = item["url"];
+            final sortOrder = item["sort_order"] ?? item["sortOrder"];
+
+            if (url != null) {
+              parsed.add({
+                'url': url.toString(),
+                'order': sortOrder is num ? sortOrder.toInt() : i,
+                'index': i,
+              });
+            }
+          }
+        }
+
+        parsed.retainWhere((item) => (item['url'] as String).trim().isNotEmpty);
+
+        parsed.sort((a, b) {
+          final orderCompare = (a['order'] as int).compareTo(b['order'] as int);
+          if (orderCompare != 0) return orderCompare;
+          return (a['index'] as int).compareTo(b['index'] as int);
+        });
+
         return parsed.map((item) => item['url'] as String).toList();
       }
+
       return [];
     }
 
