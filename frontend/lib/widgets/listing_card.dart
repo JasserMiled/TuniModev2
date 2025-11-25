@@ -46,7 +46,7 @@ class ListingCard extends StatelessWidget {
                     Text(
                       '${listing.price.toStringAsFixed(0)} TND',
                       style: TextStyle(
-                        color: Colors.green.shade700,
+                        color: Colors.blue.shade700,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

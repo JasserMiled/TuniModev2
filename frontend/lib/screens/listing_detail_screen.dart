@@ -61,7 +61,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 Text(
                   '${listing.price.toStringAsFixed(0)} TND',
                   style: TextStyle(
-                    color: Colors.green.shade700,
+                    color: Colors.blue.shade700,
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
                   ),
