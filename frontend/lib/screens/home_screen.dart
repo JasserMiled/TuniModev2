@@ -14,8 +14,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   static const Color _primaryBlue = Color(0xFF0B6EFE);
-  static const Color _lightBackground = Color(0xFFF6F3EE);
-  static const Color _accentGreen = Color(0xFF2FB280);
+  static const Color _lightBackground = Color(0xFFF7F9FC);
+  static const Color _accentGreen = Color(0xFF24B072);
+  static const Color _lavender = Color(0xFFF1EDFD);
+  static const Color _peach = Color(0xFFFFF4EC);
 
   late Future<List<Listing>> _futureListings;
   final TextEditingController _searchController = TextEditingController();
@@ -79,28 +81,60 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: _lightBackground,
       appBar: AppBar(
-        title: const Text('TuniMode'),
+        titleSpacing: 16,
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
-        elevation: 0.5,
+        elevation: 0.3,
         shadowColor: Colors.black12,
-        centerTitle: true,
+        title: Row(
+          children: const [
+            Icon(Icons.auto_awesome, color: _primaryBlue),
+            SizedBox(width: 8),
+            Text(
+              'TuniMode',
+              style: TextStyle(
+                color: Color(0xFF0F172A),
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
+            tooltip: 'Actualiser',
             icon: const Icon(Icons.refresh, color: _primaryBlue),
             onPressed: _reload,
           ),
-          IconButton(
-            icon: const Icon(Icons.person, color: _primaryBlue),
+          TextButton(
             onPressed: _openLogin,
+            child: const Text('Se connecter'),
+          ),
+          const SizedBox(width: 6),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: ElevatedButton.icon(
+              onPressed: _openDashboard,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _primaryBlue,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.storefront_rounded, size: 18),
+              label: const Text('Vendre mes articles'),
+            ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openDashboard,
-        icon: const Icon(Icons.store),
+        icon: const Icon(Icons.local_mall_outlined),
         label: const Text('Espace Pro'),
-        backgroundColor: _primaryBlue,
+        backgroundColor: _accentGreen,
       ),
       body: SafeArea(
         child: Padding(
@@ -109,11 +143,15 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeroHeader(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               _buildSearchBar(),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
+              _buildHighlights(),
+              const SizedBox(height: 14),
               _buildCategoryChips(),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              _buildSectionTitle(),
+              const SizedBox(height: 10),
               Expanded(
                 child: FutureBuilder<List<Listing>>(
                   future: _futureListings,
@@ -171,14 +209,18 @@ class _HomeScreenState extends State<HomeScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: const Color(0xFFF8F5F0),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE7DFD4)),
+            gradient: const LinearGradient(
+              colors: [Color(0xFFEFF4FF), Color(0xFFE8FFF3)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: Colors.white, width: 0.6),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 14,
-                offset: const Offset(0, 10),
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 18,
+                offset: const Offset(0, 12),
               ),
             ],
           ),
@@ -208,39 +250,43 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: const [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: Colors.white,
-              child: Icon(Icons.shopping_bag, color: _primaryBlue),
-            ),
-            SizedBox(width: 10),
-            Text(
-              'Bienvenue sur TuniMode',
-              style: TextStyle(
-                color: Color(0xFF3D3D3D),
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.eco, size: 18, color: _accentGreen),
+              SizedBox(width: 8),
+              Text(
+                'Seconde main premium en Tunisie',
+                style: TextStyle(
+                  color: Color(0xFF0F172A),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         const Text(
-          'Prêt à faire du tri dans tes placards ?',
+          'Débarrasse-toi du superflu, inspire la communauté, 
+et trouve les bonnes affaires près de chez toi.',
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w800,
-            color: Color(0xFF2D2A26),
+            color: Color(0xFF111827),
             height: 1.2,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         const Text(
-          'Donne une seconde vie à tes pièces, vends en sécurité et inspire les passionnés de mode en Tunisie.',
+          'Une sélection qui met à l’honneur la mode tunisienne : vends en toute sécurité et déniche des pièces uniques en quelques clics.',
           style: TextStyle(
-            color: Color(0xFF4D4A45),
+            color: Color(0xFF334155),
             fontSize: 15,
             height: 1.5,
           ),
@@ -306,7 +352,12 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE9E1D8)),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFECF0FF), Color(0xFFFDF0E7)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(color: Colors.white),
         ),
         child: Image.network(
           'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&q=80',
@@ -329,7 +380,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: Colors.blue.shade50),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         child: Row(
           children: [
             const Icon(Icons.search, color: _primaryBlue),
@@ -339,18 +390,40 @@ class _HomeScreenState extends State<HomeScreen> {
                 controller: _searchController,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
-                  hintText: 'Rechercher des vêtements ou marques...',
+                  hintText: 'Rechercher une marque, une tendance ou une taille...',
                 ),
                 textInputAction: TextInputAction.search,
                 onSubmitted: (_) => _performSearch(),
               ),
             ),
+            Container(
+              decoration: BoxDecoration(
+                color: _lavender,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Row(
+                children: const [
+                  Icon(Icons.filter_alt_outlined, color: _primaryBlue, size: 18),
+                  SizedBox(width: 6),
+                  Text(
+                    'Filtres rapides',
+                    style: TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
             TextButton(
               onPressed: _performSearch,
               style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
                 backgroundColor: _primaryBlue,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -395,4 +468,99 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _buildHighlights() {
+    final cards = [
+      _Highlight(
+        icon: Icons.new_releases_rounded,
+        label: 'Nouveautés quotidiennes',
+        color: _lavender,
+      ),
+      _Highlight(
+        icon: Icons.favorite_border,
+        label: 'Coups de cœur de la communauté',
+        color: _peach,
+      ),
+      _Highlight(
+        icon: Icons.verified_user_outlined,
+        label: 'Transactions sécurisées',
+        color: Colors.white,
+      ),
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: cards
+            .map(
+              (card) => Container(
+                margin: const EdgeInsets.only(right: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: card.color,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(card.icon, color: _primaryBlue, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      card.label,
+                      style: const TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: const [
+        Text(
+          'Derniers articles mis en ligne',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF111827),
+          ),
+        ),
+        Text(
+          'Mis à jour en temps réel',
+          style: TextStyle(
+            color: Color(0xFF64748B),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Highlight {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  const _Highlight({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
 }
