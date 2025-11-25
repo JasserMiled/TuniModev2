@@ -80,15 +80,16 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: _lightBackground,
       appBar: AppBar(
         titleSpacing: 16,
+        toolbarHeight: 86,
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         elevation: 0.3,
         shadowColor: Colors.black12,
         title: Row(
-          children: const [
-            Icon(Icons.auto_awesome, color: _primaryBlue),
-            SizedBox(width: 8),
-            Text(
+          children: [
+            const Icon(Icons.auto_awesome, color: _primaryBlue),
+            const SizedBox(width: 8),
+            const Text(
               'TuniMode',
               style: TextStyle(
                 color: Color(0xFF0F172A),
@@ -96,72 +97,60 @@ class _HomeScreenState extends State<HomeScreen> {
                 letterSpacing: 0.2,
               ),
             ),
+            const SizedBox(width: 18),
+            Expanded(child: _buildSearchBar()),
+            const SizedBox(width: 10),
+            IconButton(
+              tooltip: 'Actualiser',
+              icon: const Icon(Icons.refresh, color: _primaryBlue),
+              onPressed: _reload,
+            ),
+            TextButton(
+              onPressed: _openLogin,
+              child: const Text('Se connecter'),
+            ),
+            const SizedBox(width: 6),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: ElevatedButton.icon(
+                onPressed: _openDashboard,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _primaryBlue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.storefront_rounded, size: 18),
+                label: const Text('Vendre mes articles'),
+              ),
+            ),
           ],
         ),
-        actions: [
-          IconButton(
-            tooltip: 'Actualiser',
-            icon: const Icon(Icons.refresh, color: _primaryBlue),
-            onPressed: _reload,
-          ),
-          TextButton(
-            onPressed: _openLogin,
-            child: const Text('Se connecter'),
-          ),
-          const SizedBox(width: 6),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: ElevatedButton.icon(
-              onPressed: _openDashboard,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _primaryBlue,
-                foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.storefront_rounded, size: 18),
-              label: const Text('Vendre mes articles'),
-            ),
-          ),
-        ],
       ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _openDashboard,
-          icon: const Icon(Icons.store),
-          label: const Text('Espace Pro'),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              const Text(
-                'Débarrasse-toi du superflu, inspire la communauté,\n'
-                'et trouve les bonnes affaires près de chez toi.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 12),
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: 'Rechercher une annonce',
-                suffixIcon: IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: _performSearch,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openDashboard,
+        icon: const Icon(Icons.store),
+        label: const Text('Espace Pro'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const Text(
+              'Débarrasse-toi du superflu, inspire la communauté,\n'
+              'et trouve les bonnes affaires près de chez toi.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => _performSearch(),
-          ),
-          const SizedBox(height: 8),
-          _buildCategoryChips(),
-          const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            _buildCategoryChips(),
+            const SizedBox(height: 16),
             Expanded(
               child: FutureBuilder<List<Listing>>(
                 future: _futureListings,
