@@ -27,6 +27,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     return '${ApiService.baseUrl}$url';
   }
 
+  String _formatGender(String gender) {
+    if (gender.isEmpty) return gender;
+    return '${gender[0].toUpperCase()}${gender.substring(1)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,8 +101,17 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                     ],
                   ),
                 const SizedBox(height: 8),
-                if (listing.gender != null)
-                  Text('Genre : ${listing.gender!.substring(0, 1).toUpperCase()}${listing.gender!.substring(1)}'),
+                if (listing.gender != null && listing.gender!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.wc, size: 18),
+                        const SizedBox(width: 6),
+                        Chip(label: Text(_formatGender(listing.gender!))),
+                      ],
+                    ),
+                  ),
                 if (listing.sizes.isNotEmpty)
                   Wrap(
                     spacing: 8,
