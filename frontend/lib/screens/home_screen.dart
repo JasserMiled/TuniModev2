@@ -197,6 +197,38 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: listings.length,
                     itemBuilder: (context, index) {
                       final listing = listings[index];
+
+                      if (index == 0) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 6),
+                              child: Text(
+                                'Dernière annonce',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF111827),
+                                ),
+                              ),
+                            ),
+                            ListingCard(
+                              listing: listing,
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        ListingDetailScreen(listingId: listing.id),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                        );
+                      }
+
                       return ListingCard(
                         listing: listing,
                         onTap: () {
