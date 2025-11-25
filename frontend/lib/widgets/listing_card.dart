@@ -51,6 +51,22 @@ class ListingCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
+                    if (listing.gender != null ||
+                        listing.sizes.isNotEmpty ||
+                        listing.colors.isNotEmpty)
+                      Text(
+                        [
+                          if (listing.gender != null)
+                            listing.gender!.substring(0, 1).toUpperCase() +
+                                listing.gender!.substring(1),
+                          if (listing.sizes.isNotEmpty)
+                            'Tailles: ${listing.sizes.join(', ')}',
+                          if (listing.colors.isNotEmpty)
+                            'Couleurs: ${listing.colors.join(', ')}'
+                        ].join(' • '),
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         if (listing.city != null)
