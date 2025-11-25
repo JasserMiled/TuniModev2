@@ -10,6 +10,7 @@ class Listing {
   final String? city;
   final String? categoryName;
   final String? sellerName;
+  final List<String> imageUrls;
 
   Listing({
     required this.id,
@@ -23,6 +24,7 @@ class Listing {
     this.city,
     this.categoryName,
     this.sellerName,
+    this.imageUrls = const [],
   });
 
   factory Listing.fromJson(Map<String, dynamic> json) {
@@ -65,6 +67,10 @@ class Listing {
       city: json["city"] as String?,
       categoryName: json["category_name"] as String?,
       sellerName: json["seller_name"] as String?,
+      imageUrls: (json["images"] as List<dynamic>? ?? [])
+          .map((img) => (img as Map<String, dynamic>?)?["url"] as String? ?? '')
+          .where((url) => url.isNotEmpty)
+          .toList(),
     );
   }
 }
