@@ -46,7 +46,21 @@ router.get("/", async (req, res) => {
     }
 
     const sql = `
-      SELECT l.*, u.name AS seller_name, c.name AS category_name
+      SELECT
+        l.*,
+        u.name AS seller_name,
+        c.name AS category_name,
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object('url', li.url, 'sort_order', li.sort_order)
+              ORDER BY li.sort_order
+            )
+            FROM listing_images li
+            WHERE li.listing_id = l.id
+          ),
+          '[]'::json
+        ) AS images
       FROM listings l
       JOIN users u ON l.user_id = u.id
       LEFT JOIN categories c ON l.category_id = c.id
@@ -57,35 +71,7 @@ router.get("/", async (req, res) => {
 
     const result = await db.query(sql, params);
 
-    const listingIds = result.rows.map((row) => row.id);
-    let imagesByListing = new Map();
-
-    if (listingIds.length > 0) {
-      const imagesRes = await db.query(
-        `SELECT listing_id, url, sort_order
-         FROM listing_images
-         WHERE listing_id = ANY($1)
-         ORDER BY listing_id, sort_order`,
-        [listingIds]
-      );
-
-      imagesByListing = imagesRes.rows.reduce((acc, row) => {
-        const existing = acc.get(row.listing_id) || [];
-        existing.push({
-          url: row.url,
-          sort_order: row.sort_order,
-        });
-        acc.set(row.listing_id, existing);
-        return acc;
-      }, new Map());
-    }
-
-    const listingsWithImages = result.rows.map((row) => ({
-      ...row,
-      images: imagesByListing.get(row.id) || [],
-    }));
-
-    res.json(listingsWithImages);
+    res.json(result.rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Erreur serveur" });
