@@ -52,11 +52,40 @@ router.get("/", async (req, res) => {
       LEFT JOIN categories c ON l.category_id = c.id
       WHERE ${conditions.join(" AND ")}
       ORDER BY l.created_at DESC
-      LIMIT 50
+      LIMIT 8
     `;
 
     const result = await db.query(sql, params);
-    res.json(result.rows);
+
+    const listingIds = result.rows.map((row) => row.id);
+    let imagesByListing = new Map();
+
+    if (listingIds.length > 0) {
+      const imagesRes = await db.query(
+        `SELECT listing_id, url, sort_order
+         FROM listing_images
+         WHERE listing_id = ANY($1)
+         ORDER BY listing_id, sort_order`,
+        [listingIds]
+      );
+
+      imagesByListing = imagesRes.rows.reduce((acc, row) => {
+        const existing = acc.get(row.listing_id) || [];
+        existing.push({
+          url: row.url,
+          sort_order: row.sort_order,
+        });
+        acc.set(row.listing_id, existing);
+        return acc;
+      }, new Map());
+    }
+
+    const listingsWithImages = result.rows.map((row) => ({
+      ...row,
+      images: imagesByListing.get(row.id) || [],
+    }));
+
+    res.json(listingsWithImages);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Erreur serveur" });
