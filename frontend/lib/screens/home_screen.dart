@@ -22,15 +22,6 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Listing>> _futureListings;
   final TextEditingController _searchController = TextEditingController();
 
-  final List<String> _categories = const [
-    'Nouveautés',
-    'Casual',
-    'Sport',
-    'Traditionnel',
-    'Luxueux',
-    'Enfant',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -53,11 +44,6 @@ class _HomeScreenState extends State<HomeScreen> {
         query: query.isEmpty ? null : query,
       );
     });
-  }
-
-  void _selectCategory(String category) {
-    _searchController.text = category;
-    _performSearch();
   }
 
   @override
@@ -130,241 +116,74 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openDashboard,
-        icon: const Icon(Icons.local_mall_outlined),
-        label: const Text('Espace Pro'),
-        backgroundColor: _accentGreen,
-      ),
-      body: SafeArea(
-        child: Padding(
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: _openDashboard,
+          icon: const Icon(Icons.store),
+          label: const Text('Espace Pro'),
+        ),
+        body: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeroHeader(),
-              const SizedBox(height: 18),
-              _buildSearchBar(),
-              const SizedBox(height: 14),
-              _buildHighlights(),
-              const SizedBox(height: 14),
-              _buildCategoryChips(),
-              const SizedBox(height: 12),
-              _buildSectionTitle(),
-              const SizedBox(height: 10),
-              Expanded(
-                child: FutureBuilder<List<Listing>>(
-                  future: _futureListings,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Text('Erreur : ${snapshot.error}'),
-                      );
-                    }
-                    final listings = snapshot.data ?? [];
-                    if (listings.isEmpty) {
-                      return Center(
-                        child: Text(
-                          'Aucune annonce pour le moment. Découvrons les premières tendances TuniMode !',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                      );
-                    }
-                    return ListView.separated(
-                      itemCount: listings.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final listing = listings[index];
-                        return ListingCard(
-                          listing: listing,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => ListingDetailScreen(listingId: listing.id),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeroHeader() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 720;
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFEFF4FF), Color(0xFFE8FFF3)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: Colors.white, width: 0.6),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 18,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: isWide
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(child: _buildHeroText()),
-                    const SizedBox(width: 18),
-                    _buildHeroImage(height: 260),
-                  ],
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeroImage(height: 220),
-                    const SizedBox(height: 16),
-                    _buildHeroText(),
-                  ],
-                ),
-        );
-      },
-    );
-  }
-
-  Widget _buildHeroText() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(Icons.eco, size: 18, color: _accentGreen),
-              SizedBox(width: 8),
-              Text(
-                'Seconde main premium en Tunisie',
+              const Text(
+                'Débarrasse-toi du superflu, inspire la communauté,\n'
+                'et trouve les bonnes affaires près de chez toi.',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Color(0xFF0F172A),
-                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'Débarrasse-toi du superflu, inspire la communauté, 
-et trouve les bonnes affaires près de chez toi.',
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF111827),
-            height: 1.2,
-          ),
-        ),
-        const SizedBox(height: 10),
-        const Text(
-          'Une sélection qui met à l’honneur la mode tunisienne : vends en toute sécurité et déniche des pièces uniques en quelques clics.',
-          style: TextStyle(
-            color: Color(0xFF334155),
-            fontSize: 15,
-            height: 1.5,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          spacing: 12,
-          runSpacing: 10,
-          children: [
-            ElevatedButton.icon(
-              onPressed: _openDashboard,
-              icon: const Icon(Icons.upload_rounded),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _accentGreen,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: 'Rechercher une annonce',
+                  suffixIcon: IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: _performSearch,
                 ),
               ),
-              label: const Text(
-                'Commencer à vendre',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-              ),
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => _performSearch(),
             ),
-            OutlinedButton(
-              onPressed: _openLogin,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black87,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                side: const BorderSide(color: Color(0xFFCBC3B3)),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Découvrir comment ça marche',
-                style: TextStyle(fontWeight: FontWeight.w600),
+            const SizedBox(height: 16),
+            Expanded(
+              child: FutureBuilder<List<Listing>>(
+                future: _futureListings,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text('Erreur : ${snapshot.error}'),
+                    );
+                  }
+                  final listings = snapshot.data ?? [];
+                  if (listings.isEmpty) {
+                    return const Center(child: Text('Aucune annonce pour le moment.'));
+                  }
+                  return ListView.builder(
+                    itemCount: listings.length,
+                    itemBuilder: (context, index) {
+                      final listing = listings[index];
+                      return ListingCard(
+                        listing: listing,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ListingDetailScreen(listingId: listing.id),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 14),
-        Row(
-          children: const [
-            Icon(Icons.location_on_outlined, color: Color(0xFF7D7668)),
-            SizedBox(width: 6),
-            Text(
-              'Explorer des articles proches de chez toi',
-              style: TextStyle(
-                color: Color(0xFF6A6359),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHeroImage({required double height}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: const LinearGradient(
-            colors: [Color(0xFFECF0FF), Color(0xFFFDF0E7)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          border: Border.all(color: Colors.white),
-        ),
-        child: Image.network(
-          'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&q=80',
-          height: height,
-          width: height * 0.82,
-          fit: BoxFit.cover,
-          alignment: Alignment.center,
         ),
       ),
     );

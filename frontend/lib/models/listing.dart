@@ -67,10 +67,6 @@ class Listing {
       city: json["city"] as String?,
       categoryName: json["category_name"] as String?,
       sellerName: json["seller_name"] as String?,
-      imageUrls: (json["images"] as List<dynamic>? ?? [])
-          .map((img) => (img as Map<String, dynamic>?)?["url"] as String? ?? '')
-          .where((url) => url.isNotEmpty)
-          .toList(),
     );
   }
 }

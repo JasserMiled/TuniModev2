@@ -107,14 +107,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _message = null;
     });
 
-    final uploadedImages = await _uploadSelectedImages();
-    if (uploadedImages == null) {
-      setState(() {
-        _loading = false;
-      });
-      return;
-    }
-
     List<String> _splitValues(String input) => input
         .split(',')
         .map((v) => v.trim())
@@ -145,7 +137,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _gender = null;
         _sizesText = '';
         _colorsText = '';
-        _images = [];
       });
     }
   }
