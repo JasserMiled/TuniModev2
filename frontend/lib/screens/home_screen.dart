@@ -207,6 +207,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   }
 
+                  final latestListings = listings.take(8).toList();
+
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -232,10 +234,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 340,
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
-                          itemCount: listings.length,
+                          itemCount: latestListings.length,
                           separatorBuilder: (_, __) => const SizedBox(width: 12),
                           itemBuilder: (context, index) {
-                            final listing = listings[index];
+                            final listing = latestListings[index];
                             return SizedBox(
                               width: 170,
                               child: ListingCard(
