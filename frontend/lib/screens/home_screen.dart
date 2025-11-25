@@ -14,6 +14,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Listing>> _futureListings;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -23,8 +24,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _reload() {
     setState(() {
-      _futureListings = ApiService.fetchListings();
+      final query = _searchController.text.trim();
+      _futureListings = ApiService.fetchListings(
+        query: query.isEmpty ? null : query,
+      );
     });
+  }
+
+  void _performSearch() {
+    final query = _searchController.text.trim();
+    setState(() {
+      _futureListings = ApiService.fetchListings(
+        query: query.isEmpty ? null : query,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _openLogin() {
@@ -60,38 +79,57 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: FutureBuilder<List<Listing>>(
-          future: _futureListings,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(
-                child: Text('Erreur : ${snapshot.error}'),
-              );
-            }
-            final listings = snapshot.data ?? [];
-            if (listings.isEmpty) {
-              return const Center(child: Text('Aucune annonce pour le moment.'));
-            }
-            return ListView.builder(
-              itemCount: listings.length,
-              itemBuilder: (context, index) {
-                final listing = listings[index];
-                return ListingCard(
-                  listing: listing,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => ListingDetailScreen(listingId: listing.id),
-                      ),
+        child: Column(
+          children: [
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Rechercher une annonce',
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: _performSearch,
+                ),
+              ),
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => _performSearch(),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: FutureBuilder<List<Listing>>(
+                future: _futureListings,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text('Erreur : ${snapshot.error}'),
                     );
-                  },
-                );
-              },
-            );
-          },
+                  }
+                  final listings = snapshot.data ?? [];
+                  if (listings.isEmpty) {
+                    return const Center(child: Text('Aucune annonce pour le moment.'));
+                  }
+                  return ListView.builder(
+                    itemCount: listings.length,
+                    itemBuilder: (context, index) {
+                      final listing = listings[index];
+                      return ListingCard(
+                        listing: listing,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ListingDetailScreen(listingId: listing.id),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

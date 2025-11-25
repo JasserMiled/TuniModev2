@@ -13,8 +13,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _title = '';
   String _description = '';
   String _price = '';
-  String _size = '';
-  String _color = '';
+  String _sizesText = '';
+  String _colorsText = '';
+  String? _gender;
   String _city = '';
   String _condition = '';
 
@@ -37,12 +38,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _message = null;
     });
 
+    List<String> _splitValues(String input) => input
+        .split(',')
+        .map((v) => v.trim())
+        .where((v) => v.isNotEmpty)
+        .toList();
+
     final ok = await ApiService.createListing(
       title: _title,
       description: _description,
       price: double.tryParse(_price) ?? 0,
-      size: _size.isEmpty ? null : _size,
-      color: _color.isEmpty ? null : _color,
+      sizes: _splitValues(_sizesText),
+      colors: _splitValues(_colorsText),
+      gender: _gender,
       condition: _condition.isEmpty ? null : _condition,
       categoryId: null,
       city: _city.isEmpty ? null : _city,
@@ -55,6 +63,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (ok) {
       _formKey.currentState!.reset();
+      setState(() {
+        _gender = null;
+        _sizesText = '';
+        _colorsText = '';
+      });
     }
   }
 
@@ -98,12 +111,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               (v == null || v.isEmpty) ? 'Champ obligatoire' : null,
                         ),
                         TextFormField(
-                          decoration: const InputDecoration(labelText: 'Taille'),
-                          onSaved: (v) => _size = v?.trim() ?? '',
+                          decoration: const InputDecoration(
+                            labelText: 'Tailles disponibles',
+                            helperText: 'Séparez les valeurs par des virgules',
+                          ),
+                          onSaved: (v) => _sizesText = v?.trim() ?? '',
                         ),
                         TextFormField(
-                          decoration: const InputDecoration(labelText: 'Couleur'),
-                          onSaved: (v) => _color = v?.trim() ?? '',
+                          decoration: const InputDecoration(
+                            labelText: 'Couleurs disponibles',
+                            helperText: 'Séparez les valeurs par des virgules',
+                          ),
+                          onSaved: (v) => _colorsText = v?.trim() ?? '',
+                        ),
+                        DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(labelText: 'Genre'),
+                          value: _gender,
+                          items: const [
+                            DropdownMenuItem(value: 'homme', child: Text('Homme')),
+                            DropdownMenuItem(value: 'femme', child: Text('Femme')),
+                            DropdownMenuItem(value: 'enfant', child: Text('Enfant')),
+                            DropdownMenuItem(value: 'unisexe', child: Text('Unisexe')),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _gender = value;
+                            });
+                          },
                         ),
                         TextFormField(
                           decoration: const InputDecoration(labelText: 'Ville'),

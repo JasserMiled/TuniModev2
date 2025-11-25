@@ -76,8 +76,24 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                     ],
                   ),
                 const SizedBox(height: 8),
-                if (listing.size != null) Text('Taille : ${listing.size}'),
-                if (listing.color != null) Text('Couleur : ${listing.color}'),
+                if (listing.gender != null)
+                  Text('Genre : ${listing.gender!.substring(0, 1).toUpperCase()}${listing.gender!.substring(1)}'),
+                if (listing.sizes.isNotEmpty)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: listing.sizes
+                        .map((s) => Chip(label: Text('Taille $s')))
+                        .toList(),
+                  ),
+                if (listing.colors.isNotEmpty)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: listing.colors
+                        .map((c) => Chip(label: Text('Couleur $c')))
+                        .toList(),
+                  ),
                 if (listing.condition != null)
                   Text('État : ${listing.condition}'),
                 const SizedBox(height: 16),

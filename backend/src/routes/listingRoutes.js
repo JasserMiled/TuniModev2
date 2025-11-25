@@ -11,6 +11,10 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const { q, category_id, city, min_price, max_price } = req.query;
+
+    // Build the WHERE clause dynamically based on the filters provided in the query string.
+    // We always enforce that a listing must be active, then append additional conditions
+    // as the client adds search parameters.
     const conditions = ["l.status = 'active'"];
     const params = [];
     let idx = 1;
@@ -64,6 +68,8 @@ router.get("/", async (req, res) => {
  */
 router.get("/:id", async (req, res) => {
   try {
+    // Fetch the listing along with seller and category metadata in a single query
+    // to minimize round-trips before loading related images below.
     const listingRes = await db.query(
       `SELECT l.*, u.name AS seller_name, u.phone AS seller_phone, c.name AS category_name
        FROM listings l
@@ -113,26 +119,53 @@ router.post("/", authRequired, requireRole("pro", "admin"), async (req, res) => 
       title,
       description,
       price,
-      size,
-      color,
+      sizes,
+      colors,
+      gender,
       condition,
       category_id,
       city,
       images,
     } = req.body;
 
+    const normalizeStringArray = (value) => {
+      if (value === undefined) return [];
+      if (Array.isArray(value)) {
+        return value
+          .map((v) => (v === null || v === undefined ? null : String(v).trim()))
+          .filter((v) => v);
+      }
+      if (typeof value === "string") {
+        return value
+          .split(",")
+          .map((v) => v.trim())
+          .filter((v) => v);
+      }
+      return [];
+    };
+
+    const allowedGenders = ["homme", "femme", "enfant", "unisexe"];
+    const normalizedGender =
+      typeof gender === "string" && allowedGenders.includes(gender.toLowerCase())
+        ? gender.toLowerCase()
+        : null;
+
+    const parsedSizes = normalizeStringArray(sizes);
+    const parsedColors = normalizeStringArray(colors);
+
     const listingRes = await db.query(
       `INSERT INTO listings
-       (user_id, title, description, price, size, color, condition, category_id, city)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       (user_id, title, description, price, sizes, colors, gender, condition, category_id, city)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        RETURNING *`,
       [
         req.user.id,
         title,
         description,
         price,
-        size,
-        color,
+        parsedSizes,
+        parsedColors,
+        normalizedGender,
         condition,
         category_id || null,
         city || null,
@@ -142,6 +175,8 @@ router.post("/", authRequired, requireRole("pro", "admin"), async (req, res) => 
     const listing = listingRes.rows[0];
 
     if (Array.isArray(images) && images.length > 0) {
+      // Prepare a single bulk INSERT for images to preserve ordering while
+      // avoiding multiple round-trips to the database.
       const values = [];
       const params = [];
       let idx = 1;
@@ -172,6 +207,8 @@ router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) =
   try {
     const listingId = req.params.id;
 
+    // Ensure the listing exists and the requester is allowed to update it
+    // (owner or admin) before applying any changes.
     const check = await db.query("SELECT user_id FROM listings WHERE id = $1", [listingId]);
     const found = check.rows[0];
     if (!found) return res.status(404).json({ message: "Annonce introuvable" });
@@ -183,29 +220,71 @@ router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) =
       title,
       description,
       price,
-      size,
-      color,
+      sizes,
+      colors,
+      gender,
       condition,
       category_id,
       city,
       status,
     } = req.body;
 
+    const normalizeStringArray = (value) => {
+      if (value === undefined) return null;
+      if (Array.isArray(value)) {
+        return value
+          .map((v) => (v === null || v === undefined ? null : String(v).trim()))
+          .filter((v) => v);
+      }
+      if (typeof value === "string") {
+        const parts = value
+          .split(",")
+          .map((v) => v.trim())
+          .filter((v) => v);
+        return parts;
+      }
+      return [];
+    };
+
+    const allowedGenders = ["homme", "femme", "enfant", "unisexe"];
+    const normalizedGender = (() => {
+      if (gender === undefined) return null;
+      if (gender === null || gender === "") return null;
+      const lower = String(gender).toLowerCase();
+      return allowedGenders.includes(lower) ? lower : null;
+    })();
+
+    const parsedSizes = normalizeStringArray(sizes);
+    const parsedColors = normalizeStringArray(colors);
+
     const result = await db.query(
       `UPDATE listings
        SET title = COALESCE($1, title),
            description = COALESCE($2, description),
            price = COALESCE($3, price),
-           size = COALESCE($4, size),
-           color = COALESCE($5, color),
-           condition = COALESCE($6, condition),
-           category_id = COALESCE($7, category_id),
-           city = COALESCE($8, city),
-           status = COALESCE($9, status),
+           sizes = COALESCE($4, sizes),
+           colors = COALESCE($5, colors),
+           gender = COALESCE($6, gender),
+           condition = COALESCE($7, condition),
+           category_id = COALESCE($8, category_id),
+           city = COALESCE($9, city),
+           status = COALESCE($10, status),
            updated_at = NOW()
-       WHERE id = $10
+       WHERE id = $11
        RETURNING *`,
-      [title, description, price, size, color, condition, category_id, city, status, listingId]
+      [
+        title,
+        description,
+        price,
+        parsedSizes,
+        parsedColors,
+        normalizedGender,
+        condition,
+        category_id,
+        city,
+        status,
+        listingId,
+      ]
     );
 
     res.json(result.rows[0]);
@@ -222,6 +301,8 @@ router.delete("/:id", authRequired, requireRole("pro", "admin"), async (req, res
   try {
     const listingId = req.params.id;
 
+    // Validate ownership before deleting to prevent users from removing
+    // listings that are not theirs (unless they are administrators).
     const check = await db.query("SELECT user_id FROM listings WHERE id = $1", [listingId]);
     const found = check.rows[0];
     if (!found) return res.status(404).json({ message: "Annonce introuvable" });
