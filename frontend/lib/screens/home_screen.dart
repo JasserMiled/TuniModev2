@@ -207,55 +207,53 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   }
 
-                  final latestListing = listings.first;
-                  final remainingListings = listings.skip(1).toList();
-
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Dernières annonces',
+                        'Derniers articles mis en ligne',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: Color(0xFF111827),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      ListingCard(
-                        listing: latestListing,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ListingDetailScreen(listingId: latestListing.id),
-                            ),
-                          );
-                        },
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Choisis tes prochaines trouvailles parmi des milliers de vêtements et accessoires.',
+                        style: TextStyle(
+                          color: Color(0xFF475569),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      if (remainingListings.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: remainingListings.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        height: 280,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: listings.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 12),
                           itemBuilder: (context, index) {
-                            final listing = remainingListings[index];
-                            return ListingCard(
-                              listing: listing,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        ListingDetailScreen(listingId: listing.id),
-                                  ),
-                                );
-                              },
+                            final listing = listings[index];
+                            return SizedBox(
+                              width: 170,
+                              child: ListingCard(
+                                listing: listing,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => ListingDetailScreen(
+                                        listingId: listing.id,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
                             );
                           },
                         ),
-                      ],
+                      ),
                     ],
                   );
                 },
