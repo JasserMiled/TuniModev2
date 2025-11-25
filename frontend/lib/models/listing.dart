@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class Listing {
   final int id;
   final String title;
@@ -56,47 +58,67 @@ class Listing {
     }
 
     List<String> parseImages(dynamic value) {
-      if (value is List) {
-        final parsed = <Map<String, dynamic>>[];
+      List<dynamic> rawList;
 
-        for (var i = 0; i < value.length; i++) {
-          final item = value[i];
-
-          if (item is String) {
-            parsed.add({
-              'url': item,
-              'order': i,
-              'index': i,
-            });
-            continue;
-          }
-
-          if (item is Map<String, dynamic>) {
-            final url = item["url"];
-            final sortOrder = item["sort_order"] ?? item["sortOrder"];
-
-            if (url != null) {
-              parsed.add({
-                'url': url.toString(),
-                'order': sortOrder is num ? sortOrder.toInt() : i,
-                'index': i,
-              });
-            }
-          }
+      if (value is String && value.trim().isNotEmpty) {
+        // Accept either a comma-separated list of URLs or a serialized JSON array
+        // so we can keep showing images even if the API shape drifts.
+        if (value.trim().startsWith('[')) {
+          rawList = (jsonDecode(value) as List<dynamic>);
+        } else {
+          rawList = value
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
         }
-
-        parsed.retainWhere((item) => (item['url'] as String).trim().isNotEmpty);
-
-        parsed.sort((a, b) {
-          final orderCompare = (a['order'] as int).compareTo(b['order'] as int);
-          if (orderCompare != 0) return orderCompare;
-          return (a['index'] as int).compareTo(b['index'] as int);
-        });
-
-        return parsed.map((item) => item['url'] as String).toList();
+      } else if (value is List) {
+        rawList = value;
+      } else {
+        return [];
       }
 
-      return [];
+      final parsed = <Map<String, dynamic>>[];
+
+      for (var i = 0; i < rawList.length; i++) {
+        final item = rawList[i];
+
+        if (item is String) {
+          parsed.add({
+            'url': item,
+            'order': i,
+            'index': i,
+          });
+          continue;
+        }
+
+        if (item is Map<String, dynamic>) {
+          final url = item["url"] ?? item["image"] ?? item["path"];
+          final sortOrder = item["sort_order"] ?? item["sortOrder"] ?? item["order"];
+
+          if (url != null) {
+            final parsedOrder = sortOrder is num
+                ? sortOrder.toInt()
+                : int.tryParse(sortOrder?.toString() ?? "");
+
+            parsed.add({
+              'url': url.toString(),
+              'order': parsedOrder ?? i,
+              'index': i,
+            });
+          }
+        }
+      }
+
+      parsed.retainWhere((item) => (item['url'] as String).trim().isNotEmpty);
+
+      parsed.sort((a, b) {
+        final orderCompare = (a['order'] as int).compareTo(b['order'] as int);
+        if (orderCompare != 0) return orderCompare;
+        return (a['index'] as int).compareTo(b['index'] as int);
+      });
+
+      return parsed.map((item) => item['url'] as String).toList();
     }
 
     return Listing(
