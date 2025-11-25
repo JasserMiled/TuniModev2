@@ -108,7 +108,10 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                       children: [
                         const Icon(Icons.wc, size: 18),
                         const SizedBox(width: 6),
-                        Chip(label: Text(_formatGender(listing.gender!))),
+                        Text(
+                          'Genre : ${_formatGender(listing.gender!)}',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
                       ],
                     ),
                   ),
