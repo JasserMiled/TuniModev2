@@ -127,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
                     final listings = snapshot.data ?? [];
                     if (listings.isEmpty) {
-                      return const Center(
+                      return Center(
                         child: Text(
                           'Aucune annonce pour le moment. Découvrons les premières tendances TuniMode !',
                           textAlign: TextAlign.center,
