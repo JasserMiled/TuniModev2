@@ -35,15 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _futureListings = ApiService.fetchListings();
   }
 
-  void _reload() {
-    setState(() {
-      final query = _searchController.text.trim();
-      _futureListings = ApiService.fetchListings(
-        query: query.isEmpty ? null : query,
-      );
-    });
-  }
-
   void _performSearch() {
     final query = _searchController.text.trim();
     setState(() {
@@ -99,34 +90,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(width: 18),
             Expanded(child: _buildSearchBar()),
-            const SizedBox(width: 10),
-            IconButton(
-              tooltip: 'Actualiser',
-              icon: const Icon(Icons.refresh, color: _primaryBlue),
-              onPressed: _reload,
-            ),
             TextButton(
               onPressed: _openLogin,
               child: const Text('Se connecter'),
             ),
             const SizedBox(width: 6),
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: ElevatedButton.icon(
-                onPressed: _openDashboard,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _primaryBlue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.storefront_rounded, size: 18),
-                label: const Text('Vendre mes articles'),
-              ),
-            ),
+            const SizedBox(width: 12),
           ],
         ),
       ),
