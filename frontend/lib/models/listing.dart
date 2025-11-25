@@ -55,6 +55,23 @@ class Listing {
       return [];
     }
 
+    List<String> parseImages(dynamic value) {
+      if (value is List) {
+        return value
+            .map((item) {
+              if (item is String) return item;
+              if (item is Map<String, dynamic>) {
+                final url = item["url"];
+                if (url != null) return url.toString();
+              }
+              return null;
+            })
+            .whereType<String>()
+            .toList();
+      }
+      return [];
+    }
+
     return Listing(
       id: json["id"] as int,
       title: json["title"] as String,
@@ -67,6 +84,7 @@ class Listing {
       city: json["city"] as String?,
       categoryName: json["category_name"] as String?,
       sellerName: json["seller_name"] as String?,
+      imageUrls: parseImages(json["images"] ?? json["imageUrls"]),
     );
   }
 }

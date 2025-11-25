@@ -20,6 +20,13 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     _futureListing = ApiService.fetchListingDetail(widget.listingId);
   }
 
+  String _resolveImageUrl(String url) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    return '${ApiService.baseUrl}$url';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,7 +61,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            '${ApiService.baseUrl}${listing.imageUrls.first}',
+                            _resolveImageUrl(listing.imageUrls.first),
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) =>
                                 const Icon(Icons.broken_image, size: 60),
