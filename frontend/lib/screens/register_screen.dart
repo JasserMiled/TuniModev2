@@ -103,7 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               items: const [
                                 DropdownMenuItem(
                                   value: 'buyer',
-                                  child: Text('Particulier'),
+                                  child: Text('Acheteur'),
                                 ),
                                 DropdownMenuItem(
                                   value: 'pro',
