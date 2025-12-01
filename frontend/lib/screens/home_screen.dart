@@ -20,8 +20,6 @@ class _HomeScreenState extends State<HomeScreen> {
   static const Color _peach = Color(0xFFFFF4EC);
 
   late Future<List<Listing>> _futureListings;
-  late final PageController _carouselController;
-  int _currentCarouselIndex = 0;
   final TextEditingController _searchController = TextEditingController();
   String? _selectedGender;
   String? _selectedCity;
@@ -38,7 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _carouselController = PageController(viewportFraction: 0.78);
     _futureListings = ApiService.fetchListings();
   }
 
@@ -279,7 +276,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _searchController.dispose();
-    _carouselController.dispose();
     super.dispose();
   }
 
@@ -460,82 +456,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
-                        height: 370,
-                        child: PageView.builder(
-                          controller: _carouselController,
-                          padEnds: false,
+                        height: 340,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
                           itemCount: latestListings.length,
-                          physics: const BouncingScrollPhysics(),
-                          onPageChanged: (index) {
-                            setState(() {
-                              _currentCarouselIndex = index;
-                            });
-                          },
+                          separatorBuilder: (_, __) => const SizedBox(width: 12),
                           itemBuilder: (context, index) {
                             final listing = latestListings[index];
-                            return AnimatedBuilder(
-                              animation: _carouselController,
-                              builder: (context, child) {
-                                double scale = 1;
-                                if (_carouselController.hasClients &&
-                                    _carouselController.position.haveDimensions) {
-                                  final page = _carouselController.page ?? 0;
-                                  final distance = (page - index).abs();
-                                  scale = (1 - (distance * 0.08)).clamp(0.9, 1.0);
-                                }
-
-                                return Center(
-                                  child: Transform.scale(
-                                    scale: scale,
-                                    child: child,
-                                  ),
-                                );
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.only(
-                                  left: index == 0 ? 4 : 10,
-                                  right: index == latestListings.length - 1 ? 4 : 10,
-                                ),
-                                child: SizedBox(
-                                  width: 230,
-                                  child: ListingCard(
-                                    listing: listing,
-                                    onGenderTap: _filterByGender,
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => ListingDetailScreen(
-                                            listingId: listing.id,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
+                            return SizedBox(
+                              width: 170,
+                              child: ListingCard(
+                                listing: listing,
+                                onGenderTap: _filterByGender,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => ListingDetailScreen(
+                                        listingId: listing.id,
+                                      ),
+                                    ),
+                                  );
+                                },
                               ),
                             );
                           },
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Center(
-                        child: Wrap(
-                          spacing: 8,
-                          children: List.generate(
-                            latestListings.length,
-                            (index) {
-                              final isActive = index == _currentCarouselIndex;
-                              return AnimatedContainer(
-                                duration: const Duration(milliseconds: 250),
-                                width: isActive ? 18 : 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: isActive ? _primaryBlue : Colors.grey.shade300,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              );
-                            },
-                          ),
                         ),
                       ),
                     ],
