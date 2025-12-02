@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../models/category.dart';
 import '../models/listing.dart';
+import '../models/order.dart';
 import '../models/user.dart';
 
 class ApiService {
@@ -250,5 +251,33 @@ class ApiService {
     }
 
     return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  static Future<List<Order>> fetchBuyerOrders() async {
+    final uri = Uri.parse('$baseUrl/api/orders/me/buyer');
+    final res = await http.get(uri, headers: _headers(withAuth: true));
+
+    if (res.statusCode != 200) {
+      throw Exception('Impossible de charger vos commandes');
+    }
+
+    final data = jsonDecode(res.body) as List<dynamic>;
+    return data
+        .map((item) => Order.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  static Future<List<Order>> fetchSellerOrders() async {
+    final uri = Uri.parse('$baseUrl/api/orders/me/seller');
+    final res = await http.get(uri, headers: _headers(withAuth: true));
+
+    if (res.statusCode != 200) {
+      throw Exception('Impossible de charger vos demandes de commandes');
+    }
+
+    final data = jsonDecode(res.body) as List<dynamic>;
+    return data
+        .map((item) => Order.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 }
