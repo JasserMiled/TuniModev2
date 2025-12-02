@@ -64,6 +64,14 @@ const List<_ColorOption> _colorOptions = [
   _ColorOption(name: 'Pêche', hex: '#FFDAB9'),
 ];
 
+const List<String> _conditionOptions = [
+  'Neuf',
+  'Excellent état',
+  'Très bon état',
+  'Bon état',
+  'Satisfaisant',
+];
+
 class _PickedImage {
   final String name;
   final Uint8List bytes;
@@ -88,7 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final List<String> _selectedColors = [];
   String? _gender;
   String _city = '';
-  String _condition = '';
+  String? _condition;
   List<_PickedImage> _images = [];
   List<Category> _categoryTree = [];
   List<Category> _categoryPath = [];
@@ -223,7 +231,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       sizes: _splitValues(_sizesText),
       colors: _selectedColors,
       gender: _gender,
-      condition: _condition.isEmpty ? null : _condition,
+      condition: _condition,
       categoryId: _selectedCategory?.id,
       city: _city.isEmpty ? null : _city,
       images: uploadedImages,
@@ -241,6 +249,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _sizesText = '';
         _selectedColors.clear();
         _images = [];
+        _condition = null;
         _selectedCategory = null;
         _categoryPath = [];
         _currentCategories = _categoryTree;
@@ -599,10 +608,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           decoration: const InputDecoration(labelText: 'Ville'),
                           onSaved: (v) => _city = v?.trim() ?? '',
                         ),
-                        TextFormField(
-                          decoration:
-                              const InputDecoration(labelText: 'État (Neuf, Bon, etc.)'),
-                          onSaved: (v) => _condition = v?.trim() ?? '',
+                        DropdownButtonFormField<String>(
+                          decoration: const InputDecoration(labelText: 'État du produit'),
+                          value: _condition,
+                          items: _conditionOptions
+                              .map(
+                                (condition) => DropdownMenuItem(
+                                  value: condition,
+                                  child: Text(condition),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _condition = value;
+                            });
+                          },
+                          onSaved: (value) => _condition = value,
                         ),
                         const SizedBox(height: 16),
                         if (_message != null)
