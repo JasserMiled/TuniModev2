@@ -1,4 +1,4 @@
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -10,14 +10,18 @@ CREATE TABLE users (
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE categories (
+-- ⚠️ ATTENTION : ceci supprime complètement la table categories
+DROP TABLE IF EXISTS categories CASCADE;
+
+-- Création de la table categories
+CREATE TABLE IF NOT EXISTS categories (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL UNIQUE,
     parent_id INTEGER REFERENCES categories(id)
 );
 
-CREATE TABLE listings (
+CREATE TABLE IF NOT EXISTS listings (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
@@ -35,14 +39,14 @@ CREATE TABLE listings (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE listing_images (
+CREATE TABLE IF NOT EXISTS listing_images (
     id SERIAL PRIMARY KEY,
     listing_id INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
     url TEXT NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
     listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
     sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -52,14 +56,14 @@ CREATE TABLE messages (
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE favorites (
+CREATE TABLE IF NOT EXISTS favorites (
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     listing_id INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (user_id, listing_id)
 );
 
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     buyer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     seller_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -74,139 +78,193 @@ CREATE TABLE orders (
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-INSERT INTO categories (name, slug, parent_id) VALUES ('Hommes', 'hommes', NULL);
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements', 'hommes-vetements', (SELECT id FROM categories WHERE slug = 'hommes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sous-vetements et chaussettes', 'hommes-vetements-sous-vetements-et-chaussettes', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sous-vetements', 'hommes-vetements-sous-vetements-et-chaussettes-sous-vetements', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sous-vetements-et-chaussettes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussettes', 'hommes-vetements-sous-vetements-et-chaussettes-chaussettes', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sous-vetements-et-chaussettes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Peignoirs', 'hommes-vetements-sous-vetements-et-chaussettes-peignoirs', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sous-vetements-et-chaussettes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres', 'hommes-vetements-sous-vetements-et-chaussettes-autres', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sous-vetements-et-chaussettes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Manteaux', 'hommes-vetements-manteaux', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Duffle-coats', 'hommes-vetements-manteaux-duffle-coats', (SELECT id FROM categories WHERE slug = 'hommes-vetements-manteaux'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pardessus et manteaux longs', 'hommes-vetements-manteaux-pardessus-et-manteaux-longs', (SELECT id FROM categories WHERE slug = 'hommes-vetements-manteaux'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Parkas', 'hommes-vetements-manteaux-parkas', (SELECT id FROM categories WHERE slug = 'hommes-vetements-manteaux'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Cabans', 'hommes-vetements-manteaux-cabans', (SELECT id FROM categories WHERE slug = 'hommes-vetements-manteaux'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Impermeables', 'hommes-vetements-manteaux-impermeables', (SELECT id FROM categories WHERE slug = 'hommes-vetements-manteaux'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Trenchs', 'hommes-vetements-manteaux-trenchs', (SELECT id FROM categories WHERE slug = 'hommes-vetements-manteaux'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Hauts et t-shirts', 'hommes-vetements-hauts-et-t-shirts', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises', 'hommes-vetements-hauts-et-t-shirts-chemises', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises a carreaux', 'hommes-vetements-hauts-et-t-shirts-chemises-chemises-a-carreaux', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-chemises'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises en jean', 'hommes-vetements-hauts-et-t-shirts-chemises-chemises-en-jean', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-chemises'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises unies', 'hommes-vetements-hauts-et-t-shirts-chemises-chemises-unies', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-chemises'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises a motifs', 'hommes-vetements-hauts-et-t-shirts-chemises-chemises-a-motifs', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-chemises'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises a rayures', 'hommes-vetements-hauts-et-t-shirts-chemises-chemises-a-rayures', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-chemises'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres chemises', 'hommes-vetements-hauts-et-t-shirts-chemises-autres-chemises', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-chemises'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts', 'hommes-vetements-hauts-et-t-shirts-t-shirts', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts unis', 'hommes-vetements-hauts-et-t-shirts-t-shirts-t-shirts-unis', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts imprimes', 'hommes-vetements-hauts-et-t-shirts-t-shirts-t-shirts-imprimes', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts a rayures', 'hommes-vetements-hauts-et-t-shirts-t-shirts-t-shirts-a-rayures', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Polos', 'hommes-vetements-hauts-et-t-shirts-t-shirts-polos', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts a manches longues', 'hommes-vetements-hauts-et-t-shirts-t-shirts-t-shirts-a-manches-longues', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres T-shirts', 'hommes-vetements-hauts-et-t-shirts-t-shirts-autres-t-shirts', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts sans manches', 'hommes-vetements-hauts-et-t-shirts-t-shirts-sans-manches', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Costumes et blazers', 'hommes-vetements-costumes-et-blazers', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Blazers', 'hommes-vetements-costumes-et-blazers-blazers', (SELECT id FROM categories WHERE slug = 'hommes-vetements-costumes-et-blazers'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons de costume', 'hommes-vetements-costumes-et-blazers-pantalons-de-costume', (SELECT id FROM categories WHERE slug = 'hommes-vetements-costumes-et-blazers'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Gilets de costume', 'hommes-vetements-costumes-et-blazers-gilets-de-costume', (SELECT id FROM categories WHERE slug = 'hommes-vetements-costumes-et-blazers'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Ensembles costume', 'hommes-vetements-costumes-et-blazers-ensembles-costume', (SELECT id FROM categories WHERE slug = 'hommes-vetements-costumes-et-blazers'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Costumes de mariage', 'hommes-vetements-costumes-et-blazers-costumes-de-mariage', (SELECT id FROM categories WHERE slug = 'hommes-vetements-costumes-et-blazers'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres', 'hommes-vetements-costumes-et-blazers-autres', (SELECT id FROM categories WHERE slug = 'hommes-vetements-costumes-et-blazers'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats et pulls', 'hommes-vetements-sweats-et-pulls', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats', 'hommes-vetements-sweats-et-pulls-sweats', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls et pulls a capuche', 'hommes-vetements-sweats-et-pulls-pulls-et-pulls-a-capuche', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls a capuche avec zip', 'hommes-vetements-sweats-et-pulls-pulls-a-capuche-avec-zip', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Cardigans', 'hommes-vetements-sweats-et-pulls-cardigans', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls ras de cou', 'hommes-vetements-sweats-et-pulls-pulls-ras-de-cou', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats a col V', 'hommes-vetements-sweats-et-pulls-sweats-a-col-v', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls a col roule', 'hommes-vetements-sweats-et-pulls-pulls-a-col-roule', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats longs', 'hommes-vetements-sweats-et-pulls-sweats-longs', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls d''hiver', 'hommes-vetements-sweats-et-pulls-pulls-dhiver', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vestes', 'hommes-vetements-sweats-et-pulls-vestes', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres', 'hommes-vetements-sweats-et-pulls-autres', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts', 'hommes-vetements-shorts', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts cargo', 'hommes-vetements-shorts-shorts-cargo', (SELECT id FROM categories WHERE slug = 'hommes-vetements-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts chino', 'hommes-vetements-shorts-shorts-chino', (SELECT id FROM categories WHERE slug = 'hommes-vetements-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts en jean', 'hommes-vetements-shorts-shorts-en-jean', (SELECT id FROM categories WHERE slug = 'hommes-vetements-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres shorts', 'hommes-vetements-shorts-autres-shorts', (SELECT id FROM categories WHERE slug = 'hommes-vetements-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons', 'hommes-vetements-pantalons', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons cargo', 'hommes-vetements-pantalons-pantalons-cargo', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons chinos', 'hommes-vetements-pantalons-pantalons-chinos', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons en jean', 'hommes-vetements-pantalons-pantalons-en-jean', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons de costume', 'hommes-vetements-pantalons-pantalons-de-costume', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons habilles', 'hommes-vetements-pantalons-pantalons-habilles', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons jogging', 'hommes-vetements-pantalons-pantalons-jogging', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons en toile', 'hommes-vetements-pantalons-pantalons-en-toile', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons de travail', 'hommes-vetements-pantalons-pantalons-de-travail', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons thermiques', 'hommes-vetements-pantalons-pantalons-thermiques', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres pantalons', 'hommes-vetements-pantalons-autres-pantalons', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans', 'hommes-vetements-jeans', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans skinny', 'hommes-vetements-jeans-jeans-skinny', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans slim', 'hommes-vetements-jeans-jeans-slim', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans droits', 'hommes-vetements-jeans-jeans-droits', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans bootcut', 'hommes-vetements-jeans-jeans-bootcut', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans relaxed', 'hommes-vetements-jeans-jeans-relaxed', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans baggy', 'hommes-vetements-jeans-jeans-baggy', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres jeans', 'hommes-vetements-jeans-autres-jeans', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Survetements et sport', 'hommes-vetements-survetements-et-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Survetements', 'hommes-vetements-survetements-et-sport-survetements', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-t-shirts-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-shorts-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-pantalons-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vestes de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-vestes-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-sweats-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Collants et leggings sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-collants-et-leggings-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres vetements de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-autres-vetements-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Tenues specifiques (fitness, gym, etc.)', 'hommes-vetements-survetements-et-sport-tenues-specifiques-fitness-gym-etc', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Maillots de bain', 'hommes-vetements-maillots-de-bain', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures', 'hommes-chaussures', (SELECT id FROM categories WHERE slug = 'hommes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Mocassins et chaussures bateau', 'hommes-chaussures-mocassins-et-chaussures-bateau', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bottes', 'hommes-chaussures-bottes', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Mules et sabots', 'hommes-chaussures-mules-et-sabots', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Espadrilles', 'hommes-chaussures-espadrilles', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Claquettes et tongs', 'hommes-chaussures-claquettes-et-tongs', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sandales', 'hommes-chaussures-sandales', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussons et pantoufles', 'hommes-chaussures-chaussons-et-pantoufles', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de sport', 'hommes-chaussures-chaussures-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de basket', 'hommes-chaussures-chaussures-de-sport-chaussures-de-basket', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de cyclisme', 'hommes-chaussures-chaussures-de-sport-chaussures-de-cyclisme', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de danse', 'hommes-chaussures-chaussures-de-sport-chaussures-de-danse', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de foot', 'hommes-chaussures-chaussures-de-sport-chaussures-de-foot', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de golf', 'hommes-chaussures-chaussures-de-sport-chaussures-de-golf', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures et bottes de randonnee', 'hommes-chaussures-chaussures-de-sport-chaussures-et-bottes-de-randonnee', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de foot en salle', 'hommes-chaussures-chaussures-de-sport-chaussures-de-foot-en-salle', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de fitness', 'hommes-chaussures-chaussures-de-sport-chaussures-de-fitness', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bottes de moto', 'hommes-chaussures-chaussures-de-sport-bottes-de-moto', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Patins a roulettes et rollers', 'hommes-chaussures-chaussures-de-sport-patins-a-roulettes-et-rollers', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de course', 'hommes-chaussures-chaussures-de-sport-chaussures-de-course', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de tennis', 'hommes-chaussures-chaussures-de-sport-chaussures-de-tennis', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Baskets', 'hommes-chaussures-baskets', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Accessoires', 'hommes-accessoires', (SELECT id FROM categories WHERE slug = 'hommes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs et sacoches', 'hommes-accessoires-sacs-et-sacoches', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs a dos', 'hommes-accessoires-sacs-et-sacoches-sacs-a-dos', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-sacs-et-sacoches'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs de sport', 'hommes-accessoires-sacs-et-sacoches-sacs-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-sacs-et-sacoches'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Cartables et sacoches', 'hommes-accessoires-sacs-et-sacoches-cartables-et-sacoches', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-sacs-et-sacoches'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Porte-monnaie', 'hommes-accessoires-sacs-et-sacoches-porte-monnaie', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-sacs-et-sacoches'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Porte-feuille', 'hommes-accessoires-sacs-et-sacoches-porte-feuille', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-sacs-et-sacoches'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Ceintures', 'hommes-accessoires-ceintures', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Gants', 'hommes-accessoires-gants', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chapeaux et casquettes', 'hommes-accessoires-chapeaux-et-casquettes', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bonnets', 'hommes-accessoires-chapeaux-et-casquettes-bonnets', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-chapeaux-et-casquettes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Casquettes', 'hommes-accessoires-chapeaux-et-casquettes-casquettes', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-chapeaux-et-casquettes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chapeaux', 'hommes-accessoires-chapeaux-et-casquettes-chapeaux', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-chapeaux-et-casquettes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bijoux', 'hommes-accessoires-bijoux', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bracelets', 'hommes-accessoires-bijoux-bracelets', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-bijoux'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Colliers', 'hommes-accessoires-bijoux-colliers', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-bijoux'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bagues', 'hommes-accessoires-bijoux-bagues', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-bijoux'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'hommes-accessoires-bijoux-autre', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-bijoux'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Echarpes et chales', 'hommes-accessoires-echarpes-et-chales', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Lunettes de soleil', 'hommes-accessoires-lunettes-de-soleil', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Cravates et nœuds papillons', 'hommes-accessoires-cravates-et-n-uds-papillons', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Montres', 'hommes-accessoires-montres', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Soins', 'hommes-soins', (SELECT id FROM categories WHERE slug = 'hommes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Soins visage', 'hommes-soins-soins-visage', (SELECT id FROM categories WHERE slug = 'hommes-soins'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Soins cheveux', 'hommes-soins-soins-cheveux', (SELECT id FROM categories WHERE slug = 'hommes-soins'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Parfums', 'hommes-soins-parfums', (SELECT id FROM categories WHERE slug = 'hommes-soins'));
+-- =========================
+--  ENFANTS (FILLE + GARÇON)
+-- =========================
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Enfants', 'enfants', NULL);
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements pour filles', 'enfants-vetements-pour-filles', (SELECT id FROM categories WHERE slug = 'enfants'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bebe filles', 'enfants-vetements-pour-filles-bebe-filles', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Combinaisons', 'enfants-vetements-pour-filles-bebe-filles-combinaisons', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-bebe-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bodies', 'enfants-vetements-pour-filles-bebe-filles-bodies', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-bebe-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Grenouilleres', 'enfants-vetements-pour-filles-bebe-filles-grenouilleres', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-bebe-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Ensembles', 'enfants-vetements-pour-filles-bebe-filles-ensembles', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-bebe-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-filles-bebe-filles-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-bebe-filles'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures', 'enfants-vetements-pour-filles-chaussures', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures bebe', 'enfants-vetements-pour-filles-chaussures-chaussures-bebe', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Ballerines', 'enfants-vetements-pour-filles-chaussures-ballerines', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Mocassins et slip-ons', 'enfants-vetements-pour-filles-chaussures-mocassins-et-slip-ons', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bottes', 'enfants-vetements-pour-filles-chaussures-bottes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sandales, claquettes et tongs', 'enfants-vetements-pour-filles-chaussures-sandales-claquettes-et-tongs', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures habillees', 'enfants-vetements-pour-filles-chaussures-chaussures-habillees', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussons et pantoufles', 'enfants-vetements-pour-filles-chaussures-chaussons-et-pantoufles', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de sport', 'enfants-vetements-pour-filles-chaussures-chaussures-de-sport', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Baskets', 'enfants-vetements-pour-filles-chaussures-baskets', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements d''exterieur', 'enfants-vetements-pour-filles-vetements-dexterieur', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Manteaux', 'enfants-vetements-pour-filles-vetements-dexterieur-manteaux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-vetements-dexterieur'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vestes sans manches', 'enfants-vetements-pour-filles-vetements-dexterieur-vestes-sans-manches', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-vetements-dexterieur'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vestes', 'enfants-vetements-pour-filles-vetements-dexterieur-vestes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-vetements-dexterieur'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements de pluie', 'enfants-vetements-pour-filles-vetements-dexterieur-vetements-de-pluie', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-vetements-dexterieur'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls & sweats', 'enfants-vetements-pour-filles-pulls-sweats', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls', 'enfants-vetements-pour-filles-pulls-sweats-pulls', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pulls-sweats'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats', 'enfants-vetements-pour-filles-pulls-sweats-sweats', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pulls-sweats'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats a capuche', 'enfants-vetements-pour-filles-pulls-sweats-sweats-a-capuche', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pulls-sweats'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-filles-pulls-sweats-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pulls-sweats'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Tops & t-shirts', 'enfants-vetements-pour-filles-tops-t-shirts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts', 'enfants-vetements-pour-filles-tops-t-shirts-t-shirts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-tops-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Polos', 'enfants-vetements-pour-filles-tops-t-shirts-polos', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-tops-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises', 'enfants-vetements-pour-filles-tops-t-shirts-chemises', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-tops-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chemisiers', 'enfants-vetements-pour-filles-tops-t-shirts-chemisiers', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-tops-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-filles-tops-t-shirts-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-tops-t-shirts'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jupes & robes', 'enfants-vetements-pour-filles-jupes-robes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Robes', 'enfants-vetements-pour-filles-jupes-robes-robes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-jupes-robes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jupes', 'enfants-vetements-pour-filles-jupes-robes-jupes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-jupes-robes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-filles-jupes-robes-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-jupes-robes'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons et shorts', 'enfants-vetements-pour-filles-pantalons-et-shorts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans', 'enfants-vetements-pour-filles-pantalons-et-shorts-jeans', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pantalons-et-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans slim', 'enfants-vetements-pour-filles-pantalons-et-shorts-jeans-slim', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pantalons-et-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Leggings', 'enfants-vetements-pour-filles-pantalons-et-shorts-leggings', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pantalons-et-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Salopettes', 'enfants-vetements-pour-filles-pantalons-et-shorts-salopettes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pantalons-et-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts et pantacourts', 'enfants-vetements-pour-filles-pantalons-et-shorts-shorts-et-pantacourts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pantalons-et-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres', 'enfants-vetements-pour-filles-pantalons-et-shorts-autres', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pantalons-et-shorts'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sous-vetements', 'enfants-vetements-pour-filles-sous-vetements', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussettes', 'enfants-vetements-pour-filles-sous-vetements-chaussettes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sous-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Collants', 'enfants-vetements-pour-filles-sous-vetements-collants', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sous-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Culottes', 'enfants-vetements-pour-filles-sous-vetements-culottes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sous-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-filles-sous-vetements-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sous-vetements'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pyjamas', 'enfants-vetements-pour-filles-pyjamas', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Accessoires', 'enfants-vetements-pour-filles-accessoires', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Casquettes et chapeaux', 'enfants-vetements-pour-filles-accessoires-casquettes-et-chapeaux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Gants', 'enfants-vetements-pour-filles-accessoires-gants', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Echarpes et chales', 'enfants-vetements-pour-filles-accessoires-echarpes-et-chales', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bandeaux et barrettes cheveux', 'enfants-vetements-pour-filles-accessoires-bandeaux-et-barrettes-cheveux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Ceintures', 'enfants-vetements-pour-filles-accessoires-ceintures', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bijoux', 'enfants-vetements-pour-filles-accessoires-bijoux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres accessoires', 'enfants-vetements-pour-filles-accessoires-autres-accessoires', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs & sacs a dos', 'enfants-vetements-pour-filles-sacs-sacs-a-dos', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs a main', 'enfants-vetements-pour-filles-sacs-sacs-a-dos-sacs-a-main', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sacs-sacs-a-dos'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs a dos', 'enfants-vetements-pour-filles-sacs-sacs-a-dos-sacs-a-dos', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sacs-sacs-a-dos'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs d''ecole', 'enfants-vetements-pour-filles-sacs-sacs-a-dos-sacs-decole', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sacs-sacs-a-dos'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres sacs', 'enfants-vetements-pour-filles-sacs-sacs-a-dos-autres-sacs', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sacs-sacs-a-dos'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sports', 'enfants-vetements-pour-filles-sports', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Maillots de bain', 'enfants-vetements-pour-filles-sports-maillots-de-bain', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sports'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Tenues de sport', 'enfants-vetements-pour-filles-sports-tenues-de-sport', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sports'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre equipement sport', 'enfants-vetements-pour-filles-sports-autre-equipement-sport', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sports'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Deguisements', 'enfants-vetements-pour-filles-deguisements', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Princesses', 'enfants-vetements-pour-filles-deguisements-princesses', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-deguisements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Heros', 'enfants-vetements-pour-filles-deguisements-heros', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-deguisements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Animaux', 'enfants-vetements-pour-filles-deguisements-animaux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-deguisements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Metiers', 'enfants-vetements-pour-filles-deguisements-metiers', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-deguisements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre deguisement', 'enfants-vetements-pour-filles-deguisements-autre-deguisement', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-deguisements'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres vetements', 'enfants-vetements-pour-filles-autres-vetements', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
+
+
+-- =====================
+-- GARCONS
+-- =====================
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements pour garcons', 'enfants-vetements-pour-garcons', (SELECT id FROM categories WHERE slug = 'enfants'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bebe garcons', 'enfants-vetements-pour-garcons-bebe-garcons', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Combinaisons', 'enfants-vetements-pour-garcons-bebe-garcons-combinaisons', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-bebe-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bodies', 'enfants-vetements-pour-garcons-bebe-garcons-bodies', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-bebe-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Grenouilleres', 'enfants-vetements-pour-garcons-bebe-garcons-grenouilleres', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-bebe-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Ensembles', 'enfants-vetements-pour-garcons-bebe-garcons-ensembles', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-bebe-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-garcons-bebe-garcons-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-bebe-garcons'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures', 'enfants-vetements-pour-garcons-chaussures', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures bebe', 'enfants-vetements-pour-garcons-chaussures-chaussures-bebe', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Mocassins et chaussures bateau', 'enfants-vetements-pour-garcons-chaussures-mocassins-et-chaussures-bateau', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bottes', 'enfants-vetements-pour-garcons-chaussures-bottes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Espadrilles', 'enfants-vetements-pour-garcons-chaussures-espadrilles', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sandales, claquettes et tongs', 'enfants-vetements-pour-garcons-chaussures-sandales-claquettes-et-tongs', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures habillees', 'enfants-vetements-pour-garcons-chaussures-chaussures-habillees', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussons et pantoufles', 'enfants-vetements-pour-garcons-chaussures-chaussons-et-pantoufles', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de sport', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Foot', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport-foot', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Basket', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport-basket', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Tennis', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport-tennis', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Course', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport-course', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Randonnee', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport-randonnee', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport-autres', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Baskets', 'enfants-vetements-pour-garcons-chaussures-baskets', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements d''exterieur', 'enfants-vetements-pour-garcons-vetements-dexterieur', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Manteaux', 'enfants-vetements-pour-garcons-vetements-dexterieur-manteaux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-vetements-dexterieur'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vestes sans manches', 'enfants-vetements-pour-garcons-vetements-dexterieur-vestes-sans-manches', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-vetements-dexterieur'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vestes', 'enfants-vetements-pour-garcons-vetements-dexterieur-vestes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-vetements-dexterieur'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls & sweats', 'enfants-vetements-pour-garcons-pulls-sweats', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls', 'enfants-vetements-pour-garcons-pulls-sweats-pulls', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pulls-sweats'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats', 'enfants-vetements-pour-garcons-pulls-sweats-sweats', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pulls-sweats'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats a capuche', 'enfants-vetements-pour-garcons-pulls-sweats-sweats-a-capuche', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pulls-sweats'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-garcons-pulls-sweats-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pulls-sweats'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises et t-shirts', 'enfants-vetements-pour-garcons-chemises-et-t-shirts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-t-shirts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Polos', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-polos', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-chemises', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Manches courtes', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-manches-courtes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Manches longues', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-manches-longues', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sans manches', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-sans-manches', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons et shorts', 'enfants-vetements-pour-garcons-pantalons-et-shorts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans', 'enfants-vetements-pour-garcons-pantalons-et-shorts-jeans', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans slim', 'enfants-vetements-pour-garcons-pantalons-et-shorts-jeans-slim', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pattes d''elephant', 'enfants-vetements-pour-garcons-pantalons-et-shorts-pattes-delephant', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Leggings', 'enfants-vetements-pour-garcons-pantalons-et-shorts-leggings', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Salopettes', 'enfants-vetements-pour-garcons-pantalons-et-shorts-salopettes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts & pantacourts', 'enfants-vetements-pour-garcons-pantalons-et-shorts-shorts-pantacourts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sarouels', 'enfants-vetements-pour-garcons-pantalons-et-shorts-sarouels', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-garcons-pantalons-et-shorts-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sous-vetements', 'enfants-vetements-pour-garcons-sous-vetements', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussettes', 'enfants-vetements-pour-garcons-sous-vetements-chaussettes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-sous-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Collants', 'enfants-vetements-pour-garcons-sous-vetements-collants', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-sous-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Boxers / calecons', 'enfants-vetements-pour-garcons-sous-vetements-boxers-calecons', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-sous-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-garcons-sous-vetements-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-sous-vetements'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pyjamas', 'enfants-vetements-pour-garcons-pyjamas', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Grenouilleres', 'enfants-vetements-pour-garcons-pyjamas-grenouilleres', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pyjamas'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Robes de chambre', 'enfants-vetements-pour-garcons-pyjamas-robes-de-chambre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pyjamas'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres', 'enfants-vetements-pour-garcons-pyjamas-autres', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pyjamas'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Accessoires', 'enfants-vetements-pour-garcons-accessoires', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Casquettes et chapeaux', 'enfants-vetements-pour-garcons-accessoires-casquettes-et-chapeaux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Gants', 'enfants-vetements-pour-garcons-accessoires-gants', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Echarpes et chales', 'enfants-vetements-pour-garcons-accessoires-echarpes-et-chales', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Ceintures', 'enfants-vetements-pour-garcons-accessoires-ceintures', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres accessoires', 'enfants-vetements-pour-garcons-accessoires-autres-accessoires', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-accessoires'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sports', 'enfants-vetements-pour-garcons-sports', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Maillots', 'enfants-vetements-pour-garcons-sports-maillots', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-sports'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Tenues sport', 'enfants-vetements-pour-garcons-sports-tenues-sport', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-sports'));
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres vetements', 'enfants-vetements-pour-garcons-autres-vetements', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
+
+-- autres categories enfants globales
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jeux et jouets', 'enfants-jeux-et-jouets', (SELECT id FROM categories WHERE slug = 'enfants'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Poussettes, porte-bebe et sieges auto', 'enfants-poussettes-porte-bebe-et-sieges-auto', (SELECT id FROM categories WHERE slug = 'enfants'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Fournitures scolaires', 'enfants-fournitures-scolaires', (SELECT id FROM categories WHERE slug = 'enfants'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres articles pour bebe et enfant', 'enfants-autres-articles-pour-bebe-et-enfant', (SELECT id FROM categories WHERE slug = 'enfants'));
+
+
 INSERT INTO categories (name, slug, parent_id) VALUES ('Femmes', 'femmes', NULL);
 INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements', 'femmes-vetements', (SELECT id FROM categories WHERE slug = 'femmes'));
 INSERT INTO categories (name, slug, parent_id) VALUES ('Manteaux et vestes', 'femmes-vetements-manteaux-et-vestes', (SELECT id FROM categories WHERE slug = 'femmes-vetements'));
@@ -350,150 +408,419 @@ INSERT INTO categories (name, slug, parent_id) VALUES ('Maillots & tenues de pla
 INSERT INTO categories (name, slug, parent_id) VALUES ('Sous-vetements maternite', 'femmes-vetements-maternite-sous-vetements-maternite', (SELECT id FROM categories WHERE slug = 'femmes-vetements-maternite'));
 INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements de sport maternite', 'femmes-vetements-maternite-vetements-de-sport-maternite', (SELECT id FROM categories WHERE slug = 'femmes-vetements-maternite'));
 INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements de sport', 'femmes-vetements-vetements-de-sport', (SELECT id FROM categories WHERE slug = 'femmes-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Enfants', 'enfants', NULL);
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements pour filles', 'enfants-vetements-pour-filles', (SELECT id FROM categories WHERE slug = 'enfants'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bebe filles', 'enfants-vetements-pour-filles-bebe-filles', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Combinaisons', 'enfants-vetements-pour-filles-bebe-filles-combinaisons', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-bebe-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bodies', 'enfants-vetements-pour-filles-bebe-filles-bodies', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-bebe-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Grenouilleres', 'enfants-vetements-pour-filles-bebe-filles-grenouilleres', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-bebe-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Ensembles', 'enfants-vetements-pour-filles-bebe-filles-ensembles', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-bebe-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-filles-bebe-filles-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-bebe-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures', 'enfants-vetements-pour-filles-chaussures', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures bebe', 'enfants-vetements-pour-filles-chaussures-chaussures-bebe', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Ballerines', 'enfants-vetements-pour-filles-chaussures-ballerines', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Mocassins et slip-ons', 'enfants-vetements-pour-filles-chaussures-mocassins-et-slip-ons', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bottes', 'enfants-vetements-pour-filles-chaussures-bottes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sandales, claquettes et tongs', 'enfants-vetements-pour-filles-chaussures-sandales-claquettes-et-tongs', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures habillees', 'enfants-vetements-pour-filles-chaussures-chaussures-habillees', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussons et pantoufles', 'enfants-vetements-pour-filles-chaussures-chaussons-et-pantoufles', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de sport', 'enfants-vetements-pour-filles-chaussures-chaussures-de-sport', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Baskets', 'enfants-vetements-pour-filles-chaussures-baskets', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements d''exterieur', 'enfants-vetements-pour-filles-vetements-dexterieur', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Manteaux', 'enfants-vetements-pour-filles-vetements-dexterieur-manteaux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-vetements-dexterieur'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vestes sans manches', 'enfants-vetements-pour-filles-vetements-dexterieur-vestes-sans-manches', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-vetements-dexterieur'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vestes', 'enfants-vetements-pour-filles-vetements-dexterieur-vestes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-vetements-dexterieur'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements de pluie', 'enfants-vetements-pour-filles-vetements-dexterieur-vetements-de-pluie', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-vetements-dexterieur'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls & sweats', 'enfants-vetements-pour-filles-pulls-sweats', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls', 'enfants-vetements-pour-filles-pulls-sweats-pulls', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pulls-sweats'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats', 'enfants-vetements-pour-filles-pulls-sweats-sweats', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pulls-sweats'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats a capuche', 'enfants-vetements-pour-filles-pulls-sweats-sweats-a-capuche', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pulls-sweats'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-filles-pulls-sweats-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pulls-sweats'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Tops & t-shirts', 'enfants-vetements-pour-filles-tops-t-shirts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts', 'enfants-vetements-pour-filles-tops-t-shirts-t-shirts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-tops-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Polos', 'enfants-vetements-pour-filles-tops-t-shirts-polos', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-tops-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises', 'enfants-vetements-pour-filles-tops-t-shirts-chemises', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-tops-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chemisiers', 'enfants-vetements-pour-filles-tops-t-shirts-chemisiers', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-tops-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-filles-tops-t-shirts-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-tops-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jupes & robes', 'enfants-vetements-pour-filles-jupes-robes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Robes', 'enfants-vetements-pour-filles-jupes-robes-robes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-jupes-robes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jupes', 'enfants-vetements-pour-filles-jupes-robes-jupes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-jupes-robes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-filles-jupes-robes-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-jupes-robes'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons et shorts', 'enfants-vetements-pour-filles-pantalons-et-shorts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans', 'enfants-vetements-pour-filles-pantalons-et-shorts-jeans', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans slim', 'enfants-vetements-pour-filles-pantalons-et-shorts-jeans-slim', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Leggings', 'enfants-vetements-pour-filles-pantalons-et-shorts-leggings', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Salopettes', 'enfants-vetements-pour-filles-pantalons-et-shorts-salopettes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts et pantacourts', 'enfants-vetements-pour-filles-pantalons-et-shorts-shorts-et-pantacourts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres', 'enfants-vetements-pour-filles-pantalons-et-shorts-autres', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sous-vetements', 'enfants-vetements-pour-filles-sous-vetements', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussettes', 'enfants-vetements-pour-filles-sous-vetements-chaussettes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sous-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Collants', 'enfants-vetements-pour-filles-sous-vetements-collants', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sous-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Culottes', 'enfants-vetements-pour-filles-sous-vetements-culottes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sous-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-filles-sous-vetements-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sous-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pyjamas', 'enfants-vetements-pour-filles-pyjamas', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Accessoires', 'enfants-vetements-pour-filles-accessoires', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Casquettes et chapeaux', 'enfants-vetements-pour-filles-accessoires-casquettes-et-chapeaux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Gants', 'enfants-vetements-pour-filles-accessoires-gants', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Echarpes et chales', 'enfants-vetements-pour-filles-accessoires-echarpes-et-chales', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bandeaux et barrettes cheveux', 'enfants-vetements-pour-filles-accessoires-bandeaux-et-barrettes-cheveux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Ceintures', 'enfants-vetements-pour-filles-accessoires-ceintures', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bijoux', 'enfants-vetements-pour-filles-accessoires-bijoux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres accessoires', 'enfants-vetements-pour-filles-accessoires-autres-accessoires', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs & sacs a dos', 'enfants-vetements-pour-filles-sacs-sacs-a-dos', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs a main', 'enfants-vetements-pour-filles-sacs-sacs-a-dos-sacs-a-main', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sacs-sacs-a-dos'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs a dos', 'enfants-vetements-pour-filles-sacs-sacs-a-dos-sacs-a-dos', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sacs-sacs-a-dos'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs d''ecole', 'enfants-vetements-pour-filles-sacs-sacs-a-dos-sacs-decole', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sacs-sacs-a-dos'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres sacs', 'enfants-vetements-pour-filles-sacs-sacs-a-dos-autres-sacs', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sacs-sacs-a-dos'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sports', 'enfants-vetements-pour-filles-sports', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Maillots de bain', 'enfants-vetements-pour-filles-sports-maillots-de-bain', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sports'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Tenues de sport', 'enfants-vetements-pour-filles-sports-tenues-de-sport', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sports'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre equipement sport', 'enfants-vetements-pour-filles-sports-autre-equipement-sport', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-sports'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Deguisements', 'enfants-vetements-pour-filles-deguisements', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Princesses', 'enfants-vetements-pour-filles-deguisements-princesses', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-deguisements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Heros', 'enfants-vetements-pour-filles-deguisements-heros', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-deguisements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Animaux', 'enfants-vetements-pour-filles-deguisements-animaux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-deguisements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Metiers', 'enfants-vetements-pour-filles-deguisements-metiers', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-deguisements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre deguisement', 'enfants-vetements-pour-filles-deguisements-autre-deguisement', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles-deguisements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres vetements', 'enfants-vetements-pour-filles-autres-vetements', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-filles'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements pour garcons', 'enfants-vetements-pour-garcons', (SELECT id FROM categories WHERE slug = 'enfants'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bebe garcons', 'enfants-vetements-pour-garcons-bebe-garcons', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Combinaisons', 'enfants-vetements-pour-garcons-bebe-garcons-combinaisons', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-bebe-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bodies', 'enfants-vetements-pour-garcons-bebe-garcons-bodies', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-bebe-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Grenouilleres', 'enfants-vetements-pour-garcons-bebe-garcons-grenouilleres', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-bebe-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Ensembles', 'enfants-vetements-pour-garcons-bebe-garcons-ensembles', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-bebe-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-garcons-bebe-garcons-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-bebe-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures', 'enfants-vetements-pour-garcons-chaussures', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures bebe', 'enfants-vetements-pour-garcons-chaussures-chaussures-bebe', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Mocassins et chaussures bateau', 'enfants-vetements-pour-garcons-chaussures-mocassins-et-chaussures-bateau', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Bottes', 'enfants-vetements-pour-garcons-chaussures-bottes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Espadrilles', 'enfants-vetements-pour-garcons-chaussures-espadrilles', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sandales, claquettes et tongs', 'enfants-vetements-pour-garcons-chaussures-sandales-claquettes-et-tongs', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures habillees', 'enfants-vetements-pour-garcons-chaussures-chaussures-habillees', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussons et pantoufles', 'enfants-vetements-pour-garcons-chaussures-chaussons-et-pantoufles', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de sport', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Foot', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport-foot', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Basket', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport-basket', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Tennis', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport-tennis', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Course', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport-course', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Randonnee', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport-randonnee', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres', 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport-autres', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures-chaussures-de-sport'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Baskets', 'enfants-vetements-pour-garcons-chaussures-baskets', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chaussures'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements d''exterieur', 'enfants-vetements-pour-garcons-vetements-dexterieur', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Manteaux', 'enfants-vetements-pour-garcons-vetements-dexterieur-manteaux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-vetements-dexterieur'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vestes sans manches', 'enfants-vetements-pour-garcons-vetements-dexterieur-vestes-sans-manches', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-vetements-dexterieur'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Vestes', 'enfants-vetements-pour-garcons-vetements-dexterieur-vestes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-vetements-dexterieur'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls & sweats', 'enfants-vetements-pour-garcons-pulls-sweats', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls', 'enfants-vetements-pour-garcons-pulls-sweats-pulls', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pulls-sweats'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats', 'enfants-vetements-pour-garcons-pulls-sweats-sweats', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pulls-sweats'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats a capuche', 'enfants-vetements-pour-garcons-pulls-sweats-sweats-a-capuche', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pulls-sweats'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-garcons-pulls-sweats-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pulls-sweats'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises et t-shirts', 'enfants-vetements-pour-garcons-chemises-et-t-shirts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-t-shirts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Polos', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-polos', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-chemises', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Manches courtes', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-manches-courtes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Manches longues', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-manches-longues', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sans manches', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-sans-manches', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-garcons-chemises-et-t-shirts-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-chemises-et-t-shirts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons et shorts', 'enfants-vetements-pour-garcons-pantalons-et-shorts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans', 'enfants-vetements-pour-garcons-pantalons-et-shorts-jeans', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans slim', 'enfants-vetements-pour-garcons-pantalons-et-shorts-jeans-slim', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pattes d''elephant', 'enfants-vetements-pour-garcons-pantalons-et-shorts-pattes-delephant', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Leggings', 'enfants-vetements-pour-garcons-pantalons-et-shorts-leggings', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Salopettes', 'enfants-vetements-pour-garcons-pantalons-et-shorts-salopettes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts & pantacourts', 'enfants-vetements-pour-garcons-pantalons-et-shorts-shorts-pantacourts', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sarouels', 'enfants-vetements-pour-garcons-pantalons-et-shorts-sarouels', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-garcons-pantalons-et-shorts-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pantalons-et-shorts'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sous-vetements', 'enfants-vetements-pour-garcons-sous-vetements', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussettes', 'enfants-vetements-pour-garcons-sous-vetements-chaussettes', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-sous-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Collants', 'enfants-vetements-pour-garcons-sous-vetements-collants', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-sous-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Boxers / calecons', 'enfants-vetements-pour-garcons-sous-vetements-boxers-calecons', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-sous-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'enfants-vetements-pour-garcons-sous-vetements-autre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-sous-vetements'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Pyjamas', 'enfants-vetements-pour-garcons-pyjamas', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Grenouilleres', 'enfants-vetements-pour-garcons-pyjamas-grenouilleres', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pyjamas'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Robes de chambre', 'enfants-vetements-pour-garcons-pyjamas-robes-de-chambre', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pyjamas'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres', 'enfants-vetements-pour-garcons-pyjamas-autres', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-pyjamas'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Accessoires', 'enfants-vetements-pour-garcons-accessoires', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Casquettes et chapeaux', 'enfants-vetements-pour-garcons-accessoires-casquettes-et-chapeaux', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Gants', 'enfants-vetements-pour-garcons-accessoires-gants', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Echarpes et chales', 'enfants-vetements-pour-garcons-accessoires-echarpes-et-chales', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Ceintures', 'enfants-vetements-pour-garcons-accessoires-ceintures', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres accessoires', 'enfants-vetements-pour-garcons-accessoires-autres-accessoires', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-accessoires'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Sports', 'enfants-vetements-pour-garcons-sports', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Maillots', 'enfants-vetements-pour-garcons-sports-maillots', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-sports'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Tenues sport', 'enfants-vetements-pour-garcons-sports-tenues-sport', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons-sports'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres vetements', 'enfants-vetements-pour-garcons-autres-vetements', (SELECT id FROM categories WHERE slug = 'enfants-vetements-pour-garcons'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Jeux et jouets', 'enfants-jeux-et-jouets', (SELECT id FROM categories WHERE slug = 'enfants'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Poussettes, porte-bebe et sieges auto', 'enfants-poussettes-porte-bebe-et-sieges-auto', (SELECT id FROM categories WHERE slug = 'enfants'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Fournitures scolaires', 'enfants-fournitures-scolaires', (SELECT id FROM categories WHERE slug = 'enfants'));
-INSERT INTO categories (name, slug, parent_id) VALUES ('Autres articles pour bebe et enfant', 'enfants-autres-articles-pour-bebe-et-enfant', (SELECT id FROM categories WHERE slug = 'enfants'));
+
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Chaussures', 'femmes-chaussures', (SELECT id FROM categories WHERE slug='femmes'));
+
+-- Baskets
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Baskets', 'femmes-chaussures-baskets', (SELECT id FROM categories WHERE slug='femmes-chaussures'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Baskets basses', 'femmes-chaussures-baskets-baskets-basses', (SELECT id FROM categories WHERE slug='femmes-chaussures-baskets'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Baskets montantes', 'femmes-chaussures-baskets-baskets-montantes', (SELECT id FROM categories WHERE slug='femmes-chaussures-baskets'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Baskets plateforme', 'femmes-chaussures-baskets-baskets-plateforme', (SELECT id FROM categories WHERE slug='femmes-chaussures-baskets'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Baskets running', 'femmes-chaussures-baskets-baskets-running', (SELECT id FROM categories WHERE slug='femmes-chaussures-baskets'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Baskets training', 'femmes-chaussures-baskets-baskets-training', (SELECT id FROM categories WHERE slug='femmes-chaussures-baskets'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Autres baskets', 'femmes-chaussures-baskets-autres-baskets', (SELECT id FROM categories WHERE slug='femmes-chaussures-baskets'));
+
+-- Bottes
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Bottes', 'femmes-chaussures-bottes', (SELECT id FROM categories WHERE slug='femmes-chaussures'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Bottes mi-mollet', 'femmes-chaussures-bottes-bottes-mi-mollet', (SELECT id FROM categories WHERE slug='femmes-chaussures-bottes'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Bottes genou', 'femmes-chaussures-bottes-bottes-genou', (SELECT id FROM categories WHERE slug='femmes-chaussures-bottes'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Cuissardes', 'femmes-chaussures-bottes-cuissardes', (SELECT id FROM categories WHERE slug='femmes-chaussures-bottes'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Bottines', 'femmes-chaussures-bottes-bottines', (SELECT id FROM categories WHERE slug='femmes-chaussures-bottes'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Chelsea boots', 'femmes-chaussures-bottes-chelsea-boots', (SELECT id FROM categories WHERE slug='femmes-chaussures-bottes'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Bottines plateforme', 'femmes-chaussures-bottes-bottines-plateforme', (SELECT id FROM categories WHERE slug='femmes-chaussures-bottes'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Autres bottes', 'femmes-chaussures-bottes-autres', (SELECT id FROM categories WHERE slug='femmes-chaussures-bottes'));
+
+-- Talons
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Talons', 'femmes-chaussures-talons', (SELECT id FROM categories WHERE slug='femmes-chaussures'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Escarpins', 'femmes-chaussures-talons-escarpins', (SELECT id FROM categories WHERE slug='femmes-chaussures-talons'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Talons aiguilles', 'femmes-chaussures-talons-talons-aiguilles', (SELECT id FROM categories WHERE slug='femmes-chaussures-talons'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Talons blocs', 'femmes-chaussures-talons-talons-blocs', (SELECT id FROM categories WHERE slug='femmes-chaussures-talons'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Talons compenses', 'femmes-chaussures-talons-talons-compenses', (SELECT id FROM categories WHERE slug='femmes-chaussures-talons'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Sandales a talons', 'femmes-chaussures-talons-sandales-a-talons', (SELECT id FROM categories WHERE slug='femmes-chaussures-talons'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Autres talons', 'femmes-chaussures-talons-autres-talons', (SELECT id FROM categories WHERE slug='femmes-chaussures-talons'));
+
+-- Chaussures plates
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Chaussures plates', 'femmes-chaussures-chaussures-plates', (SELECT id FROM categories WHERE slug='femmes-chaussures'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Mocassins', 'femmes-chaussures-chaussures-plates-mocassins', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-plates'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Derbies', 'femmes-chaussures-chaussures-plates-derbies', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-plates'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Richelieus', 'femmes-chaussures-chaussures-plates-richelieus', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-plates'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Ballerines', 'femmes-chaussures-chaussures-plates-ballerines', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-plates'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Babies', 'femmes-chaussures-chaussures-plates-babies', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-plates'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Chaussures bateau', 'femmes-chaussures-chaussures-plates-chaussures-bateau', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-plates'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Autres chaussures plates', 'femmes-chaussures-chaussures-plates-autres', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-plates'));
+
+-- Sandales / claquettes / tongs
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Sandales, claquettes et tongs', 'femmes-chaussures-sandales-claquettes-et-tongs', (SELECT id FROM categories WHERE slug='femmes-chaussures'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Sandales', 'femmes-chaussures-sandales-claquettes-et-tongs-sandales', (SELECT id FROM categories WHERE slug='femmes-chaussures-sandales-claquettes-et-tongs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Mules', 'femmes-chaussures-sandales-claquettes-et-tongs-mules', (SELECT id FROM categories WHERE slug='femmes-chaussures-sandales-claquettes-et-tongs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Espadrilles', 'femmes-chaussures-sandales-claquettes-et-tongs-espadrilles', (SELECT id FROM categories WHERE slug='femmes-chaussures-sandales-claquettes-et-tongs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Tongs', 'femmes-chaussures-sandales-claquettes-et-tongs-tongs', (SELECT id FROM categories WHERE slug='femmes-chaussures-sandales-claquettes-et-tongs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Claquettes', 'femmes-chaussures-sandales-claquettes-et-tongs-claquettes', (SELECT id FROM categories WHERE slug='femmes-chaussures-sandales-claquettes-et-tongs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Autres', 'femmes-chaussures-sandales-claquettes-et-tongs-autres', (SELECT id FROM categories WHERE slug='femmes-chaussures-sandales-claquettes-et-tongs'));
+
+-- Chaussures d’intérieur
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Chaussures d''interieur', 'femmes-chaussures-chaussures-d-interieur', (SELECT id FROM categories WHERE slug='femmes-chaussures'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Chaussons', 'femmes-chaussures-chaussures-d-interieur-chaussons', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-d-interieur'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Pantoufles', 'femmes-chaussures-chaussures-d-interieur-pantoufles', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-d-interieur'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Autres', 'femmes-chaussures-chaussures-d-interieur-autres', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-d-interieur'));
+
+-- Chaussures de sport
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Chaussures de sport', 'femmes-chaussures-chaussures-de-sport', (SELECT id FROM categories WHERE slug='femmes-chaussures'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Running', 'femmes-chaussures-chaussures-de-sport-running', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Training', 'femmes-chaussures-chaussures-de-sport-training', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Randonnee', 'femmes-chaussures-chaussures-de-sport-randonnee', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Tennis', 'femmes-chaussures-chaussures-de-sport-tennis', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Fitness / Gym', 'femmes-chaussures-chaussures-de-sport-fitness-gym', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Autres chaussures sport', 'femmes-chaussures-chaussures-de-sport-autres', (SELECT id FROM categories WHERE slug='femmes-chaussures-chaussures-de-sport'));
+
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Sacs', 'femmes-sacs', (SELECT id FROM categories WHERE slug='femmes'));
+
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Sacs a main', 'femmes-sacs-sacs-a-main', (SELECT id FROM categories WHERE slug='femmes-sacs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Sacs a dos', 'femmes-sacs-sacs-a-dos', (SELECT id FROM categories WHERE slug='femmes-sacs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Sacs bandouliere', 'femmes-sacs-sacs-bandouliere', (SELECT id FROM categories WHERE slug='femmes-sacs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Sacs porte epaule', 'femmes-sacs-sacs-porte-epaule', (SELECT id FROM categories WHERE slug='femmes-sacs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Sacs de sport', 'femmes-sacs-sacs-de-sport', (SELECT id FROM categories WHERE slug='femmes-sacs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Sacs de voyage', 'femmes-sacs-sacs-de-voyage', (SELECT id FROM categories WHERE slug='femmes-sacs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Tote bags', 'femmes-sacs-tote-bags', (SELECT id FROM categories WHERE slug='femmes-sacs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Pochettes', 'femmes-sacs-pochettes', (SELECT id FROM categories WHERE slug='femmes-sacs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Sacs banane / ceinture', 'femmes-sacs-sacs-banane-ceinture', (SELECT id FROM categories WHERE slug='femmes-sacs'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Autres sacs', 'femmes-sacs-autres-sacs', (SELECT id FROM categories WHERE slug='femmes-sacs'));
+
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Accessoires', 'femmes-accessoires', (SELECT id FROM categories WHERE slug='femmes'));
+
+-- Bijoux
+INSERT INTO categories (name, slug, parent_id) 
+VALUES ('Bijoux', 'femmes-accessoires-bijoux', (SELECT id FROM categories WHERE slug='femmes-accessoires'));
+INSERT INTO categories (name, slug, parent_id) 
+VALUES ('Colliers', 'femmes-accessoires-bijoux-colliers', (SELECT id FROM categories WHERE slug='femmes-accessoires-bijoux'));
+INSERT INTO categories (name, slug, parent_id) 
+VALUES ('Bracelets', 'femmes-accessoires-bijoux-bracelets', (SELECT id FROM categories WHERE slug='femmes-accessoires-bijoux'));
+INSERT INTO categories (name, slug, parent_id) 
+VALUES ('Bagues', 'femmes-accessoires-bijoux-bagues', (SELECT id FROM categories WHERE slug='femmes-accessoires-bijoux'));
+INSERT INTO categories (name, slug, parent_id) 
+VALUES ('Boucles d''oreilles', 'femmes-accessoires-bijoux-boucles-d-oreilles', (SELECT id FROM categories WHERE slug='femmes-accessoires-bijoux'));
+INSERT INTO categories (name, slug, parent_id) 
+VALUES ('Piercings', 'femmes-accessoires-bijoux-piercings', (SELECT id FROM categories WHERE slug='femmes-accessoires-bijoux'));
+INSERT INTO categories (name, slug, parent_id) 
+VALUES ('Autres bijoux', 'femmes-accessoires-bijoux-autres', (SELECT id FROM categories WHERE slug='femmes-accessoires-bijoux'));
+
+-- Ceintures
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Ceintures', 'femmes-accessoires-ceintures', (SELECT id FROM categories WHERE slug='femmes-accessoires'));
+
+-- Chapeaux
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Chapeaux', 'femmes-accessoires-chapeaux', (SELECT id FROM categories WHERE slug='femmes-accessoires'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Berets', 'femmes-accessoires-chapeaux-berets', (SELECT id FROM categories WHERE slug='femmes-accessoires-chapeaux'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Bonnets', 'femmes-accessoires-chapeaux-bonnets', (SELECT id FROM categories WHERE slug='femmes-accessoires-chapeaux'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Casquettes', 'femmes-accessoires-chapeaux-casquettes', (SELECT id FROM categories WHERE slug='femmes-accessoires-chapeaux'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Chapeaux ete', 'femmes-accessoires-chapeaux-chapeaux-ete', (SELECT id FROM categories WHERE slug='femmes-accessoires-chapeaux'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Autres chapeaux', 'femmes-accessoires-chapeaux-autres', (SELECT id FROM categories WHERE slug='femmes-accessoires-chapeaux'));
+
+-- Gants / Écharpes
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Gants', 'femmes-accessoires-gants', (SELECT id FROM categories WHERE slug='femmes-accessoires'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Echarpes et foulards', 'femmes-accessoires-echarpes-et-foulards', (SELECT id FROM categories WHERE slug='femmes-accessoires'));
+
+-- Lunettes
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Lunettes de soleil', 'femmes-accessoires-lunettes-de-soleil', (SELECT id FROM categories WHERE slug='femmes-accessoires'));
+
+-- Accessoires cheveux
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Accessoires cheveux', 'femmes-accessoires-accessoires-cheveux', (SELECT id FROM categories WHERE slug='femmes-accessoires'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Chouchous', 'femmes-accessoires-accessoires-cheveux-chouchous', (SELECT id FROM categories WHERE slug='femmes-accessoires-accessoires-cheveux'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Barrettes', 'femmes-accessoires-accessoires-cheveux-barrettes', (SELECT id FROM categories WHERE slug='femmes-accessoires-accessoires-cheveux'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Serre-tetes', 'femmes-accessoires-accessoires-cheveux-serre-tetes', (SELECT id FROM categories WHERE slug='femmes-accessoires-accessoires-cheveux'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Bandanas', 'femmes-accessoires-accessoires-cheveux-bandanas', (SELECT id FROM categories WHERE slug='femmes-accessoires-accessoires-cheveux'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Autres accessoires cheveux', 'femmes-accessoires-accessoires-cheveux-autres', (SELECT id FROM categories WHERE slug='femmes-accessoires-accessoires-cheveux'));
+
+-- Reste
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Portefeuilles', 'femmes-accessoires-portefeuilles', (SELECT id FROM categories WHERE slug='femmes-accessoires'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Etuis telephone', 'femmes-accessoires-etuis-telephone', (SELECT id FROM categories WHERE slug='femmes-accessoires'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Porte-cartes', 'femmes-accessoires-porte-cartes', (SELECT id FROM categories WHERE slug='femmes-accessoires'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Montres', 'femmes-accessoires-montres', (SELECT id FROM categories WHERE slug='femmes-accessoires'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Autres accessoires', 'femmes-accessoires-autres', (SELECT id FROM categories WHERE slug='femmes-accessoires'));
+
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Beaute', 'femmes-beaute', (SELECT id FROM categories WHERE slug='femmes'));
+
+-- Maquillage
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Maquillage', 'femmes-beaute-maquillage', (SELECT id FROM categories WHERE slug='femmes-beaute'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Teint', 'femmes-beaute-maquillage-teint', (SELECT id FROM categories WHERE slug='femmes-beaute-maquillage'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Yeux', 'femmes-beaute-maquillage-yeux', (SELECT id FROM categories WHERE slug='femmes-beaute-maquillage'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Levres', 'femmes-beaute-maquillage-levres', (SELECT id FROM categories WHERE slug='femmes-beaute-maquillage'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Ongles', 'femmes-beaute-maquillage-ongles', (SELECT id FROM categories WHERE slug='femmes-beaute-maquillage'));
+
+-- Parfums
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Parfums', 'femmes-beaute-parfums', (SELECT id FROM categories WHERE slug='femmes-beaute'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Parfums femme', 'femmes-beaute-parfums-parfums-femme', (SELECT id FROM categories WHERE slug='femmes-beaute-parfums'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Brumes corporelles', 'femmes-beaute-parfums-brumes-corporelles', (SELECT id FROM categories WHERE slug='femmes-beaute-parfums'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Coffrets', 'femmes-beaute-parfums-coffrets', (SELECT id FROM categories WHERE slug='femmes-beaute-parfums'));
+
+-- Soins du visage
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Soins du visage', 'femmes-beaute-soins-du-visage', (SELECT id FROM categories WHERE slug='femmes-beaute'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Cremes', 'femmes-beaute-soins-du-visage-cremes', (SELECT id FROM categories WHERE slug='femmes-beaute-soins-du-visage'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Serums', 'femmes-beaute-soins-du-visage-serums', (SELECT id FROM categories WHERE slug='femmes-beaute-soins-du-visage'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Masques', 'femmes-beaute-soins-du-visage-masques', (SELECT id FROM categories WHERE slug='femmes-beaute-soins-du-visage'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Nettoyants', 'femmes-beaute-soins-du-visage-nettoyants', (SELECT id FROM categories WHERE slug='femmes-beaute-soins-du-visage'));
+
+-- Soins du corps
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Soins du corps', 'femmes-beaute-soins-du-corps', (SELECT id FROM categories WHERE slug='femmes-beaute'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Gels douche', 'femmes-beaute-soins-du-corps-gels-douche', (SELECT id FROM categories WHERE slug='femmes-beaute-soins-du-corps'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Hydratants', 'femmes-beaute-soins-du-corps-hydratants', (SELECT id FROM categories WHERE slug='femmes-beaute-soins-du-corps'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Huiles', 'femmes-beaute-soins-du-corps-huiles', (SELECT id FROM categories WHERE slug='femmes-beaute-soins-du-corps'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Gommages', 'femmes-beaute-soins-du-corps-gommages', (SELECT id FROM categories WHERE slug='femmes-beaute-soins-du-corps'));
+
+-- Cheveux
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Cheveux', 'femmes-beaute-cheveux', (SELECT id FROM categories WHERE slug='femmes-beaute'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Shampoings', 'femmes-beaute-cheveux-shampoings', (SELECT id FROM categories WHERE slug='femmes-beaute-cheveux'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Apres-shampoings', 'femmes-beaute-cheveux-apres-shampoings', (SELECT id FROM categories WHERE slug='femmes-beaute-cheveux'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Masques', 'femmes-beaute-cheveux-masques', (SELECT id FROM categories WHERE slug='femmes-beaute-cheveux'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Colorations', 'femmes-beaute-cheveux-colorations', (SELECT id FROM categories WHERE slug='femmes-beaute-cheveux'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Accessoires cheveux', 'femmes-beaute-cheveux-accessoires-cheveux', (SELECT id FROM categories WHERE slug='femmes-beaute-cheveux'));
+
+-- Coffrets / accessoires
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Coffrets beaute', 'femmes-beaute-coffrets-beaute', (SELECT id FROM categories WHERE slug='femmes-beaute'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Accessoires beaute', 'femmes-beaute-accessoires-beaute', (SELECT id FROM categories WHERE slug='femmes-beaute'));
+INSERT INTO categories (name, slug, parent_id)
+VALUES ('Autres produits beaute', 'femmes-beaute-autres', (SELECT id FROM categories WHERE slug='femmes-beaute'));
+
+
+INSERT INTO categories (name, slug, parent_id) VALUES ('Hommes', 'hommes', NULL);
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements', 'hommes-vetements', (SELECT id FROM categories WHERE slug = 'hommes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sous-vetements et chaussettes', 'hommes-vetements-sous-vetements-et-chaussettes', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sous-vetements', 'hommes-vetements-sous-vetements-et-chaussettes-sous-vetements', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sous-vetements-et-chaussettes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussettes', 'hommes-vetements-sous-vetements-et-chaussettes-chaussettes', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sous-vetements-et-chaussettes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Peignoirs', 'hommes-vetements-sous-vetements-et-chaussettes-peignoirs', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sous-vetements-et-chaussettes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres', 'hommes-vetements-sous-vetements-et-chaussettes-autres', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sous-vetements-et-chaussettes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Manteaux', 'hommes-vetements-manteaux', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Duffle-coats', 'hommes-vetements-manteaux-duffle-coats', (SELECT id FROM categories WHERE slug = 'hommes-vetements-manteaux'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pardessus et manteaux longs', 'hommes-vetements-manteaux-pardessus-et-manteaux-longs', (SELECT id FROM categories WHERE slug = 'hommes-vetements-manteaux'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Parkas', 'hommes-vetements-manteaux-parkas', (SELECT id FROM categories WHERE slug = 'hommes-vetements-manteaux'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Cabans', 'hommes-vetements-manteaux-cabans', (SELECT id FROM categories WHERE slug = 'hommes-vetements-manteaux'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Impermeables', 'hommes-vetements-manteaux-impermeables', (SELECT id FROM categories WHERE slug = 'hommes-vetements-manteaux'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Trenchs', 'hommes-vetements-manteaux-trenchs', (SELECT id FROM categories WHERE slug = 'hommes-vetements-manteaux'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Hauts et t-shirts', 'hommes-vetements-hauts-et-t-shirts', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises', 'hommes-vetements-hauts-et-t-shirts-chemises', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises a carreaux', 'hommes-vetements-hauts-et-t-shirts-chemises-chemises-a-carreaux', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-chemises'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises en jean', 'hommes-vetements-hauts-et-t-shirts-chemises-chemises-en-jean', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-chemises'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises unies', 'hommes-vetements-hauts-et-t-shirts-chemises-chemises-unies', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-chemises'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises a motifs', 'hommes-vetements-hauts-et-t-shirts-chemises-chemises-a-motifs', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-chemises'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chemises a rayures', 'hommes-vetements-hauts-et-t-shirts-chemises-chemises-a-rayures', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-chemises'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres chemises', 'hommes-vetements-hauts-et-t-shirts-chemises-autres-chemises', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-chemises'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts', 'hommes-vetements-hauts-et-t-shirts-t-shirts', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts unis', 'hommes-vetements-hauts-et-t-shirts-t-shirts-t-shirts-unis', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts imprimes', 'hommes-vetements-hauts-et-t-shirts-t-shirts-t-shirts-imprimes', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts a rayures', 'hommes-vetements-hauts-et-t-shirts-t-shirts-t-shirts-a-rayures', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Polos', 'hommes-vetements-hauts-et-t-shirts-t-shirts-polos', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts a manches longues', 'hommes-vetements-hauts-et-t-shirts-t-shirts-t-shirts-a-manches-longues', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres T-shirts', 'hommes-vetements-hauts-et-t-shirts-t-shirts-autres-t-shirts', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts sans manches', 'hommes-vetements-hauts-et-t-shirts-t-shirts-sans-manches', (SELECT id FROM categories WHERE slug = 'hommes-vetements-hauts-et-t-shirts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Costumes et blazers', 'hommes-vetements-costumes-et-blazers', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Blazers', 'hommes-vetements-costumes-et-blazers-blazers', (SELECT id FROM categories WHERE slug = 'hommes-vetements-costumes-et-blazers'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons de costume', 'hommes-vetements-costumes-et-blazers-pantalons-de-costume', (SELECT id FROM categories WHERE slug = 'hommes-vetements-costumes-et-blazers'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Gilets de costume', 'hommes-vetements-costumes-et-blazers-gilets-de-costume', (SELECT id FROM categories WHERE slug = 'hommes-vetements-costumes-et-blazers'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Ensembles costume', 'hommes-vetements-costumes-et-blazers-ensembles-costume', (SELECT id FROM categories WHERE slug = 'hommes-vetements-costumes-et-blazers'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Costumes de mariage', 'hommes-vetements-costumes-et-blazers-costumes-de-mariage', (SELECT id FROM categories WHERE slug = 'hommes-vetements-costumes-et-blazers'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres', 'hommes-vetements-costumes-et-blazers-autres', (SELECT id FROM categories WHERE slug = 'hommes-vetements-costumes-et-blazers'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats et pulls', 'hommes-vetements-sweats-et-pulls', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats', 'hommes-vetements-sweats-et-pulls-sweats', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls et pulls a capuche', 'hommes-vetements-sweats-et-pulls-pulls-et-pulls-a-capuche', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls a capuche avec zip', 'hommes-vetements-sweats-et-pulls-pulls-a-capuche-avec-zip', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Cardigans', 'hommes-vetements-sweats-et-pulls-cardigans', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls ras de cou', 'hommes-vetements-sweats-et-pulls-pulls-ras-de-cou', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats a col V', 'hommes-vetements-sweats-et-pulls-sweats-a-col-v', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls a col roule', 'hommes-vetements-sweats-et-pulls-pulls-a-col-roule', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats longs', 'hommes-vetements-sweats-et-pulls-sweats-longs', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pulls d''hiver', 'hommes-vetements-sweats-et-pulls-pulls-dhiver', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vestes', 'hommes-vetements-sweats-et-pulls-vestes', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres', 'hommes-vetements-sweats-et-pulls-autres', (SELECT id FROM categories WHERE slug = 'hommes-vetements-sweats-et-pulls'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts', 'hommes-vetements-shorts', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts cargo', 'hommes-vetements-shorts-shorts-cargo', (SELECT id FROM categories WHERE slug = 'hommes-vetements-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts chino', 'hommes-vetements-shorts-shorts-chino', (SELECT id FROM categories WHERE slug = 'hommes-vetements-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts en jean', 'hommes-vetements-shorts-shorts-en-jean', (SELECT id FROM categories WHERE slug = 'hommes-vetements-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres shorts', 'hommes-vetements-shorts-autres-shorts', (SELECT id FROM categories WHERE slug = 'hommes-vetements-shorts'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons', 'hommes-vetements-pantalons', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons cargo', 'hommes-vetements-pantalons-pantalons-cargo', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons chinos', 'hommes-vetements-pantalons-pantalons-chinos', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons en jean', 'hommes-vetements-pantalons-pantalons-en-jean', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons de costume', 'hommes-vetements-pantalons-pantalons-de-costume', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons habilles', 'hommes-vetements-pantalons-pantalons-habilles', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons jogging', 'hommes-vetements-pantalons-pantalons-jogging', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons en toile', 'hommes-vetements-pantalons-pantalons-en-toile', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons de travail', 'hommes-vetements-pantalons-pantalons-de-travail', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons thermiques', 'hommes-vetements-pantalons-pantalons-thermiques', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres pantalons', 'hommes-vetements-pantalons-autres-pantalons', (SELECT id FROM categories WHERE slug = 'hommes-vetements-pantalons'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans', 'hommes-vetements-jeans', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans skinny', 'hommes-vetements-jeans-jeans-skinny', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans slim', 'hommes-vetements-jeans-jeans-slim', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans droits', 'hommes-vetements-jeans-jeans-droits', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans bootcut', 'hommes-vetements-jeans-jeans-bootcut', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans relaxed', 'hommes-vetements-jeans-jeans-relaxed', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Jeans baggy', 'hommes-vetements-jeans-jeans-baggy', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres jeans', 'hommes-vetements-jeans-autres-jeans', (SELECT id FROM categories WHERE slug = 'hommes-vetements-jeans'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Survetements et sport', 'hommes-vetements-survetements-et-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Survetements', 'hommes-vetements-survetements-et-sport-survetements', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vetements de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('T-shirts de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-t-shirts-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Shorts de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-shorts-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Pantalons de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-pantalons-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Vestes de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-vestes-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sweats de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-sweats-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Collants et leggings sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-collants-et-leggings-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autres vetements de sport', 'hommes-vetements-survetements-et-sport-vetements-de-sport-autres-vetements-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport-vetements-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Tenues specifiques (fitness, gym, etc.)', 'hommes-vetements-survetements-et-sport-tenues-specifiques-fitness-gym-etc', (SELECT id FROM categories WHERE slug = 'hommes-vetements-survetements-et-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Maillots de bain', 'hommes-vetements-maillots-de-bain', (SELECT id FROM categories WHERE slug = 'hommes-vetements'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures', 'hommes-chaussures', (SELECT id FROM categories WHERE slug = 'hommes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Mocassins et chaussures bateau', 'hommes-chaussures-mocassins-et-chaussures-bateau', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bottes', 'hommes-chaussures-bottes', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Mules et sabots', 'hommes-chaussures-mules-et-sabots', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Espadrilles', 'hommes-chaussures-espadrilles', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Claquettes et tongs', 'hommes-chaussures-claquettes-et-tongs', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sandales', 'hommes-chaussures-sandales', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussons et pantoufles', 'hommes-chaussures-chaussons-et-pantoufles', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de sport', 'hommes-chaussures-chaussures-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de basket', 'hommes-chaussures-chaussures-de-sport-chaussures-de-basket', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de cyclisme', 'hommes-chaussures-chaussures-de-sport-chaussures-de-cyclisme', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de danse', 'hommes-chaussures-chaussures-de-sport-chaussures-de-danse', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de foot', 'hommes-chaussures-chaussures-de-sport-chaussures-de-foot', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de golf', 'hommes-chaussures-chaussures-de-sport-chaussures-de-golf', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures et bottes de randonnee', 'hommes-chaussures-chaussures-de-sport-chaussures-et-bottes-de-randonnee', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de foot en salle', 'hommes-chaussures-chaussures-de-sport-chaussures-de-foot-en-salle', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de fitness', 'hommes-chaussures-chaussures-de-sport-chaussures-de-fitness', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bottes de moto', 'hommes-chaussures-chaussures-de-sport-bottes-de-moto', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Patins a roulettes et rollers', 'hommes-chaussures-chaussures-de-sport-patins-a-roulettes-et-rollers', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de course', 'hommes-chaussures-chaussures-de-sport-chaussures-de-course', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chaussures de tennis', 'hommes-chaussures-chaussures-de-sport-chaussures-de-tennis', (SELECT id FROM categories WHERE slug = 'hommes-chaussures-chaussures-de-sport'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Baskets', 'hommes-chaussures-baskets', (SELECT id FROM categories WHERE slug = 'hommes-chaussures'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Accessoires', 'hommes-accessoires', (SELECT id FROM categories WHERE slug = 'hommes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs et sacoches', 'hommes-accessoires-sacs-et-sacoches', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs a dos', 'hommes-accessoires-sacs-et-sacoches-sacs-a-dos', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-sacs-et-sacoches'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Sacs de sport', 'hommes-accessoires-sacs-et-sacoches-sacs-de-sport', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-sacs-et-sacoches'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Cartables et sacoches', 'hommes-accessoires-sacs-et-sacoches-cartables-et-sacoches', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-sacs-et-sacoches'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Porte-monnaie', 'hommes-accessoires-sacs-et-sacoches-porte-monnaie', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-sacs-et-sacoches'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Porte-feuille', 'hommes-accessoires-sacs-et-sacoches-porte-feuille', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-sacs-et-sacoches'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Ceintures', 'hommes-accessoires-ceintures', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Gants', 'hommes-accessoires-gants', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chapeaux et casquettes', 'hommes-accessoires-chapeaux-et-casquettes', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bonnets', 'hommes-accessoires-chapeaux-et-casquettes-bonnets', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-chapeaux-et-casquettes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Casquettes', 'hommes-accessoires-chapeaux-et-casquettes-casquettes', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-chapeaux-et-casquettes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Chapeaux', 'hommes-accessoires-chapeaux-et-casquettes-chapeaux', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-chapeaux-et-casquettes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bijoux', 'hommes-accessoires-bijoux', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bracelets', 'hommes-accessoires-bijoux-bracelets', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-bijoux'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Colliers', 'hommes-accessoires-bijoux-colliers', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-bijoux'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Bagues', 'hommes-accessoires-bijoux-bagues', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-bijoux'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Autre', 'hommes-accessoires-bijoux-autre', (SELECT id FROM categories WHERE slug = 'hommes-accessoires-bijoux'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Echarpes et chales', 'hommes-accessoires-echarpes-et-chales', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Lunettes de soleil', 'hommes-accessoires-lunettes-de-soleil', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Cravates et nœuds papillons', 'hommes-accessoires-cravates-et-n-uds-papillons', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Montres', 'hommes-accessoires-montres', (SELECT id FROM categories WHERE slug = 'hommes-accessoires'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Soins', 'hommes-soins', (SELECT id FROM categories WHERE slug = 'hommes'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Soins visage', 'hommes-soins-soins-visage', (SELECT id FROM categories WHERE slug = 'hommes-soins'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Soins cheveux', 'hommes-soins-soins-cheveux', (SELECT id FROM categories WHERE slug = 'hommes-soins'));
+INSERT INTO categories (name, slug, parent_id) VALUES ('Parfums', 'hommes-soins-parfums', (SELECT id FROM categories WHERE slug = 'hommes-soins'));
