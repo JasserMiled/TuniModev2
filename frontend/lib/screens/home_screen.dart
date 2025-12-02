@@ -8,6 +8,7 @@ import 'login_screen.dart';
 import 'order_requests_screen.dart';
 import 'orders_screen.dart';
 import 'profile_screen.dart';
+import 'my_listings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -806,6 +807,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openMyListings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const MyListingsScreen()),
+    );
+  }
+
   Widget _buildAccountButton() {
     if (!_isAuthenticated) {
       return TextButton(
@@ -815,6 +822,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final isPro = ApiService.currentUser?.role == 'pro';
+    final isAdmin = ApiService.currentUser?.role == 'admin';
+    final canSeeListings = isPro || isAdmin;
     final ordersLabel = isPro ? 'Mes demandes de commandes' : 'Mes commandes';
 
     return PopupMenuButton<String>(
@@ -824,6 +833,9 @@ class _HomeScreenState extends State<HomeScreen> {
         switch (value) {
           case 'profile':
             _openProfile();
+            break;
+          case 'my_listings':
+            _openMyListings();
             break;
           case 'orders':
             _openOrders();
@@ -838,6 +850,11 @@ class _HomeScreenState extends State<HomeScreen> {
           value: 'profile',
           child: Text('Mon profil'),
         ),
+        if (canSeeListings)
+          const PopupMenuItem(
+            value: 'my_listings',
+            child: Text('Mes annonces'),
+          ),
         PopupMenuItem(
           value: 'orders',
           child: Text(ordersLabel),
