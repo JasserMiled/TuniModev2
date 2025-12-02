@@ -135,6 +135,20 @@ class ApiService {
     }
   }
 
+  static Future<List<Listing>> fetchMyListings() async {
+    final uri = Uri.parse('$baseUrl/api/listings/me/mine');
+    final res = await http.get(uri, headers: _headers(withAuth: true));
+
+    if (res.statusCode != 200) {
+      throw Exception('Impossible de charger vos annonces');
+    }
+
+    final data = jsonDecode(res.body) as List<dynamic>;
+    return data
+        .map((e) => Listing.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   static Future<Listing> fetchListingDetail(int id) async {
     final uri = Uri.parse('$baseUrl/api/listings/$id');
     final res = await http.get(uri, headers: _headers());
