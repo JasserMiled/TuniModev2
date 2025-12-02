@@ -84,6 +84,18 @@ class ListingCard extends StatelessWidget {
                       _formatLabel(listing.gender!),
                       onTap: () => onGenderTap?.call(listing.gender!),
                     ),
+                  if (listing.deliveryAvailable)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: _buildTag(
+                        'Livraison',
+                        leading: const Icon(
+                          Icons.local_shipping,
+                          size: 14,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                    ),
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -133,20 +145,29 @@ class ListingCard extends StatelessWidget {
     return details.join(' - ');
   }
 
-  Widget _buildTag(String label, {VoidCallback? onTap}) {
+  Widget _buildTag(String label, {VoidCallback? onTap, Widget? leading}) {
     final tag = Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          color: Color(0xFF475569),
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (leading != null) ...[
+            leading,
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF475569),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
 

@@ -133,6 +133,7 @@ class ApiService {
     int? categoryId,
     String? city,
     List<String>? images,
+    bool deliveryAvailable = false,
   }) async {
     final uri = Uri.parse('$baseUrl/api/listings');
     final res = await http.post(
@@ -147,6 +148,7 @@ class ApiService {
         'condition': condition,
         'category_id': categoryId,
         'city': city,
+        'delivery_available': deliveryAvailable,
         'images': images ?? [],
       }),
     );

@@ -178,6 +178,7 @@ router.post("/", authRequired, requireRole("pro", "admin"), async (req, res) => 
       condition,
       category_id,
       city,
+      delivery_available,
       images,
     } = req.body;
 
@@ -204,8 +205,8 @@ router.post("/", authRequired, requireRole("pro", "admin"), async (req, res) => 
 
     const listingRes = await db.query(
       `INSERT INTO listings
-       (user_id, title, description, price, sizes, colors, gender, condition, category_id, city)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       (user_id, title, description, price, sizes, colors, gender, condition, category_id, city, delivery_available)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
        RETURNING *`,
        [
         req.user.id,
@@ -218,6 +219,7 @@ router.post("/", authRequired, requireRole("pro", "admin"), async (req, res) => 
         condition,
         category_id || null,
         city || null,
+        Boolean(delivery_available),
       ]
     );
 
@@ -274,6 +276,7 @@ router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) =
       condition,
       category_id,
       city,
+      delivery_available,
       status,
     } = req.body;
 
@@ -299,6 +302,8 @@ router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) =
         ? await deriveGenderFromCategory(category_id)
         : null;
     const categoryProvided = category_id !== undefined;
+    const normalizedDelivery =
+      delivery_available === undefined ? null : Boolean(delivery_available);
 
     const parsedSizes = normalizeStringArray(sizes);
     const parsedColors = normalizeStringArray(colors);
@@ -314,9 +319,10 @@ router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) =
            condition = COALESCE($8, condition),
            category_id = CASE WHEN $6 THEN $9 ELSE category_id END,
            city = COALESCE($10, city),
-           status = COALESCE($11, status),
+           delivery_available = COALESCE($11, delivery_available),
+           status = COALESCE($12, status),
            updated_at = NOW()
-       WHERE id = $12
+       WHERE id = $13
        RETURNING *`,
       [
         title,
@@ -329,6 +335,7 @@ router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) =
         condition,
         category_id,
         city,
+        normalizedDelivery,
         status,
         listingId,
       ]

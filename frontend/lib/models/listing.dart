@@ -10,6 +10,7 @@ class Listing {
   final String? gender;
   final String? condition;
   final String? city;
+  final bool deliveryAvailable;
   final String? categoryName;
   final String? sellerName;
   final List<String> imageUrls;
@@ -24,6 +25,7 @@ class Listing {
     this.gender,
     this.condition,
     this.city,
+    this.deliveryAvailable = false,
     this.categoryName,
     this.sellerName,
     this.imageUrls = const [],
@@ -121,6 +123,16 @@ class Listing {
       return parsed.map((item) => item['url'] as String).toList();
     }
 
+    bool parseDeliveryAvailable(dynamic value) {
+      if (value is bool) return value;
+      if (value is num) return value != 0;
+      if (value is String) {
+        final lower = value.toLowerCase();
+        return lower == 'true' || lower == '1' || lower == 'yes';
+      }
+      return false;
+    }
+
     return Listing(
       id: json["id"] as int,
       title: json["title"] as String,
@@ -131,6 +143,7 @@ class Listing {
       gender: json["gender"] as String?,
       condition: json["condition"] as String?,
       city: json["city"] as String?,
+      deliveryAvailable: parseDeliveryAvailable(json["delivery_available"]),
       categoryName: json["category_name"] as String?,
       sellerName: json["seller_name"] as String?,
       imageUrls: parseImages(json["images"] ?? json["imageUrls"]),

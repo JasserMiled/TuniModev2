@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS listings (
     condition VARCHAR(50),
     category_id INTEGER REFERENCES categories(id),
     city VARCHAR(100),
+    delivery_available BOOLEAN NOT NULL DEFAULT FALSE,
     status VARCHAR(20) NOT NULL DEFAULT 'active'
         CHECK (status IN ('active','paused','deleted')),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
