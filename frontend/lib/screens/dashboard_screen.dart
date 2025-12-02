@@ -72,6 +72,26 @@ const List<String> _conditionOptions = [
   'Satisfaisant',
 ];
 
+const List<String> _sizeOptions = [
+  'XXXS / 30 / 2',
+  'XXS / 32 / 4',
+  'XS / 34 / 6',
+  'S / 36 / 8',
+  'M / 38 / 10',
+  'L / 40 / 12',
+  'XL / 42 / 14',
+  'XXL / 44 / 16',
+  'XXXL / 46 / 18',
+  '4XL / 48 / 20',
+  '5XL / 50 / 22',
+  '6XL / 52 / 24',
+  '7XL / 54 / 26',
+  '8XL / 56 / 28',
+  '9XL / 58 / 30',
+  'Taille unique',
+  'Autre',
+];
+
 class _PickedImage {
   final String name;
   final Uint8List bytes;
@@ -92,7 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _title = '';
   String _description = '';
   String _price = '';
-  String _sizesText = '';
+  final List<String> _selectedSizes = [];
   final List<String> _selectedColors = [];
   String? _gender;
   String _city = '';
@@ -218,17 +238,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return;
     }
 
-    List<String> _splitValues(String input) => input
-        .split(',')
-        .map((v) => v.trim())
-        .where((v) => v.isNotEmpty)
-        .toList();
-
     final ok = await ApiService.createListing(
       title: _title,
       description: _description,
       price: double.tryParse(_price) ?? 0,
-      sizes: _splitValues(_sizesText),
+      sizes: _selectedSizes,
       colors: _selectedColors,
       gender: _gender,
       condition: _condition,
@@ -246,7 +260,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _formKey.currentState!.reset();
       setState(() {
         _gender = null;
-        _sizesText = '';
+        _selectedSizes.clear();
         _selectedColors.clear();
         _images = [];
         _condition = null;
@@ -308,6 +322,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _selectedColors.add(colorName);
       }
     });
+  }
+
+  void _toggleSize(String size) {
+    setState(() {
+      if (_selectedSizes.contains(size)) {
+        _selectedSizes.remove(size);
+      } else {
+        _selectedSizes.add(size);
+      }
+    });
+  }
+
+  Widget _buildSizeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Tailles disponibles',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade800,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Sélectionnez une ou plusieurs tailles dans la liste.',
+          style: TextStyle(color: Colors.grey.shade700),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _sizeOptions
+              .map(
+                (size) => FilterChip(
+                  label: Text(size),
+                  selected: _selectedSizes.contains(size),
+                  onSelected: (_) => _toggleSize(size),
+                ),
+              )
+              .toList(),
+        ),
+      ],
+    );
   }
 
   Widget _buildColorSelector() {
@@ -567,13 +628,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           validator: (v) =>
                               (v == null || v.isEmpty) ? 'Champ obligatoire' : null,
                         ),
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Tailles disponibles',
-                            helperText: 'Séparez les valeurs par des virgules',
-                          ),
-                          onSaved: (v) => _sizesText = v?.trim() ?? '',
-                        ),
+                        _buildSizeSelector(),
                         const SizedBox(height: 8),
                         _buildColorSelector(),
                         const SizedBox(height: 12),
