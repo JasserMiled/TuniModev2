@@ -114,7 +114,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _price = '';
   final List<String> _selectedSizes = [];
   final List<String> _selectedColors = [];
-  String? _gender;
   String _city = '';
   String? _condition;
   List<_PickedImage> _images = [];
@@ -244,7 +243,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       price: double.tryParse(_price) ?? 0,
       sizes: _selectedSizes,
       colors: _selectedColors,
-      gender: _gender,
       condition: _condition,
       categoryId: _selectedCategory?.id,
       city: _city.isEmpty ? null : _city,
@@ -259,7 +257,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (ok) {
       _formKey.currentState!.reset();
       setState(() {
-        _gender = null;
         _selectedSizes.clear();
         _selectedColors.clear();
         _images = [];
@@ -643,25 +640,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        _buildCategorySelector(),
-                        DropdownButtonFormField<String>(
-                          decoration: const InputDecoration(labelText: 'Genre'),
-                          value: _gender,
-                          items: const [
-                            DropdownMenuItem(value: 'homme', child: Text('Homme')),
-                            DropdownMenuItem(value: 'femme', child: Text('Femme')),
-                            DropdownMenuItem(value: 'enfant', child: Text('Enfant')),
-                            DropdownMenuItem(value: 'unisexe', child: Text('Unisexe')),
-                          ],
-                          onChanged: (value) {
-                            setState(() {
-                              _gender = value;
-                            });
-                          },
-                        ),
-                        TextFormField(
-                          decoration: const InputDecoration(labelText: 'Ville'),
-                          onSaved: (v) => _city = v?.trim() ?? '',
+        _buildCategorySelector(),
+        TextFormField(
+          decoration: const InputDecoration(labelText: 'Ville'),
+          onSaved: (v) => _city = v?.trim() ?? '',
                         ),
                         DropdownButtonFormField<String>(
                           decoration: const InputDecoration(labelText: 'État du produit'),
