@@ -242,6 +242,9 @@ class _HomeScreenState extends State<HomeScreen> {
     bool? tempDelivery = _deliveryAvailable;
     final List<String> tempSelectedSizes = List.from(_selectedSizes);
     final List<String> tempSelectedColors = List.from(_selectedColors);
+    final List<Category> tempCategoryPath = tempCategoryId == null
+        ? []
+        : _findCategoryPath(_categoryTree, tempCategoryId!);
 
     showModalBottomSheet(
       context: context,
@@ -324,30 +327,127 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                         const SizedBox(height: 6),
-                        DropdownButtonFormField<int?>(
-                          value: tempCategoryId,
-                          decoration: const InputDecoration(
-                            hintText: 'Toutes les catégories',
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('Toutes les catégories'),
-                            ),
-                            ..._flattenCategories(_categoryTree)
-                                .map(
-                                  (option) => DropdownMenuItem<int?>(
-                                    value: option.id,
-                                    child: Text(option.label),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: [
+                                  ActionChip(
+                                    label: const Text('Toutes les catégories'),
+                                    avatar: const Icon(Icons.home_outlined, size: 18),
+                                    backgroundColor: tempCategoryPath.isEmpty
+                                        ? _primaryBlue.withOpacity(0.12)
+                                        : null,
+                                    side: BorderSide(
+                                      color: tempCategoryPath.isEmpty
+                                          ? _primaryBlue
+                                          : Colors.grey.shade300,
+                                    ),
+                                    onPressed: _isLoadingCategories
+                                        ? null
+                                        : () => setModalState(() {
+                                              tempCategoryPath.clear();
+                                              tempCategoryId = null;
+                                            }),
                                   ),
+                                  ...tempCategoryPath
+                                      .asMap()
+                                      .entries
+                                      .expand(
+                                        (entry) => [
+                                          const Icon(Icons.chevron_right, size: 18),
+                                          ActionChip(
+                                            label: Text(entry.value.name),
+                                            avatar: Icon(
+                                              entry.key == tempCategoryPath.length - 1
+                                                  ? Icons.check_circle
+                                                  : Icons.folder_open,
+                                              size: 18,
+                                              color: _primaryBlue,
+                                            ),
+                                            backgroundColor:
+                                                entry.key == tempCategoryPath.length - 1
+                                                    ? _primaryBlue.withOpacity(0.12)
+                                                    : null,
+                                            side: BorderSide(
+                                              color: entry.key == tempCategoryPath.length - 1
+                                                  ? _primaryBlue
+                                                  : Colors.grey.shade300,
+                                            ),
+                                            onPressed: () => setModalState(() {
+                                              if (entry.key + 1 <
+                                                  tempCategoryPath.length) {
+                                                tempCategoryPath.removeRange(
+                                                    entry.key + 1,
+                                                    tempCategoryPath.length);
+                                              }
+                                              tempCategoryId = entry.value.id;
+                                            }),
+                                          ),
+                                        ],
+                                      )
+                                      .toList(),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              if (_isLoadingCategories)
+                                const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                              else if (_categoryLoadError != null)
+                                Text(
+                                  _categoryLoadError!,
+                                  style: const TextStyle(color: Colors.redAccent),
                                 )
-                                .toList(),
-                          ],
-                          onChanged: _isLoadingCategories
-                              ? null
-                              : (value) => setModalState(() {
-                                    tempCategoryId = value;
-                                  }),
+                              else ...[
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children:
+                                      (tempCategoryPath.isEmpty ? _categoryTree : tempCategoryPath.last.children)
+                                          .map(
+                                    (category) {
+                                      final isSelected = tempCategoryId == category.id;
+                                      final hasChildren = category.children.isNotEmpty;
+                                      return ChoiceChip(
+                                        label: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(category.name),
+                                            if (hasChildren) ...const [
+                                              SizedBox(width: 6),
+                                              Icon(Icons.chevron_right, size: 18),
+                                            ],
+                                          ],
+                                        ),
+                                        selected: isSelected,
+                                        selectedColor: _primaryBlue.withOpacity(0.12),
+                                        onSelected: (_) => setModalState(() {
+                                          tempCategoryPath.add(category);
+                                          tempCategoryId = category.id;
+                                        }),
+                                      );
+                                    },
+                                  ).toList(),
+                                ),
+                                if ((tempCategoryPath.isEmpty
+                                        ? _categoryTree
+                                        : tempCategoryPath.last.children)
+                                    .isEmpty)
+                                  const Text(
+                                    'Aucune sous-catégorie',
+                                    style: TextStyle(color: Colors.black54),
+                                  ),
+                              ],
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 14),
                         const Text(
@@ -548,6 +648,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     tempMax = 500;
                                     cityController.clear();
                                     tempCategoryId = null;
+                                    tempCategoryPath.clear();
                                     tempDelivery = null;
                                     tempSelectedSizes.clear();
                                     tempSelectedColors.clear();
@@ -613,6 +714,20 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return buffer.toString();
+  }
+
+  List<Category> _findCategoryPath(List<Category> categories, int targetId) {
+    for (final category in categories) {
+      if (category.id == targetId) {
+        return [category];
+      }
+      final childPath = _findCategoryPath(category.children, targetId);
+      if (childPath.isNotEmpty) {
+        return [category, ...childPath];
+      }
+    }
+
+    return [];
   }
 
   List<_CategoryOption> _flattenCategories(List<Category> categories,
