@@ -4,11 +4,13 @@ import 'package:http/http.dart' as http;
 
 import '../models/category.dart';
 import '../models/listing.dart';
+import '../models/user.dart';
 
 class ApiService {
   static const String baseUrl = 'http://localhost:4000';
 
   static String? authToken;
+  static User? currentUser;
 
   static Map<String, String> _headers({bool withAuth = false}) {
     final headers = <String, String>{
@@ -42,6 +44,7 @@ class ApiService {
 
     if (res.statusCode == 201) {
       final data = jsonDecode(res.body);
+      currentUser = User.fromJson(data['user']);
       authToken = data['token'];
       return true;
     }
@@ -64,10 +67,16 @@ class ApiService {
 
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
+      currentUser = User.fromJson(data['user']);
       authToken = data['token'];
       return true;
     }
     return false;
+  }
+
+  static void logout() {
+    authToken = null;
+    currentUser = null;
   }
 
   static Future<List<Listing>> fetchListings({

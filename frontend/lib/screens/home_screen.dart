@@ -5,6 +5,9 @@ import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
 import 'listing_detail_screen.dart';
 import 'login_screen.dart';
+import 'order_requests_screen.dart';
+import 'orders_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -111,6 +114,8 @@ class _HomeScreenState extends State<HomeScreen> {
     'Chaussures',
     'Accessoires',
   ];
+
+  bool get _isAuthenticated => ApiService.authToken != null;
 
   @override
   void initState() {
@@ -766,14 +771,84 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _openLogin() {
-    Navigator.of(context).push(
+  Future<void> _openLogin() async {
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
+    if (!mounted) return;
+    setState(() {});
   }
 
   void _openDashboard() {
     Navigator.of(context).pushNamed('/dashboard');
+  }
+
+  void _openProfile() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    );
+  }
+
+  void _openOrders() {
+    final destination =
+        ApiService.currentUser?.role == 'pro' ? const OrderRequestsScreen() : const OrdersScreen();
+
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => destination),
+    );
+  }
+
+  void _handleLogout() {
+    ApiService.logout();
+    setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Vous êtes déconnecté')),
+    );
+  }
+
+  Widget _buildAccountButton() {
+    if (!_isAuthenticated) {
+      return TextButton(
+        onPressed: _openLogin,
+        child: const Text('Se connecter'),
+      );
+    }
+
+    final isPro = ApiService.currentUser?.role == 'pro';
+    final ordersLabel = isPro ? 'Mes demandes de commandes' : 'Mes commandes';
+
+    return PopupMenuButton<String>(
+      tooltip: 'Menu du compte',
+      icon: const Icon(Icons.menu, color: Color(0xFF0F172A)),
+      onSelected: (value) {
+        switch (value) {
+          case 'profile':
+            _openProfile();
+            break;
+          case 'orders':
+            _openOrders();
+            break;
+          case 'logout':
+            _handleLogout();
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'profile',
+          child: Text('Mon profil'),
+        ),
+        PopupMenuItem(
+          value: 'orders',
+          child: Text(ordersLabel),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem(
+          value: 'logout',
+          child: Text('Se déconnecter'),
+        ),
+      ],
+    );
   }
 
   @override
@@ -801,12 +876,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(width: 18),
             Expanded(child: _buildSearchBar()),
-            TextButton(
-              onPressed: _openLogin,
-              child: const Text('Se connecter'),
-            ),
+            _buildAccountButton(),
             const SizedBox(width: 6),
-            const SizedBox(width: 12),
           ],
         ),
       ),
