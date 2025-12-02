@@ -2,6 +2,7 @@ import 'dart:convert';
 
 class Listing {
   final int id;
+  final int userId;
   final String title;
   final String? description;
   final double price;
@@ -18,6 +19,7 @@ class Listing {
 
   Listing({
     required this.id,
+    required this.userId,
     required this.title,
     this.description,
     required this.price,
@@ -137,6 +139,8 @@ class Listing {
 
     return Listing(
       id: json["id"] as int,
+      userId: int.tryParse(json["user_id"]?.toString() ?? "") ??
+          (json["userId"] is int ? json["userId"] as int : 0),
       title: json["title"] as String,
       description: json["description"] as String?,
       price: parsedPrice,

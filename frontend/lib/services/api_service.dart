@@ -161,6 +161,49 @@ class ApiService {
     }
   }
 
+  static Future<bool> updateListing({
+    required int id,
+    String? title,
+    String? description,
+    double? price,
+    List<String>? sizes,
+    List<String>? colors,
+    String? condition,
+    int? categoryId,
+    String? city,
+    bool? deliveryAvailable,
+    String? status,
+    int? stock,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/listings/$id');
+    final res = await http.put(
+      uri,
+      headers: _headers(withAuth: true),
+      body: jsonEncode({
+        'title': title,
+        'description': description,
+        'price': price,
+        'sizes': sizes,
+        'colors': colors,
+        'condition': condition,
+        'category_id': categoryId,
+        'city': city,
+        'delivery_available': deliveryAvailable,
+        'status': status,
+        'stock': stock,
+      }),
+    );
+
+    return res.statusCode == 200;
+  }
+
+  static Future<bool> deleteListing(int id) async {
+    final uri = Uri.parse('$baseUrl/api/listings/$id');
+    final res = await http.delete(uri, headers: _headers(withAuth: true));
+
+    return res.statusCode == 200;
+  }
+
   static Future<bool> createListing({
     required String title,
     required String description,
