@@ -77,6 +77,9 @@ class ApiService {
     double? minPrice,
     double? maxPrice,
     int? categoryId,
+    List<String>? sizes,
+    List<String>? colors,
+    bool? deliveryAvailable,
   }) async {
     final queryParams = <String, String>{};
     if (query != null && query.trim().isNotEmpty) {
@@ -96,6 +99,15 @@ class ApiService {
     }
     if (categoryId != null) {
       queryParams['category_id'] = categoryId.toString();
+    }
+    if (sizes != null && sizes.isNotEmpty) {
+      queryParams['sizes'] = sizes.join(',');
+    }
+    if (colors != null && colors.isNotEmpty) {
+      queryParams['colors'] = colors.join(',');
+    }
+    if (deliveryAvailable != null) {
+      queryParams['delivery_available'] = deliveryAvailable.toString();
     }
 
     final uri = queryParams.isEmpty
