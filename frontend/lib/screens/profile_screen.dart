@@ -26,6 +26,29 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(user?.email ?? 'Email non disponible'),
                 const SizedBox(height: 8),
+                if (user?.phone != null && user!.phone!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.phone, size: 18),
+                        const SizedBox(width: 6),
+                        Text(user.phone!),
+                      ],
+                    ),
+                  ),
+                if (user?.address != null && user!.address!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.home, size: 18),
+                        const SizedBox(width: 6),
+                        Expanded(child: Text(user.address!)),
+                      ],
+                    ),
+                  ),
                 Chip(
                   label: Text(
                     user?.role == 'pro' ? 'Professionnel' : 'Acheteur',

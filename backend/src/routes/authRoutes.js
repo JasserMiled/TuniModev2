@@ -15,6 +15,7 @@ router.post("/register", async (req, res) => {
       email,
       password,
       phone,
+      address,
       role,
       business_name,
       business_id,
@@ -27,10 +28,10 @@ router.post("/register", async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
 
     const result = await db.query(
-      `INSERT INTO users (name, email, password_hash, phone, role, business_name, business_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
-       RETURNING id, name, email, role`,
-      [name, email, hashed, phone, role, business_name || null, business_id || null]
+      `INSERT INTO users (name, email, password_hash, phone, address, role, business_name, business_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+       RETURNING id, name, email, phone, address, role`,
+      [name, email, hashed, phone, address || null, role, business_name || null, business_id || null]
     );
 
     const user = result.rows[0];
@@ -56,7 +57,7 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     const result = await db.query(
-      "SELECT id, name, email, password_hash, role FROM users WHERE email = $1",
+      "SELECT id, name, email, phone, address, password_hash, role FROM users WHERE email = $1",
       [email]
     );
     const user = result.rows[0];
