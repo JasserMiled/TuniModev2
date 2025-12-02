@@ -100,6 +100,20 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                       Text(listing.city!),
                     ],
                   ),
+                if (listing.deliveryAvailable)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Row(
+                      children: const [
+                        Icon(Icons.local_shipping, size: 18, color: Colors.green),
+                        SizedBox(width: 6),
+                        Text(
+                          'Livraison disponible',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 if (listing.gender != null && listing.gender!.isNotEmpty)
                   Padding(

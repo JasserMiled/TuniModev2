@@ -121,6 +121,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Category> _categoryPath = [];
   List<Category> _currentCategories = [];
   Category? _selectedCategory;
+  bool _deliveryAvailable = false;
 
   bool _loading = false;
   bool _categoriesLoading = true;
@@ -246,6 +247,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       condition: _condition,
       categoryId: _selectedCategory?.id,
       city: _city.isEmpty ? null : _city,
+      deliveryAvailable: _deliveryAvailable,
       images: uploadedImages,
     );
 
@@ -261,6 +263,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _selectedColors.clear();
         _images = [];
         _condition = null;
+        _deliveryAvailable = false;
         _selectedCategory = null;
         _categoryPath = [];
         _currentCategories = _categoryTree;
@@ -640,10 +643,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                         const SizedBox(height: 8),
-        _buildCategorySelector(),
-        TextFormField(
-          decoration: const InputDecoration(labelText: 'Ville'),
-          onSaved: (v) => _city = v?.trim() ?? '',
+                        _buildCategorySelector(),
+                        TextFormField(
+                          decoration: const InputDecoration(labelText: 'Ville'),
+                          onSaved: (v) => _city = v?.trim() ?? '',
+                        ),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Livraison disponible'),
+                          subtitle: const Text(
+                            'Indiquez si vous pouvez expédier le produit.',
+                          ),
+                          value: _deliveryAvailable,
+                          onChanged: (value) {
+                            setState(() {
+                              _deliveryAvailable = value;
+                            });
+                          },
                         ),
                         DropdownButtonFormField<String>(
                           decoration: const InputDecoration(labelText: 'État du produit'),
