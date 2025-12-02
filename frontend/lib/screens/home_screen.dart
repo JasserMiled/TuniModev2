@@ -236,26 +236,26 @@ class _HomeScreenState extends State<HomeScreen> {
                           prefixIcon: Icon(Icons.location_on_outlined),
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                      const Text(
-                        'Catégorie',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      if (_isLoadingCategories)
-                        const SizedBox(
-                          height: 16,
-                          width: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                        const SizedBox(height: 14),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Catégorie',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            if (_isLoadingCategories)
+                              const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            if (_categoryLoadError != null)
+                              const Icon(Icons.error_outline, color: Colors.redAccent),
+                          ],
                         ),
-                      if (_categoryLoadError != null)
-                        const Icon(Icons.error_outline, color: Colors.redAccent),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  DropdownButtonFormField<int?>(
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<int?>(
                     value: tempCategoryId,
                     decoration: const InputDecoration(
                       hintText: 'Toutes les catégories',
