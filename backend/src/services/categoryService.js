@@ -26,7 +26,9 @@ const getCategoryWithChildren = async (categoryId) => {
        FROM categories c
        INNER JOIN category_tree ct ON c.parent_id = ct.id
      )
-     SELECT id FROM category_tree`,
+     SELECT DISTINCT id
+     FROM category_tree
+     ORDER BY id`,
     [categoryId]
   );
 
@@ -59,7 +61,7 @@ const filterProductsByCategory = async (categoryId) => {
      )
      SELECT p.*
      FROM products p
-     WHERE p.category_id IN (SELECT id FROM category_tree)`,
+     WHERE p.category_id IN (SELECT DISTINCT id FROM category_tree)`,
     [categoryId]
   );
 
