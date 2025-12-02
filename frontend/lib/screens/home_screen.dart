@@ -19,6 +19,77 @@ class _HomeScreenState extends State<HomeScreen> {
   static const Color _accentGreen = Color(0xFF24B072);
   static const Color _lavender = Color(0xFFF1EDFD);
   static const Color _peach = Color(0xFFFFF4EC);
+  static const List<String> _sizeOptions = [
+    'XXXS / 30 / 2',
+    'XXS / 32 / 4',
+    'XS / 34 / 6',
+    'S / 36 / 8',
+    'M / 38 / 10',
+    'L / 40 / 12',
+    'XL / 42 / 14',
+    'XXL / 44 / 16',
+    'XXXL / 46 / 18',
+    '4XL / 48 / 20',
+    '5XL / 50 / 22',
+    '6XL / 52 / 24',
+    '7XL / 54 / 26',
+    '8XL / 56 / 28',
+    '9XL / 58 / 30',
+    'Taille unique',
+    'Autre',
+  ];
+  static const List<_ColorOption> _colorOptions = [
+    _ColorOption('Noir', Color(0xFF000000)),
+    _ColorOption('Blanc', Color(0xFFFFFFFF)),
+    _ColorOption('Gris', Color(0xFF808080)),
+    _ColorOption('Gris clair', Color(0xFFD3D3D3)),
+    _ColorOption('Gris foncé', Color(0xFF404040)),
+    _ColorOption('Rouge', Color(0xFFFF0000)),
+    _ColorOption('Rouge foncé', Color(0xFF8B0000)),
+    _ColorOption('Rouge clair', Color(0xFFFF6666)),
+    _ColorOption('Bordeaux', Color(0xFF800020)),
+    _ColorOption('Rose', Color(0xFFFFC0CB)),
+    _ColorOption('Rose fuchsia', Color(0xFFFF00FF)),
+    _ColorOption('Framboise', Color(0xFFE30B5D)),
+    _ColorOption('Orange', Color(0xFFFFA500)),
+    _ColorOption('Orange foncé', Color(0xFFFF8C00)),
+    _ColorOption('Saumon', Color(0xFFFA8072)),
+    _ColorOption('Corail', Color(0xFFFF7F50)),
+    _ColorOption('Jaune', Color(0xFFFFFF00)),
+    _ColorOption('Or', Color(0xFFFFD700)),
+    _ColorOption('Beige', Color(0xFFF5F5DC)),
+    _ColorOption('Crème', Color(0xFFFFFDD0)),
+    _ColorOption('Vert', Color(0xFF008000)),
+    _ColorOption('Vert clair', Color(0xFF90EE90)),
+    _ColorOption('Vert foncé', Color(0xFF006400)),
+    _ColorOption('Vert menthe', Color(0xFF98FF98)),
+    _ColorOption('Vert olive', Color(0xFF808000)),
+    _ColorOption('Vert émeraude', Color(0xFF50C878)),
+    _ColorOption('Turquoise', Color(0xFF40E0D0)),
+    _ColorOption('Cyan', Color(0xFF00FFFF)),
+    _ColorOption('Bleu', Color(0xFF0000FF)),
+    _ColorOption('Bleu clair', Color(0xFFADD8E6)),
+    _ColorOption('Bleu foncé', Color(0xFF00008B)),
+    _ColorOption('Bleu ciel', Color(0xFF87CEEB)),
+    _ColorOption('Bleu turquoise', Color(0xFF30D5C8)),
+    _ColorOption('Bleu marine', Color(0xFF000080)),
+    _ColorOption('Indigo', Color(0xFF4B0082)),
+    _ColorOption('Violet', Color(0xFF800080)),
+    _ColorOption('Violet foncé', Color(0xFF2E0854)),
+    _ColorOption('Lavande', Color(0xFFE6E6FA)),
+    _ColorOption('Pourpre', Color(0xFF722F37)),
+    _ColorOption('Marron', Color(0xFF8B4513)),
+    _ColorOption('Chocolat', Color(0xFF7B3F00)),
+    _ColorOption('Brun clair', Color(0xFFA0522D)),
+    _ColorOption('Sable', Color(0xFFC2B280)),
+    _ColorOption('Kaki', Color(0xFFF0E68C)),
+    _ColorOption('Cuivre', Color(0xFFB87333)),
+    _ColorOption('Argent', Color(0xFFC0C0C0)),
+    _ColorOption('Platine', Color(0xFFE5E4E2)),
+    _ColorOption('Bronze', Color(0xFFCD7F32)),
+    _ColorOption('Pêche', Color(0xFFFFDAB9)),
+    _ColorOption('Champagne', Color(0xFFF7E7CE)),
+  ];
 
   late Future<List<Listing>> _futureListings;
   final TextEditingController _searchController = TextEditingController();
@@ -169,10 +240,8 @@ class _HomeScreenState extends State<HomeScreen> {
     double tempMax = _maxPrice ?? 500;
     int? tempCategoryId = _selectedCategoryId;
     bool? tempDelivery = _deliveryAvailable;
-    final TextEditingController sizeController =
-        TextEditingController(text: _selectedSizes.join(', '));
-    final TextEditingController colorController =
-        TextEditingController(text: _selectedColors.join(', '));
+    final List<String> tempSelectedSizes = List.from(_selectedSizes);
+    final List<String> tempSelectedColors = List.from(_selectedColors);
 
     showModalBottomSheet(
       context: context,
@@ -282,29 +351,113 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 14),
                         const Text(
-                          'Tailles (séparées par des virgules)',
+                          'Tailles',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 6),
-                        TextField(
-                          controller: sizeController,
+                        DropdownButtonFormField<String?>(
+                          value: null,
                           decoration: const InputDecoration(
-                            hintText: 'Ex: S, M, L',
+                            hintText: 'Sélectionner une taille',
                             prefixIcon: Icon(Icons.straighten),
                           ),
+                          items: [
+                            const DropdownMenuItem<String?>(
+                              value: null,
+                              child: Text('Ajouter une taille'),
+                            ),
+                            ..._sizeOptions.map(
+                              (option) => DropdownMenuItem<String?>(
+                                value: option,
+                                child: Text(option),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setModalState(() {
+                              if (!tempSelectedSizes.contains(value)) {
+                                tempSelectedSizes.add(value);
+                              }
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: tempSelectedSizes
+                              .map(
+                                (size) => InputChip(
+                                  label: Text(size),
+                                  onDeleted: () => setModalState(() {
+                                    tempSelectedSizes.remove(size);
+                                  }),
+                                ),
+                              )
+                              .toList(),
                         ),
                         const SizedBox(height: 14),
                         const Text(
-                          'Couleurs (séparées par des virgules)',
+                          'Couleurs',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 6),
-                        TextField(
-                          controller: colorController,
+                        DropdownButtonFormField<String?>(
+                          value: null,
                           decoration: const InputDecoration(
-                            hintText: 'Ex: noir, bleu, rouge',
+                            hintText: 'Sélectionner une couleur',
                             prefixIcon: Icon(Icons.palette_outlined),
                           ),
+                          items: [
+                            const DropdownMenuItem<String?>(
+                              value: null,
+                              child: Text('Ajouter une couleur'),
+                            ),
+                            ..._colorOptions.map(
+                              (option) => DropdownMenuItem<String?>(
+                                value: option.name,
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 14,
+                                      height: 14,
+                                      margin: const EdgeInsets.only(right: 8),
+                                      decoration: BoxDecoration(
+                                        color: option.color,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(color: Colors.grey.shade300),
+                                      ),
+                                    ),
+                                    Text(option.name),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setModalState(() {
+                              if (!tempSelectedColors.contains(value)) {
+                                tempSelectedColors.add(value);
+                              }
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: tempSelectedColors
+                              .map(
+                                (color) => InputChip(
+                                  label: Text(color),
+                                  onDeleted: () => setModalState(() {
+                                    tempSelectedColors.remove(color);
+                                  }),
+                                ),
+                              )
+                              .toList(),
                         ),
                         const SizedBox(height: 14),
                         const Text(
@@ -396,8 +549,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     cityController.clear();
                                     tempCategoryId = null;
                                     tempDelivery = null;
-                                    sizeController.clear();
-                                    colorController.clear();
+                                    tempSelectedSizes.clear();
+                                    tempSelectedColors.clear();
                                   });
                                 },
                                 child: const Text('Réinitialiser'),
@@ -414,8 +567,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     final city = cityController.text.trim();
                                     _selectedCity = city.isEmpty ? null : city;
                                     _selectedCategoryId = tempCategoryId;
-                                    _selectedSizes = _parseInputList(sizeController.text);
-                                    _selectedColors = _parseInputList(colorController.text);
+                                    _selectedSizes = List.from(tempSelectedSizes);
+                                    _selectedColors = List.from(tempSelectedColors);
                                     _deliveryAvailable = tempDelivery;
                                   });
                                   Navigator.of(context).pop();
@@ -460,14 +613,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return buffer.toString();
-  }
-
-  List<String> _parseInputList(String value) {
-    return value
-        .split(',')
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .toList();
   }
 
   List<_CategoryOption> _flattenCategories(List<Category> categories,
@@ -1017,4 +1162,11 @@ class _CategoryOption {
     required this.id,
     required this.label,
   });
+}
+
+class _ColorOption {
+  final String name;
+  final Color color;
+
+  const _ColorOption(this.name, this.color);
 }
