@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+
 import '../models/listing.dart';
 import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
@@ -81,13 +83,32 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
 
         return RefreshIndicator(
           onRefresh: _refresh,
-          child: ListView.builder(
-            physics: const AlwaysScrollableScrollPhysics(),
-            itemCount: listings.length,
-            itemBuilder: (context, index) => ListingCard(
-              listing: listings[index],
-              onTap: () => _openListing(listings[index]),
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              int columnCount = 1;
+
+              if (width >= 1100) {
+                columnCount = 4;
+              } else if (width >= 800) {
+                columnCount = 3;
+              } else if (width >= 520) {
+                columnCount = 2;
+              }
+
+              return MasonryGridView.count(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                crossAxisCount: columnCount,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                itemCount: listings.length,
+                itemBuilder: (context, index) => ListingCard(
+                  listing: listings[index],
+                  onTap: () => _openListing(listings[index]),
+                ),
+              );
+            },
           ),
         );
       },
