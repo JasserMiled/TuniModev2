@@ -14,6 +14,7 @@ class Listing {
   final String? categoryName;
   final String? sellerName;
   final List<String> imageUrls;
+  final int stock;
 
   Listing({
     required this.id,
@@ -29,6 +30,7 @@ class Listing {
     this.categoryName,
     this.sellerName,
     this.imageUrls = const [],
+    this.stock = 1,
   });
 
   factory Listing.fromJson(Map<String, dynamic> json) {
@@ -147,6 +149,8 @@ class Listing {
       categoryName: json["category_name"] as String?,
       sellerName: json["seller_name"] as String?,
       imageUrls: parseImages(json["images"] ?? json["imageUrls"]),
+      stock: int.tryParse(json["stock"]?.toString() ?? "") ??
+          (json["stock"] is int ? json["stock"] as int : 1),
     );
   }
 }

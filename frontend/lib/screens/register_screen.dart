@@ -14,6 +14,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _email = '';
   String _password = '';
   String _phone = '';
+  String _address = '';
   String _role = 'buyer';
   bool _loading = false;
   String? _error;
@@ -33,6 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       password: _password,
       role: _role,
       phone: _phone,
+      address: _address,
     );
 
     setState(() {
@@ -84,6 +86,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           decoration: const InputDecoration(labelText: 'Téléphone'),
                           keyboardType: TextInputType.phone,
                           onSaved: (v) => _phone = v?.trim() ?? '',
+                        ),
+                        TextFormField(
+                          decoration: const InputDecoration(labelText: 'Adresse'),
+                          maxLines: 2,
+                          onSaved: (v) => _address = v?.trim() ?? '',
                         ),
                         TextFormField(
                           decoration:

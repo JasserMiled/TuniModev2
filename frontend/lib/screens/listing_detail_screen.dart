@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/listing.dart';
 import '../services/api_service.dart';
+import '../widgets/order_form.dart';
 
 class ListingDetailScreen extends StatefulWidget {
   final int listingId;
@@ -30,6 +31,26 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   String _formatGender(String gender) {
     if (gender.isEmpty) return gender;
     return '${gender[0].toUpperCase()}${gender.substring(1)}';
+  }
+
+  void _openOrderSheet(Listing listing) {
+    if (ApiService.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connectez-vous pour commander.')),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: OrderForm(listing: listing),
+      ),
+    );
   }
 
   @override
@@ -163,6 +184,23 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                     'Vendeur : ${listing.sellerName}',
                     style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.inventory_2, size: 18),
+                    const SizedBox(width: 6),
+                    Text('Stock disponible : ${listing.stock}'),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _openOrderSheet(listing),
+                    icon: const Icon(Icons.shopping_cart_checkout),
+                    label: const Text('Acheter'),
+                  ),
+                ),
               ],
             ),
           );

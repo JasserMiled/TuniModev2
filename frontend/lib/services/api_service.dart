@@ -28,6 +28,7 @@ class ApiService {
     required String password,
     required String role,
     String? phone,
+    String? address,
   }) async {
     final uri = Uri.parse('$baseUrl/api/auth/register');
     final res = await http.post(
@@ -38,6 +39,7 @@ class ApiService {
         'email': email,
         'password': password,
         'phone': phone,
+        'address': address,
         'role': role,
       }),
     );
@@ -214,5 +216,39 @@ class ApiService {
     }
 
     return null;
+  }
+
+  static Future<Map<String, dynamic>> createOrder({
+    required int listingId,
+    required int quantity,
+    required String receptionMode,
+    String? color,
+    String? size,
+    String? shippingAddress,
+    String? phone,
+    String? buyerNote,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/orders');
+    final res = await http.post(
+      uri,
+      headers: _headers(withAuth: true),
+      body: jsonEncode({
+        'listing_id': listingId,
+        'quantity': quantity,
+        'reception_mode': receptionMode,
+        'color': color,
+        'size': size,
+        'shipping_address': shippingAddress,
+        'phone': phone,
+        'buyer_note': buyerNote,
+      }),
+    );
+
+    if (res.statusCode != 201) {
+      final errorMessage = jsonDecode(res.body)['message'] ?? 'Commande impossible';
+      throw Exception(errorMessage);
+    }
+
+    return jsonDecode(res.body) as Map<String, dynamic>;
   }
 }

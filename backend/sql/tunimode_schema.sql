@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     phone VARCHAR(30),
+    address TEXT,
     role VARCHAR(20) NOT NULL CHECK (role IN ('buyer','pro','admin')),
     business_name VARCHAR(255),
     business_id VARCHAR(100),
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS listings (
     condition VARCHAR(50),
     category_id INTEGER REFERENCES categories(id),
     city VARCHAR(100),
+    stock INTEGER NOT NULL DEFAULT 1,
     delivery_available BOOLEAN NOT NULL DEFAULT FALSE,
     status VARCHAR(20) NOT NULL DEFAULT 'active'
         CHECK (status IN ('active','paused','deleted')),
@@ -71,7 +73,11 @@ CREATE TABLE IF NOT EXISTS orders (
     listing_id INTEGER NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL DEFAULT 1,
     total_amount NUMERIC(10,2) NOT NULL,
-    delivery_method VARCHAR(50) DEFAULT 'to_confirm',
+    reception_mode VARCHAR(50) NOT NULL DEFAULT 'retrait' CHECK (reception_mode IN ('retrait','livraison')),
+    shipping_address TEXT,
+    phone VARCHAR(30),
+    color TEXT,
+    size TEXT,
     buyer_note TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'pending'
         CHECK (status IN ('pending','confirmed','shipped','delivered','cancelled')),
