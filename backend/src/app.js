@@ -10,6 +10,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const favoriteRoutes = require("./routes/favoriteRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
 
 const app = express();
 app.use(cors());
@@ -28,5 +29,6 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/favorites", favoriteRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/categories", categoryRoutes);
 
 module.exports = app;

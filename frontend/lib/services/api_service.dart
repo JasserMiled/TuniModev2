@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
+import '../models/category.dart';
 import '../models/listing.dart';
 
 class ApiService {
@@ -153,6 +154,20 @@ class ApiService {
     );
 
     return res.statusCode == 201;
+  }
+
+  static Future<List<Category>> fetchCategoryTree() async {
+    final uri = Uri.parse('$baseUrl/api/categories/tree');
+    final res = await http.get(uri, headers: _headers());
+
+    if (res.statusCode != 200) {
+      throw Exception('Impossible de charger les catégories');
+    }
+
+    final data = jsonDecode(res.body) as List<dynamic>;
+    return data
+        .map((node) => Category.fromJson(node as Map<String, dynamic>))
+        .toList();
   }
 
   static Future<String?> uploadImage({
