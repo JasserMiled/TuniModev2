@@ -2,6 +2,7 @@
 const express = require("express");
 const db = require("../db");
 const { authRequired, requireRole } = require("../middleware/auth");
+const { getCategoryWithChildren } = require("../services/categoryService");
 
 const router = express.Router();
 
@@ -74,9 +75,24 @@ router.get("/", async (req, res) => {
       params.push(`%${q.toLowerCase()}%`);
       idx++;
     }
-    if (category_id) {
-      conditions.push(`l.category_id = $${idx}`);
-      params.push(category_id);
+    if (category_id !== undefined) {
+      const parsedCategoryId = Number(category_id);
+
+      if (!Number.isInteger(parsedCategoryId) || parsedCategoryId <= 0) {
+        return res.status(400).json({ message: "category_id invalide" });
+      }
+
+      // Récupère la catégorie sélectionnée ainsi que tous ses descendants
+      // via un CTE récursif pour éviter les requêtes N+1, puis filtre
+      // les annonces sur cet ensemble d'identifiants.
+      const descendantCategoryIds = await getCategoryWithChildren(parsedCategoryId);
+
+      if (descendantCategoryIds.length === 0) {
+        return res.json([]);
+      }
+
+      conditions.push(`l.category_id = ANY($${idx})`);
+      params.push(descendantCategoryIds);
       idx++;
     }
     if (normalizedSizes.length > 0) {
