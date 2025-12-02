@@ -5,6 +5,65 @@ import 'package:flutter/material.dart';
 import '../models/category.dart';
 import '../services/api_service.dart';
 
+class _ColorOption {
+  final String name;
+  final String hex;
+
+  const _ColorOption({required this.name, required this.hex});
+}
+
+const List<_ColorOption> _colorOptions = [
+  _ColorOption(name: 'Noir', hex: '#000000'),
+  _ColorOption(name: 'Blanc', hex: '#FFFFFF'),
+  _ColorOption(name: 'Gris', hex: '#808080'),
+  _ColorOption(name: 'Gris clair', hex: '#D3D3D3'),
+  _ColorOption(name: 'Gris foncé', hex: '#404040'),
+  _ColorOption(name: 'Rouge', hex: '#FF0000'),
+  _ColorOption(name: 'Rouge foncé', hex: '#8B0000'),
+  _ColorOption(name: 'Rouge clair', hex: '#FF6666'),
+  _ColorOption(name: 'Bordeaux', hex: '#800020'),
+  _ColorOption(name: 'Rose', hex: '#FFC0CB'),
+  _ColorOption(name: 'Rose fuchsia', hex: '#FF00FF'),
+  _ColorOption(name: 'Framboise', hex: '#E30B5D'),
+  _ColorOption(name: 'Orange', hex: '#FFA500'),
+  _ColorOption(name: 'Orange foncé', hex: '#FF8C00'),
+  _ColorOption(name: 'Saumon', hex: '#FA8072'),
+  _ColorOption(name: 'Corail', hex: '#FF7F50'),
+  _ColorOption(name: 'Jaune', hex: '#FFFF00'),
+  _ColorOption(name: 'Or', hex: '#FFD700'),
+  _ColorOption(name: 'Beige', hex: '#F5F5DC'),
+  _ColorOption(name: 'Crème', hex: '#FFFDD0'),
+  _ColorOption(name: 'Vert', hex: '#008000'),
+  _ColorOption(name: 'Vert clair', hex: '#90EE90'),
+  _ColorOption(name: 'Vert foncé', hex: '#006400'),
+  _ColorOption(name: 'Vert menthe', hex: '#98FF98'),
+  _ColorOption(name: 'Vert olive', hex: '#808000'),
+  _ColorOption(name: 'Vert émeraude', hex: '#50C878'),
+  _ColorOption(name: 'Turquoise', hex: '#40E0D0'),
+  _ColorOption(name: 'Cyan', hex: '#00FFFF'),
+  _ColorOption(name: 'Bleu', hex: '#0000FF'),
+  _ColorOption(name: 'Bleu clair', hex: '#ADD8E6'),
+  _ColorOption(name: 'Bleu foncé', hex: '#00008B'),
+  _ColorOption(name: 'Bleu ciel', hex: '#87CEEB'),
+  _ColorOption(name: 'Bleu turquoise', hex: '#30D5C8'),
+  _ColorOption(name: 'Bleu marine', hex: '#000080'),
+  _ColorOption(name: 'Indigo', hex: '#4B0082'),
+  _ColorOption(name: 'Violet', hex: '#800080'),
+  _ColorOption(name: 'Violet foncé', hex: '#2E0854'),
+  _ColorOption(name: 'Lavande', hex: '#E6E6FA'),
+  _ColorOption(name: 'Pourpre', hex: '#722F37'),
+  _ColorOption(name: 'Marron', hex: '#8B4513'),
+  _ColorOption(name: 'Chocolat', hex: '#7B3F00'),
+  _ColorOption(name: 'Brun clair', hex: '#A0522D'),
+  _ColorOption(name: 'Sable', hex: '#C2B280'),
+  _ColorOption(name: 'Kaki', hex: '#F0E68C'),
+  _ColorOption(name: 'Cuivre', hex: '#B87333'),
+  _ColorOption(name: 'Argent', hex: '#C0C0C0'),
+  _ColorOption(name: 'Platine', hex: '#E5E4E2'),
+  _ColorOption(name: 'Bronze', hex: '#CD7F32'),
+  _ColorOption(name: 'Pêche', hex: '#FFDAB9'),
+];
+
 class _PickedImage {
   final String name;
   final Uint8List bytes;
@@ -26,7 +85,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _description = '';
   String _price = '';
   String _sizesText = '';
-  String _colorsText = '';
+  final List<String> _selectedColors = [];
   String? _gender;
   String _city = '';
   String _condition = '';
@@ -162,7 +221,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       description: _description,
       price: double.tryParse(_price) ?? 0,
       sizes: _splitValues(_sizesText),
-      colors: _splitValues(_colorsText),
+      colors: _selectedColors,
       gender: _gender,
       condition: _condition.isEmpty ? null : _condition,
       categoryId: _selectedCategory?.id,
@@ -180,7 +239,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() {
         _gender = null;
         _sizesText = '';
-        _colorsText = '';
+        _selectedColors.clear();
         _images = [];
         _selectedCategory = null;
         _categoryPath = [];
@@ -223,6 +282,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _currentCategories = _categoryPath.last.children;
       _selectedCategory = null;
     });
+  }
+
+  Color _colorFromHex(String hex) {
+    final buffer = StringBuffer();
+    if (hex.length == 6 || hex.length == 7) buffer.write('ff');
+    buffer.write(hex.replaceFirst('#', ''));
+    return Color(int.parse(buffer.toString(), radix: 16));
+  }
+
+  void _toggleColor(String colorName) {
+    setState(() {
+      if (_selectedColors.contains(colorName)) {
+        _selectedColors.remove(colorName);
+      } else {
+        _selectedColors.add(colorName);
+      }
+    });
+  }
+
+  Widget _buildColorSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Couleurs disponibles',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade800,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Sélectionnez une ou plusieurs couleurs dans la liste.',
+          style: TextStyle(color: Colors.grey.shade700),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _colorOptions
+              .map(
+                (option) => FilterChip(
+                  label: Text(option.name),
+                  avatar: CircleAvatar(
+                    backgroundColor: _colorFromHex(option.hex),
+                    radius: 12,
+                  ),
+                  selected: _selectedColors.contains(option.name),
+                  onSelected: (_) => _toggleColor(option.name),
+                ),
+              )
+              .toList(),
+        ),
+      ],
+    );
   }
 
   Widget _buildCategorySelector() {
@@ -448,13 +565,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           onSaved: (v) => _sizesText = v?.trim() ?? '',
                         ),
-                        TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Couleurs disponibles',
-                            helperText: 'Séparez les valeurs par des virgules',
-                          ),
-                          onSaved: (v) => _colorsText = v?.trim() ?? '',
-                        ),
+                        const SizedBox(height: 8),
+                        _buildColorSelector(),
                         const SizedBox(height: 12),
                         Align(
                           alignment: Alignment.centerLeft,
