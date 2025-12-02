@@ -35,7 +35,11 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
       MaterialPageRoute(
         builder: (_) => ListingDetailScreen(listingId: listing.id),
       ),
-    );
+    ).then((updated) {
+      if (updated == true) {
+        _refresh();
+      }
+    });
   }
 
   Widget _buildBody() {
