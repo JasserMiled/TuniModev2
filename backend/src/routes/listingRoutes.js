@@ -12,6 +12,31 @@ const normalizeGender = (gender) => {
   return allowedGenders.includes(lower) ? lower : null;
 };
 
+const genderByRootSlug = {
+  hommes: "homme",
+  femmes: "femme",
+  enfants: "enfant",
+};
+
+const deriveGenderFromCategory = async (categoryId) => {
+  if (!categoryId) return null;
+
+  const result = await db.query(
+    `WITH RECURSIVE tree AS (
+       SELECT id, slug, parent_id FROM categories WHERE id = $1
+       UNION ALL
+       SELECT c.id, c.slug, c.parent_id
+       FROM categories c
+       JOIN tree t ON c.id = t.parent_id
+     )
+     SELECT slug FROM tree WHERE parent_id IS NULL LIMIT 1`,
+    [categoryId]
+  );
+
+  const rootSlug = result.rows[0]?.slug?.toLowerCase();
+  return genderByRootSlug[rootSlug] || null;
+};
+
 /**
  * GET /api/listings
  */
@@ -150,7 +175,6 @@ router.post("/", authRequired, requireRole("pro", "admin"), async (req, res) => 
       price,
       sizes,
       colors,
-      gender,
       condition,
       category_id,
       city,
@@ -173,7 +197,7 @@ router.post("/", authRequired, requireRole("pro", "admin"), async (req, res) => 
       return [];
     };
 
-    const normalizedGender = normalizeGender(gender);
+    const resolvedGender = await deriveGenderFromCategory(category_id);
 
     const parsedSizes = normalizeStringArray(sizes);
     const parsedColors = normalizeStringArray(colors);
@@ -183,14 +207,14 @@ router.post("/", authRequired, requireRole("pro", "admin"), async (req, res) => 
        (user_id, title, description, price, sizes, colors, gender, condition, category_id, city)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        RETURNING *`,
-      [
+       [
         req.user.id,
         title,
         description,
         price,
         parsedSizes,
         parsedColors,
-        normalizedGender,
+        resolvedGender,
         condition,
         category_id || null,
         city || null,
@@ -247,7 +271,6 @@ router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) =
       price,
       sizes,
       colors,
-      gender,
       condition,
       category_id,
       city,
@@ -271,7 +294,11 @@ router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) =
       return [];
     };
 
-    const normalizedGender = normalizeGender(gender);
+    const resolvedGender =
+      category_id !== undefined
+        ? await deriveGenderFromCategory(category_id)
+        : null;
+    const categoryProvided = category_id !== undefined;
 
     const parsedSizes = normalizeStringArray(sizes);
     const parsedColors = normalizeStringArray(colors);
@@ -283,13 +310,13 @@ router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) =
            price = COALESCE($3, price),
            sizes = COALESCE($4, sizes),
            colors = COALESCE($5, colors),
-           gender = COALESCE($6, gender),
-           condition = COALESCE($7, condition),
-           category_id = COALESCE($8, category_id),
-           city = COALESCE($9, city),
-           status = COALESCE($10, status),
+           gender = CASE WHEN $6 THEN $7 ELSE gender END,
+           condition = COALESCE($8, condition),
+           category_id = CASE WHEN $6 THEN $9 ELSE category_id END,
+           city = COALESCE($10, city),
+           status = COALESCE($11, status),
            updated_at = NOW()
-       WHERE id = $11
+       WHERE id = $12
        RETURNING *`,
       [
         title,
@@ -297,7 +324,8 @@ router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) =
         price,
         parsedSizes,
         parsedColors,
-        normalizedGender,
+        categoryProvided,
+        resolvedGender,
         condition,
         category_id,
         city,
