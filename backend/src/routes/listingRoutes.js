@@ -44,6 +44,24 @@ router.get("/", async (req, res) => {
   try {
     const { q, category_id, city, min_price, max_price, gender } = req.query;
 
+    const normalizeArrayFilter = (value) => {
+      if (value === undefined || value === null) return [];
+
+      const values = Array.isArray(value)
+        ? value
+        : typeof value === "string"
+        ? value.split(",")
+        : [];
+
+      return values
+        .map((v) => (v === null || v === undefined ? null : String(v).trim().toLowerCase()))
+        .filter((v) => v);
+    };
+
+    const normalizedSizes = normalizeArrayFilter(req.query.sizes || req.query.size);
+    const normalizedColors = normalizeArrayFilter(req.query.colors || req.query.color);
+    const deliveryParam = req.query.delivery_available;
+
     // Build the WHERE clause dynamically based on the filters provided in the query string.
     // We always enforce that a listing must be active, then append additional conditions
     // as the client adds search parameters.
@@ -61,6 +79,20 @@ router.get("/", async (req, res) => {
       params.push(category_id);
       idx++;
     }
+    if (normalizedSizes.length > 0) {
+      conditions.push(
+        `EXISTS (SELECT 1 FROM unnest(l.sizes) s WHERE LOWER(s) = ANY($${idx}))`
+      );
+      params.push(normalizedSizes);
+      idx++;
+    }
+    if (normalizedColors.length > 0) {
+      conditions.push(
+        `EXISTS (SELECT 1 FROM unnest(l.colors) c WHERE LOWER(c) = ANY($${idx}))`
+      );
+      params.push(normalizedColors);
+      idx++;
+    }
     if (city) {
       conditions.push(`LOWER(l.city) = $${idx}`);
       params.push(city.toLowerCase());
@@ -74,6 +106,15 @@ router.get("/", async (req, res) => {
     if (max_price) {
       conditions.push(`l.price <= $${idx}`);
       params.push(max_price);
+      idx++;
+    }
+
+    if (deliveryParam !== undefined) {
+      const deliveryValue = typeof deliveryParam === "string"
+        ? ["true", "1", "yes", "on"].includes(deliveryParam.toLowerCase())
+        : Boolean(deliveryParam);
+      conditions.push(`l.delivery_available = $${idx}`);
+      params.push(deliveryValue);
       idx++;
     }
 

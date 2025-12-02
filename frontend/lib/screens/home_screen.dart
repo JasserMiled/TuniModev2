@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/listing.dart';
+import '../models/category.dart';
 import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
 import 'listing_detail_screen.dart';
@@ -25,6 +26,13 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _selectedCity;
   double? _minPrice;
   double? _maxPrice;
+  int? _selectedCategoryId;
+  List<String> _selectedSizes = [];
+  List<String> _selectedColors = [];
+  bool? _deliveryAvailable;
+  List<Category> _categoryTree = [];
+  bool _isLoadingCategories = false;
+  String? _categoryLoadError;
   final List<String> _categories = const [
     'Femmes',
     'Hommes',
@@ -37,6 +45,29 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _futureListings = ApiService.fetchListings();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    setState(() {
+      _isLoadingCategories = true;
+      _categoryLoadError = null;
+    });
+
+    try {
+      final categories = await ApiService.fetchCategoryTree();
+      setState(() {
+        _categoryTree = categories;
+      });
+    } catch (e) {
+      setState(() {
+        _categoryLoadError = 'Impossible de charger les catégories';
+      });
+    } finally {
+      setState(() {
+        _isLoadingCategories = false;
+      });
+    }
   }
 
   void _performSearch() {
@@ -82,6 +113,38 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _clearCategoryFilter() {
+    if (_selectedCategoryId == null) return;
+    setState(() {
+      _selectedCategoryId = null;
+      _refreshListings();
+    });
+  }
+
+  void _clearSizeFilter() {
+    if (_selectedSizes.isEmpty) return;
+    setState(() {
+      _selectedSizes = [];
+      _refreshListings();
+    });
+  }
+
+  void _clearColorFilter() {
+    if (_selectedColors.isEmpty) return;
+    setState(() {
+      _selectedColors = [];
+      _refreshListings();
+    });
+  }
+
+  void _clearDeliveryFilter() {
+    if (_deliveryAvailable == null) return;
+    setState(() {
+      _deliveryAvailable = null;
+      _refreshListings();
+    });
+  }
+
   void _refreshListings() {
     final query = _searchController.text.trim();
     setState(() {
@@ -91,6 +154,10 @@ class _HomeScreenState extends State<HomeScreen> {
         city: _selectedCity,
         minPrice: _minPrice,
         maxPrice: _maxPrice,
+        categoryId: _selectedCategoryId,
+        sizes: _selectedSizes,
+        colors: _selectedColors,
+        deliveryAvailable: _deliveryAvailable,
       );
     });
   }
@@ -100,6 +167,12 @@ class _HomeScreenState extends State<HomeScreen> {
         TextEditingController(text: _selectedCity ?? '');
     double tempMin = _minPrice ?? 0;
     double tempMax = _maxPrice ?? 500;
+    int? tempCategoryId = _selectedCategoryId;
+    bool? tempDelivery = _deliveryAvailable;
+    final TextEditingController sizeController =
+        TextEditingController(text: _selectedSizes.join(', '));
+    final TextEditingController colorController =
+        TextEditingController(text: _selectedColors.join(', '));
 
     showModalBottomSheet(
       context: context,
@@ -150,6 +223,105 @@ class _HomeScreenState extends State<HomeScreen> {
                       hintText: 'Ex: Tunis, Sousse, Bizerte...',
                       prefixIcon: Icon(Icons.location_on_outlined),
                     ),
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Catégorie',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      if (_isLoadingCategories)
+                        const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      if (_categoryLoadError != null)
+                        const Icon(Icons.error_outline, color: Colors.redAccent),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<int?>(
+                    value: tempCategoryId,
+                    decoration: const InputDecoration(
+                      hintText: 'Toutes les catégories',
+                    ),
+                    items: [
+                      const DropdownMenuItem<int?>(
+                        value: null,
+                        child: Text('Toutes les catégories'),
+                      ),
+                      ..._flattenCategories(_categoryTree)
+                          .map(
+                            (option) => DropdownMenuItem<int?>(
+                              value: option.id,
+                              child: Text(option.label),
+                            ),
+                          )
+                          .toList(),
+                    ],
+                    onChanged: _isLoadingCategories
+                        ? null
+                        : (value) => setModalState(() {
+                              tempCategoryId = value;
+                            }),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Tailles (séparées par des virgules)',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: sizeController,
+                    decoration: const InputDecoration(
+                      hintText: 'Ex: S, M, L',
+                      prefixIcon: Icon(Icons.straighten),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Couleurs (séparées par des virgules)',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: colorController,
+                    decoration: const InputDecoration(
+                      hintText: 'Ex: noir, bleu, rouge',
+                      prefixIcon: Icon(Icons.palette_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Livraison',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 6),
+                  DropdownButtonFormField<bool?>(
+                    value: tempDelivery,
+                    decoration: const InputDecoration(
+                      hintText: 'Peu importe',
+                    ),
+                    items: const [
+                      DropdownMenuItem<bool?>(
+                        value: null,
+                        child: Text('Peu importe'),
+                      ),
+                      DropdownMenuItem<bool?>(
+                        value: true,
+                        child: Text('Livraison disponible'),
+                      ),
+                      DropdownMenuItem<bool?>(
+                        value: false,
+                        child: Text('Retrait uniquement'),
+                      ),
+                    ],
+                    onChanged: (value) => setModalState(() {
+                      tempDelivery = value;
+                    }),
                   ),
                   const SizedBox(height: 18),
                   const Text(
@@ -210,6 +382,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               tempMin = 0;
                               tempMax = 500;
                               cityController.clear();
+                              tempCategoryId = null;
+                              tempDelivery = null;
+                              sizeController.clear();
+                              colorController.clear();
                             });
                           },
                           child: const Text('Réinitialiser'),
@@ -225,6 +401,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               _maxPrice = hasPriceFilter ? tempMax : null;
                               final city = cityController.text.trim();
                               _selectedCity = city.isEmpty ? null : city;
+                              _selectedCategoryId = tempCategoryId;
+                              _selectedSizes = _parseInputList(sizeController.text);
+                              _selectedColors = _parseInputList(colorController.text);
+                              _deliveryAvailable = tempDelivery;
                             });
                             Navigator.of(context).pop();
                             _refreshListings();
@@ -266,6 +446,39 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return buffer.toString();
+  }
+
+  List<String> _parseInputList(String value) {
+    return value
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+
+  List<_CategoryOption> _flattenCategories(List<Category> categories,
+      [String prefix = '']) {
+    final options = <_CategoryOption>[];
+
+    for (final category in categories) {
+      final label = prefix.isEmpty ? category.name : '$prefix ${category.name}';
+      options.add(_CategoryOption(id: category.id, label: label));
+
+      if (category.children.isNotEmpty) {
+        options.addAll(
+          _flattenCategories(category.children, '$label ›'),
+        );
+      }
+    }
+
+    return options;
+  }
+
+  String? _categoryLabelForId(int id) {
+    for (final option in _flattenCategories(_categoryTree)) {
+      if (option.id == id) return option.label;
+    }
+    return null;
   }
 
   String _formatGenderLabel(String gender) {
@@ -629,6 +842,51 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
+    if (_selectedCategoryId != null) {
+      final categoryLabel = _categoryLabelForId(_selectedCategoryId!);
+      chips.add(
+        InputChip(
+          avatar: const Icon(Icons.category_outlined, size: 18),
+          label: Text('Catégorie : ${categoryLabel ?? '#${_selectedCategoryId}'}'),
+          onDeleted: _clearCategoryFilter,
+        ),
+      );
+    }
+
+    if (_selectedSizes.isNotEmpty) {
+      chips.add(
+        InputChip(
+          avatar: const Icon(Icons.straighten, size: 18),
+          label: Text('Tailles : ${_selectedSizes.join(', ')}'),
+          onDeleted: _clearSizeFilter,
+        ),
+      );
+    }
+
+    if (_selectedColors.isNotEmpty) {
+      chips.add(
+        InputChip(
+          avatar: const Icon(Icons.palette_outlined, size: 18),
+          label: Text('Couleurs : ${_selectedColors.join(', ')}'),
+          onDeleted: _clearColorFilter,
+        ),
+      );
+    }
+
+    if (_deliveryAvailable != null) {
+      chips.add(
+        InputChip(
+          avatar: const Icon(Icons.local_shipping_outlined, size: 18),
+          label: Text(
+            _deliveryAvailable == true
+                ? 'Livraison disponible'
+                : 'Retrait uniquement',
+          ),
+          onDeleted: _clearDeliveryFilter,
+        ),
+      );
+    }
+
     if (chips.isEmpty) return const SizedBox.shrink();
 
     return Padding(
@@ -734,5 +992,15 @@ class _Highlight {
     required this.icon,
     required this.label,
     required this.color,
+  });
+}
+
+class _CategoryOption {
+  final int id;
+  final String label;
+
+  const _CategoryOption({
+    required this.id,
+    required this.label,
   });
 }
