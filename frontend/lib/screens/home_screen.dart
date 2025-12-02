@@ -223,19 +223,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Ville',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: cityController,
-                        decoration: const InputDecoration(
-                          hintText: 'Ex: Tunis, Sousse, Bizerte...',
-                          prefixIcon: Icon(Icons.location_on_outlined),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Ville',
+                          style: TextStyle(fontWeight: FontWeight.w700),
                         ),
-                      ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: cityController,
+                          decoration: const InputDecoration(
+                            hintText: 'Ex: Tunis, Sousse, Bizerte...',
+                            prefixIcon: Icon(Icons.location_on_outlined),
+                          ),
+                        ),
                         const SizedBox(height: 14),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -256,190 +256,192 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<int?>(
-                    value: tempCategoryId,
-                    decoration: const InputDecoration(
-                      hintText: 'Toutes les catégories',
-                    ),
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text('Toutes les catégories'),
-                      ),
-                      ..._flattenCategories(_categoryTree)
-                          .map(
-                            (option) => DropdownMenuItem<int?>(
-                              value: option.id,
-                              child: Text(option.label),
+                          value: tempCategoryId,
+                          decoration: const InputDecoration(
+                            hintText: 'Toutes les catégories',
+                          ),
+                          items: [
+                            const DropdownMenuItem<int?>(
+                              value: null,
+                              child: Text('Toutes les catégories'),
                             ),
-                          )
-                          .toList(),
-                    ],
-                    onChanged: _isLoadingCategories
-                        ? null
-                        : (value) => setModalState(() {
-                              tempCategoryId = value;
-                            }),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Tailles (séparées par des virgules)',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: sizeController,
-                    decoration: const InputDecoration(
-                      hintText: 'Ex: S, M, L',
-                      prefixIcon: Icon(Icons.straighten),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Couleurs (séparées par des virgules)',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: colorController,
-                    decoration: const InputDecoration(
-                      hintText: 'Ex: noir, bleu, rouge',
-                      prefixIcon: Icon(Icons.palette_outlined),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Livraison',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 6),
-                  DropdownButtonFormField<bool?>(
-                    value: tempDelivery,
-                    decoration: const InputDecoration(
-                      hintText: 'Peu importe',
-                    ),
-                    items: const [
-                      DropdownMenuItem<bool?>(
-                        value: null,
-                        child: Text('Peu importe'),
-                      ),
-                      DropdownMenuItem<bool?>(
-                        value: true,
-                        child: Text('Livraison disponible'),
-                      ),
-                      DropdownMenuItem<bool?>(
-                        value: false,
-                        child: Text('Retrait uniquement'),
-                      ),
-                    ],
-                    onChanged: (value) => setModalState(() {
-                      tempDelivery = value;
-                    }),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'Plage de prix',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      InputChip(
-                        label: const Text('0 - 50'),
-                        selected: tempMin == 0 && tempMax == 50,
-                        onSelected: (_) => setPreset(0, 50),
-                      ),
-                      InputChip(
-                        label: const Text('50 - 150'),
-                        selected: tempMin == 50 && tempMax == 150,
-                        onSelected: (_) => setPreset(50, 150),
-                      ),
-                      InputChip(
-                        label: const Text('150 - 300'),
-                        selected: tempMin == 150 && tempMax == 300,
-                        onSelected: (_) => setPreset(150, 300),
-                      ),
-                      InputChip(
-                        label: const Text('300+'),
-                        selected: tempMin == 300 && tempMax == 500,
-                        onSelected: (_) => setPreset(300, 500),
-                      ),
-                    ],
-                  ),
-                  RangeSlider(
-                    values: RangeValues(tempMin, tempMax),
-                    onChanged: (values) {
-                      setModalState(() {
-                        tempMin = values.start;
-                        tempMax = values.end;
-                      });
-                    },
-                    min: 0,
-                    max: 500,
-                    divisions: 10,
-                    activeColor: _primaryBlue,
-                    labels: RangeLabels(
-                      '${valuesToCurrency(tempMin)}',
-                      '${valuesToCurrency(tempMax)}',
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setModalState(() {
-                              tempMin = 0;
-                              tempMax = 500;
-                              cityController.clear();
-                              tempCategoryId = null;
-                              tempDelivery = null;
-                              sizeController.clear();
-                              colorController.clear();
-                            });
-                          },
-                          child: const Text('Réinitialiser'),
+                            ..._flattenCategories(_categoryTree)
+                                .map(
+                                  (option) => DropdownMenuItem<int?>(
+                                    value: option.id,
+                                    child: Text(option.label),
+                                  ),
+                                )
+                                .toList(),
+                          ],
+                          onChanged: _isLoadingCategories
+                              ? null
+                              : (value) => setModalState(() {
+                                    tempCategoryId = value;
+                                  }),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            final hasPriceFilter = tempMin > 0 || tempMax < 500;
-                            setState(() {
-                              _minPrice = hasPriceFilter ? tempMin : null;
-                              _maxPrice = hasPriceFilter ? tempMax : null;
-                              final city = cityController.text.trim();
-                              _selectedCity = city.isEmpty ? null : city;
-                              _selectedCategoryId = tempCategoryId;
-                              _selectedSizes = _parseInputList(sizeController.text);
-                              _selectedColors = _parseInputList(colorController.text);
-                              _deliveryAvailable = tempDelivery;
-                            });
-                            Navigator.of(context).pop();
-                            _refreshListings();
-                          },
-                          icon: const Icon(Icons.filter_alt),
-                          label: const Text('Appliquer'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _primaryBlue,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Tailles (séparées par des virgules)',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: sizeController,
+                          decoration: const InputDecoration(
+                            hintText: 'Ex: S, M, L',
+                            prefixIcon: Icon(Icons.straighten),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Couleurs (séparées par des virgules)',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: colorController,
+                          decoration: const InputDecoration(
+                            hintText: 'Ex: noir, bleu, rouge',
+                            prefixIcon: Icon(Icons.palette_outlined),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'Livraison',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<bool?>(
+                          value: tempDelivery,
+                          decoration: const InputDecoration(
+                            hintText: 'Peu importe',
+                          ),
+                          items: const [
+                            DropdownMenuItem<bool?>(
+                              value: null,
+                              child: Text('Peu importe'),
+                            ),
+                            DropdownMenuItem<bool?>(
+                              value: true,
+                              child: Text('Livraison disponible'),
+                            ),
+                            DropdownMenuItem<bool?>(
+                              value: false,
+                              child: Text('Retrait uniquement'),
+                            ),
+                          ],
+                          onChanged: (value) => setModalState(() {
+                            tempDelivery = value;
+                          }),
+                        ),
+                        const SizedBox(height: 18),
+                        const Text(
+                          'Plage de prix',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            InputChip(
+                              label: const Text('0 - 50'),
+                              selected: tempMin == 0 && tempMax == 50,
+                              onSelected: (_) => setPreset(0, 50),
+                            ),
+                            InputChip(
+                              label: const Text('50 - 150'),
+                              selected: tempMin == 50 && tempMax == 150,
+                              onSelected: (_) => setPreset(50, 150),
+                            ),
+                            InputChip(
+                              label: const Text('150 - 300'),
+                              selected: tempMin == 150 && tempMax == 300,
+                              onSelected: (_) => setPreset(150, 300),
+                            ),
+                            InputChip(
+                              label: const Text('300+'),
+                              selected: tempMin == 300 && tempMax == 500,
+                              onSelected: (_) => setPreset(300, 500),
+                            ),
+                          ],
+                        ),
+                        RangeSlider(
+                          values: RangeValues(tempMin, tempMax),
+                          onChanged: (values) {
+                            setModalState(() {
+                              tempMin = values.start;
+                              tempMax = values.end;
+                            });
+                          },
+                          min: 0,
+                          max: 500,
+                          divisions: 10,
+                          activeColor: _primaryBlue,
+                          labels: RangeLabels(
+                            '${valuesToCurrency(tempMin)}',
+                            '${valuesToCurrency(tempMax)}',
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    tempMin = 0;
+                                    tempMax = 500;
+                                    cityController.clear();
+                                    tempCategoryId = null;
+                                    tempDelivery = null;
+                                    sizeController.clear();
+                                    colorController.clear();
+                                  });
+                                },
+                                child: const Text('Réinitialiser'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  final hasPriceFilter = tempMin > 0 || tempMax < 500;
+                                  setState(() {
+                                    _minPrice = hasPriceFilter ? tempMin : null;
+                                    _maxPrice = hasPriceFilter ? tempMax : null;
+                                    final city = cityController.text.trim();
+                                    _selectedCity = city.isEmpty ? null : city;
+                                    _selectedCategoryId = tempCategoryId;
+                                    _selectedSizes = _parseInputList(sizeController.text);
+                                    _selectedColors = _parseInputList(colorController.text);
+                                    _deliveryAvailable = tempDelivery;
+                                  });
+                                  Navigator.of(context).pop();
+                                  _refreshListings();
+                                },
+                                icon: const Icon(Icons.filter_alt),
+                                label: const Text('Appliquer'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _primaryBlue,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+      );
   }
 
   String valuesToCurrency(double value) {
