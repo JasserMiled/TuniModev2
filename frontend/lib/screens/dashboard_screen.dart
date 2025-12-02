@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../models/category.dart';
 import '../services/api_service.dart';
 
 class _PickedImage {
@@ -30,10 +31,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _city = '';
   String _condition = '';
   List<_PickedImage> _images = [];
+  List<Category> _categoryTree = [];
+  List<Category> _categoryPath = [];
+  List<Category> _currentCategories = [];
+  Category? _selectedCategory;
 
   bool _loading = false;
+  bool _categoriesLoading = true;
   bool _uploadingImages = false;
   String? _message;
+  String? _categoryError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    setState(() {
+      _categoriesLoading = true;
+      _categoryError = null;
+    });
+
+    try {
+      final tree = await ApiService.fetchCategoryTree();
+      setState(() {
+        _categoryTree = tree;
+        _currentCategories = tree;
+        _categoryPath = [];
+        _selectedCategory = null;
+        _categoriesLoading = false;
+      });
+    } catch (_) {
+      setState(() {
+        _categoryError = 'Impossible de charger les catégories';
+        _categoriesLoading = false;
+      });
+    }
+  }
 
   Future<void> _pickImages() async {
     final result = await FilePicker.platform.pickFiles(
@@ -129,7 +165,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       colors: _splitValues(_colorsText),
       gender: _gender,
       condition: _condition.isEmpty ? null : _condition,
-      categoryId: null,
+      categoryId: _selectedCategory?.id,
       city: _city.isEmpty ? null : _city,
       images: uploadedImages,
     );
@@ -146,8 +182,159 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _sizesText = '';
         _colorsText = '';
         _images = [];
+        _selectedCategory = null;
+        _categoryPath = [];
+        _currentCategories = _categoryTree;
       });
     }
+  }
+
+  void _selectCategory(Category category) {
+    setState(() {
+      _selectedCategory = category;
+    });
+  }
+
+  void _openCategory(Category category) {
+    if (category.children.isEmpty) {
+      _selectCategory(category);
+      return;
+    }
+
+    setState(() {
+      _categoryPath = [..._categoryPath, category];
+      _currentCategories = category.children;
+      _selectedCategory = null;
+    });
+  }
+
+  void _goToLevel(int index) {
+    if (index < 0) {
+      setState(() {
+        _categoryPath = [];
+        _currentCategories = _categoryTree;
+        _selectedCategory = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _categoryPath = _categoryPath.sublist(0, index + 1);
+      _currentCategories = _categoryPath.last.children;
+      _selectedCategory = null;
+    });
+  }
+
+  Widget _buildCategorySelector() {
+    if (_categoriesLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 8),
+            Text('Chargement des catégories...'),
+          ],
+        ),
+      );
+    }
+
+    if (_categoryError != null) {
+      return Column(
+        children: [
+          Text(
+            _categoryError!,
+            style: const TextStyle(color: Colors.red),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: _loadCategories,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Réessayer'),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilterChip(
+              label: const Text('Racine'),
+              selected: _categoryPath.isEmpty,
+              onSelected: (_) => _goToLevel(-1),
+            ),
+            ..._categoryPath.asMap().entries.map(
+                  (entry) => FilterChip(
+                    label: Text(entry.value.name),
+                    selected: entry.key == _categoryPath.length - 1,
+                    onSelected: (_) => _goToLevel(entry.key),
+                  ),
+                ),
+          ],
+        ),
+        if (_selectedCategory != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Catégorie sélectionnée : ${_selectedCategory!.name}',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => _goToLevel(-1),
+                  child: const Text('Changer'),
+                ),
+              ],
+            ),
+          ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 320),
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: _currentCategories.length,
+            separatorBuilder: (_, __) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final category = _currentCategories[index];
+              return ListTile(
+                leading: Radio<int>(
+                  value: category.id,
+                  groupValue: _selectedCategory?.id,
+                  onChanged: (_) => _selectCategory(category),
+                ),
+                title: Text(category.name),
+                subtitle: category.children.isNotEmpty
+                    ? Text('${category.children.length} sous-catégories')
+                    : null,
+                trailing: category.children.isNotEmpty
+                    ? IconButton(
+                        onPressed: () => _openCategory(category),
+                        icon: const Icon(Icons.chevron_right),
+                      )
+                    : null,
+                onTap: category.children.isNotEmpty
+                    ? () => _openCategory(category)
+                    : () => _selectCategory(category),
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -268,6 +455,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           onSaved: (v) => _colorsText = v?.trim() ?? '',
                         ),
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Catégorie',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildCategorySelector(),
                         DropdownButtonFormField<String>(
                           decoration: const InputDecoration(labelText: 'Genre'),
                           value: _gender,
