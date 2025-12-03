@@ -13,8 +13,12 @@ class OrderDetailScreen extends StatelessWidget {
         return 'Confirmée';
       case 'shipped':
         return 'Expédiée';
-      case 'delivered':
-        return 'Livrée';
+      case 'ready_for_pickup':
+        return 'À retirer';
+      case 'picked_up':
+        return 'Retirée';
+      case 'completed':
+        return 'Terminée';
       case 'cancelled':
         return 'Annulée';
       default:
@@ -28,7 +32,11 @@ class OrderDetailScreen extends StatelessWidget {
         return Colors.blueAccent;
       case 'shipped':
         return Colors.deepPurple;
-      case 'delivered':
+      case 'ready_for_pickup':
+        return Colors.orange;
+      case 'picked_up':
+        return Colors.teal;
+      case 'completed':
         return Colors.green;
       case 'cancelled':
         return Colors.redAccent;

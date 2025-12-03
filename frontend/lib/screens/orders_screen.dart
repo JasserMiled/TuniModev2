@@ -13,6 +13,7 @@ class OrdersScreen extends StatefulWidget {
 
 class _OrdersScreenState extends State<OrdersScreen> {
   late Future<List<Order>> _ordersFuture;
+  int? _confirmingOrderId;
 
   @override
   void initState() {
@@ -32,6 +33,34 @@ class _OrdersScreenState extends State<OrdersScreen> {
     await future;
   }
 
+  Future<void> _confirmReception(Order order) async {
+    setState(() {
+      _confirmingOrderId = order.id;
+    });
+
+    try {
+      await ApiService.confirmOrderReception(order.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Réception confirmée, commande terminée.')),
+        );
+      }
+      await _refresh();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _confirmingOrderId = null;
+        });
+      }
+    }
+  }
+
   String _formatDate(DateTime date) {
     final d = date.toLocal();
     final twoDigits = (int value) => value.toString().padLeft(2, '0');
@@ -44,8 +73,12 @@ class _OrdersScreenState extends State<OrdersScreen> {
         return 'Confirmée';
       case 'shipped':
         return 'Expédiée';
-      case 'delivered':
-        return 'Livrée';
+      case 'ready_for_pickup':
+        return 'À retirer';
+      case 'picked_up':
+        return 'Retirée';
+      case 'completed':
+        return 'Terminée';
       case 'cancelled':
         return 'Annulée';
       default:
@@ -59,7 +92,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
         return Colors.blueAccent;
       case 'shipped':
         return Colors.deepPurple;
-      case 'delivered':
+      case 'ready_for_pickup':
+        return Colors.orange;
+      case 'picked_up':
+        return Colors.teal;
+      case 'completed':
         return Colors.green;
       case 'cancelled':
         return Colors.redAccent;
@@ -74,6 +111,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
       'Mode : ${order.receptionMode == 'livraison' ? 'Livraison' : 'Retrait sur place'}',
       'Quantité : ${order.quantity}',
     ];
+
+    final bool canConfirmReception =
+        order.status == 'shipped' || order.status == 'picked_up';
 
     if (order.color != null && order.color!.isNotEmpty) {
       subtitleLines.add('Couleur : ${order.color}');
@@ -115,6 +155,19 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text('Note : ${order.buyerNote}'),
                 ),
+              if (canConfirmReception) ...[
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: _confirmingOrderId == order.id
+                      ? null
+                      : () => _confirmReception(order),
+                  child: Text(
+                    _confirmingOrderId == order.id
+                        ? 'Validation...'
+                        : 'Confirmer la réception',
+                  ),
+                ),
+              ],
             ],
           ),
         ),
