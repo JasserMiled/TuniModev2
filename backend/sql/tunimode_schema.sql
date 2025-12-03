@@ -80,7 +80,17 @@ CREATE TABLE IF NOT EXISTS orders (
     size TEXT,
     buyer_note TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'pending'
-        CHECK (status IN ('pending','confirmed','shipped','delivered','cancelled')),
+        CHECK (
+            status IN (
+                'pending',
+                'confirmed',
+                'shipped',
+                'ready_for_pickup',
+                'picked_up',
+                'completed',
+                'cancelled'
+            )
+        ),
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

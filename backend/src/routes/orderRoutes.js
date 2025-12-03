@@ -161,17 +161,57 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     const { status } = req.body;
     const orderId = req.params.id;
 
-    const allowed = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
-    if (!allowed.includes(status)) {
+    const allowedStatuses = [
+      "pending",
+      "confirmed",
+      "shipped",
+      "ready_for_pickup",
+      "picked_up",
+      "completed",
+      "cancelled",
+    ];
+
+    if (!allowedStatuses.includes(status)) {
       return res.status(400).json({ message: "Statut invalide" });
     }
 
-    const check = await db.query("SELECT seller_id FROM orders WHERE id = $1", [orderId]);
+    const check = await db.query(
+      "SELECT seller_id, buyer_id, status AS current_status FROM orders WHERE id = $1",
+      [orderId]
+    );
     const found = check.rows[0];
     if (!found) return res.status(404).json({ message: "Commande introuvable" });
 
-    if (found.seller_id !== req.user.id) {
-      return res.status(403).json({ message: "Vous ne pouvez pas modifier cette commande" });
+    const isSeller = found.seller_id === req.user.id;
+    const isBuyer = found.buyer_id === req.user.id;
+
+    const sellerStatuses = [
+      "confirmed",
+      "shipped",
+      "ready_for_pickup",
+      "picked_up",
+      "cancelled",
+    ];
+
+    if (status === "completed") {
+      if (!isBuyer) {
+        return res.status(403).json({ message: "Seul l'acheteur peut confirmer la réception" });
+      }
+
+      const allowedCurrentStatuses = ["shipped", "picked_up"];
+      if (!allowedCurrentStatuses.includes(found.current_status)) {
+        return res
+          .status(400)
+          .json({ message: "La commande ne peut pas être marquée comme terminée pour le moment" });
+      }
+    } else {
+      if (!isSeller) {
+        return res.status(403).json({ message: "Vous ne pouvez pas modifier cette commande" });
+      }
+
+      if (!sellerStatuses.includes(status)) {
+        return res.status(400).json({ message: "Statut vendeur invalide" });
+      }
     }
 
     const result = await db.query(

@@ -13,6 +13,7 @@ class OrderRequestsScreen extends StatefulWidget {
 
 class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
   late Future<List<Order>> _ordersFuture;
+  int? _updatingOrderId;
 
   @override
   void initState() {
@@ -32,6 +33,78 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
     await future;
   }
 
+  Future<void> _updateStatus(Order order, String status) async {
+    setState(() {
+      _updatingOrderId = order.id;
+    });
+
+    try {
+      await ApiService.updateSellerOrderStatus(orderId: order.id, status: status);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Statut mis à jour en ${_statusLabel(status)}')),
+        );
+      }
+      await _refresh();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _updatingOrderId = null;
+        });
+      }
+    }
+  }
+
+  List<Widget> _buildActions(Order order) {
+    final actions = <Widget>[];
+
+    final bool isUpdating = _updatingOrderId == order.id;
+
+    if (order.status == 'pending') {
+      actions.add(
+        ElevatedButton(
+          onPressed: isUpdating ? null : () => _updateStatus(order, 'confirmed'),
+          child: Text(isUpdating ? 'Mise à jour...' : 'Confirmer la commande'),
+        ),
+      );
+    }
+
+    if (order.status == 'confirmed' && order.receptionMode == 'livraison') {
+      actions.add(
+        ElevatedButton(
+          onPressed: isUpdating ? null : () => _updateStatus(order, 'shipped'),
+          child: Text(isUpdating ? 'Mise à jour...' : 'Marquer comme expédiée'),
+        ),
+      );
+    }
+
+    if (order.status == 'confirmed' && order.receptionMode == 'retrait') {
+      actions.add(
+        ElevatedButton(
+          onPressed: isUpdating ? null : () => _updateStatus(order, 'ready_for_pickup'),
+          child: Text(isUpdating ? 'Mise à jour...' : 'Commande prête – à retirer'),
+        ),
+      );
+    }
+
+    if (order.status == 'ready_for_pickup' && order.receptionMode == 'retrait') {
+      actions.add(
+        ElevatedButton(
+          onPressed: isUpdating ? null : () => _updateStatus(order, 'picked_up'),
+          child: Text(isUpdating ? 'Mise à jour...' : 'Marquer comme retirée'),
+        ),
+      );
+    }
+
+    return actions;
+  }
+
   String _formatDate(DateTime date) {
     final d = date.toLocal();
     final twoDigits = (int value) => value.toString().padLeft(2, '0');
@@ -44,8 +117,12 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
         return 'Confirmée';
       case 'shipped':
         return 'Expédiée';
-      case 'delivered':
-        return 'Livrée';
+      case 'ready_for_pickup':
+        return 'À retirer';
+      case 'picked_up':
+        return 'Retirée';
+      case 'completed':
+        return 'Terminée';
       case 'cancelled':
         return 'Annulée';
       default:
@@ -59,7 +136,11 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
         return Colors.blueAccent;
       case 'shipped':
         return Colors.deepPurple;
-      case 'delivered':
+      case 'ready_for_pickup':
+        return Colors.orange;
+      case 'picked_up':
+        return Colors.teal;
+      case 'completed':
         return Colors.green;
       case 'cancelled':
         return Colors.redAccent;
@@ -74,6 +155,8 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
       'Mode : ${order.receptionMode == 'livraison' ? 'Livraison' : 'Retrait sur place'}',
       'Quantité : ${order.quantity}',
     ];
+
+    final actions = _buildActions(order);
 
     if (order.color != null && order.color!.isNotEmpty) {
       subtitleLines.add('Couleur : ${order.color}');
@@ -124,6 +207,14 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text('Note de l\'acheteur : ${order.buyerNote}'),
                 ),
+              if (actions.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: actions,
+                ),
+              ],
             ],
           ),
         ),
