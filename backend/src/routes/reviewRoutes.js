@@ -4,6 +4,7 @@ const db = require("../db");
 const { authRequired } = require("../middleware/auth");
 
 const router = express.Router();
+const REVIEWS_TABLE = "reviews";
 
 // Vérifie qu'une commande existe bien entre l'acheteur et le vendeur avant d'autoriser un avis.
 const fetchOrderForReview = async (orderId, userId) => {
@@ -53,7 +54,7 @@ router.post("/", authRequired, async (req, res) => {
     const revieweeId = isBuyer ? order.seller_id : order.buyer_id;
 
     const existing = await db.query(
-      "SELECT id FROM reviews WHERE order_id = $1 AND reviewer_id = $2",
+      `SELECT id FROM ${REVIEWS_TABLE} WHERE order_id = $1 AND reviewer_id = $2`,
       [order_id, req.user.id]
     );
     if (existing.rows[0]) {
@@ -63,7 +64,7 @@ router.post("/", authRequired, async (req, res) => {
     }
 
     const result = await db.query(
-      `INSERT INTO reviews (order_id, reviewer_id, reviewee_id, rating, comment)
+      `INSERT INTO ${REVIEWS_TABLE} (order_id, reviewer_id, reviewee_id, rating, comment)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
       [order_id, req.user.id, revieweeId, normalizedRating, comment || null]
@@ -93,7 +94,7 @@ router.get("/order/:orderId", authRequired, async (req, res) => {
 
     const reviews = await db.query(
       `SELECT r.*, u.name AS reviewer_name
-       FROM reviews r
+       FROM ${REVIEWS_TABLE} r
        JOIN users u ON r.reviewer_id = u.id
        WHERE r.order_id = $1
        ORDER BY r.created_at ASC`,
@@ -116,7 +117,7 @@ router.get("/user/:userId", async (req, res) => {
     const userId = req.params.userId;
     const reviews = await db.query(
       `SELECT r.*, u.name AS reviewer_name
-       FROM reviews r
+       FROM ${REVIEWS_TABLE} r
        JOIN users u ON r.reviewer_id = u.id
        WHERE r.reviewee_id = $1
        ORDER BY r.created_at DESC`,

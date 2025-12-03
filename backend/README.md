@@ -12,6 +12,10 @@ Créer la base PostgreSQL puis exécuter :
 
 psql -d tunimode -f sql/tunimode_schema.sql
 
+Si vous avez l'erreur « relation \"reviews\" does not exist », exécutez en complément :
+
+psql -d tunimode -f sql/create_reviews_table.sql
+
 ## Lancement
 
 npm run dev
