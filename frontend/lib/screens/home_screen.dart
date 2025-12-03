@@ -989,9 +989,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 16),
                       LayoutBuilder(
                         builder: (context, constraints) {
-                          final columns = (constraints.maxWidth / 220)
+                          final columns = (constraints.maxWidth / 180)
                               .floor()
-                              .clamp(2, 5);
+                              .clamp(2, 6);
 
                           return GridView.builder(
                             shrinkWrap: true,
@@ -999,9 +999,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             gridDelegate:
                                 SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: columns,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 0.68,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: 0.72,
                             ),
                             itemCount: latestListings.length,
                             itemBuilder: (context, index) {

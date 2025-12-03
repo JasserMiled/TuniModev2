@@ -576,17 +576,19 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                   return LayoutBuilder(
                     builder: (context, constraints) {
                       final width = constraints.maxWidth;
-                      final crossAxisCount = width >= 1100
-                          ? 4
-                          : width >= 850
-                              ? 3
-                              : 2;
+                      final crossAxisCount = width >= 1400
+                          ? 5
+                          : width >= 1100
+                              ? 4
+                              : width >= 850
+                                  ? 3
+                                  : 2;
 
                       return MasonryGridView.count(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(10),
                         crossAxisCount: crossAxisCount,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
                         itemCount: results.length,
                         itemBuilder: (context, index) {
                           final listing = results[index];
