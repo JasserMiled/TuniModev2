@@ -109,6 +109,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Category> _categoryTree = [];
   bool _isLoadingCategories = false;
   String? _categoryLoadError;
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _listingsSectionKey = GlobalKey();
   final List<String> _categories = const [
     'Femmes',
     'Hommes',
@@ -151,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _performSearch() {
     final query = _searchController.text.trim();
     _searchController.text = query;
-    _refreshListings();
+    _refreshListings(scrollToResults: true);
   }
 
   void _selectCategory(String category) {
@@ -164,24 +166,24 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedGender = normalized;
       _searchController.clear();
-      _refreshListings();
     });
+    _refreshListings(scrollToResults: true);
   }
 
   void _clearGenderFilter() {
     if (_selectedGender == null) return;
     setState(() {
       _selectedGender = null;
-      _refreshListings();
     });
+    _refreshListings(scrollToResults: true);
   }
 
   void _clearCityFilter() {
     if (_selectedCity == null) return;
     setState(() {
       _selectedCity = null;
-      _refreshListings();
     });
+    _refreshListings(scrollToResults: true);
   }
 
   void _clearPriceFilter() {
@@ -189,43 +191,43 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _minPrice = null;
       _maxPrice = null;
-      _refreshListings();
     });
+    _refreshListings(scrollToResults: true);
   }
 
   void _clearCategoryFilter() {
     if (_selectedCategoryId == null) return;
     setState(() {
       _selectedCategoryId = null;
-      _refreshListings();
     });
+    _refreshListings(scrollToResults: true);
   }
 
   void _clearSizeFilter() {
     if (_selectedSizes.isEmpty) return;
     setState(() {
       _selectedSizes = [];
-      _refreshListings();
     });
+    _refreshListings(scrollToResults: true);
   }
 
   void _clearColorFilter() {
     if (_selectedColors.isEmpty) return;
     setState(() {
       _selectedColors = [];
-      _refreshListings();
     });
+    _refreshListings(scrollToResults: true);
   }
 
   void _clearDeliveryFilter() {
     if (_deliveryAvailable == null) return;
     setState(() {
       _deliveryAvailable = null;
-      _refreshListings();
     });
+    _refreshListings(scrollToResults: true);
   }
 
-  void _refreshListings() {
+  void _refreshListings({bool scrollToResults = false}) {
     final query = _searchController.text.trim();
     setState(() {
       _futureListings = ApiService.fetchListings(
@@ -239,6 +241,32 @@ class _HomeScreenState extends State<HomeScreen> {
         colors: _selectedColors,
         deliveryAvailable: _deliveryAvailable,
       );
+    });
+
+    if (scrollToResults) {
+      _scrollToListings();
+    }
+  }
+
+  void _scrollToListings() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _listingsSectionKey.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+        return;
+      }
+
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
     });
   }
 
@@ -682,7 +710,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     _deliveryAvailable = tempDelivery;
                                   });
                                   Navigator.of(context).pop();
-                                  _refreshListings();
+                                  _refreshListings(scrollToResults: true);
                                 },
                                 icon: const Icon(Icons.filter_alt),
                                 label: const Text('Appliquer'),
@@ -772,6 +800,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -922,6 +951,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
+          controller: _scrollController,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -999,6 +1029,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
               FutureBuilder<List<Listing>>(
+                key: _listingsSectionKey,
                 future: _futureListings,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
