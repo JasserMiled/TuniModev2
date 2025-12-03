@@ -10,6 +10,7 @@ import 'orders_screen.dart';
 import 'profile_screen.dart';
 import 'my_listings_screen.dart';
 import 'favorites_screen.dart';
+import 'search_results_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -149,7 +150,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _performSearch() {
-    _refreshListings();
+    final query = _searchController.text.trim();
+    if (query.isEmpty) {
+      _refreshListings();
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SearchResultsScreen(initialQuery: query),
+      ),
+    );
   }
 
   void _selectCategory(String category) {
