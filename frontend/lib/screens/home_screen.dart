@@ -6,7 +6,6 @@ import '../widgets/listing_card.dart';
 import 'listing_detail_screen.dart';
 import 'login_screen.dart';
 import 'order_requests_screen.dart';
-import 'orders_screen.dart';
 import 'profile_screen.dart';
 import 'my_listings_screen.dart';
 import 'favorites_screen.dart';
@@ -828,11 +827,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openOrders() {
-    final destination =
-        ApiService.currentUser?.role == 'pro' ? const OrderRequestsScreen() : const OrdersScreen();
-
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => destination),
+      MaterialPageRoute(builder: (_) => const OrderRequestsScreen()),
     );
   }
 
