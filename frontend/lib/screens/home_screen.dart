@@ -10,6 +10,7 @@ import 'orders_screen.dart';
 import 'profile_screen.dart';
 import 'my_listings_screen.dart';
 import 'favorites_screen.dart';
+import 'account_settings_screen.dart';
 import 'search_results_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -841,6 +842,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openAccountSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AccountSettingsScreen()),
+    );
+  }
+
   void _openSearchResults({String? query}) {
     final searchQuery = query?.trim() ?? _searchController.text.trim();
 
@@ -905,6 +912,9 @@ class _HomeScreenState extends State<HomeScreen> {
           case 'favorites':
             _openFavorites();
             break;
+          case 'account_settings':
+            _openAccountSettings();
+            break;
           case 'logout':
             _handleLogout();
             break;
@@ -927,6 +937,10 @@ class _HomeScreenState extends State<HomeScreen> {
         PopupMenuItem(
           value: 'orders',
           child: Text(ordersLabel),
+        ),
+        const PopupMenuItem(
+          value: 'account_settings',
+          child: Text('Paramètres de compte'),
         ),
         const PopupMenuDivider(),
         const PopupMenuItem(
