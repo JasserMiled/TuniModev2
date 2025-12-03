@@ -112,14 +112,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _categoryLoadError;
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _listingsSectionKey = GlobalKey();
-  final List<String> _categories = const [
-    'Femmes',
-    'Hommes',
-    'Enfants',
-    'Chaussures',
-    'Accessoires',
-  ];
-
   bool get _isAuthenticated => ApiService.authToken != null;
 
   @override
@@ -156,11 +148,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _searchController.text = query;
     _refreshListings(scrollToResults: true);
     _openSearchResults(query: query);
-  }
-
-  void _selectCategory(String category) {
-    _searchController.text = category;
-    _performSearch();
   }
 
   void _filterByGender(String gender) {
@@ -879,7 +866,6 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildCategoryChips(),
               _buildActiveFilters(),
               const SizedBox(height: 16),
               ConstrainedBox(
@@ -1105,39 +1091,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryChips() {
-    return SizedBox(
-      height: 42,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final category = _categories[index];
-          final isSelected = _searchController.text.trim().toLowerCase() ==
-              category.toLowerCase();
-          return FilterChip(
-            label: Text(category),
-            selected: isSelected,
-            onSelected: (_) => _selectCategory(category),
-            selectedColor: _primaryBlue.withOpacity(0.12),
-            checkmarkColor: _primaryBlue,
-            labelStyle: TextStyle(
-              color: isSelected ? _primaryBlue : Colors.grey[800],
-              fontWeight: FontWeight.w600,
-            ),
-            side: BorderSide(
-              color: isSelected ? _primaryBlue : Colors.grey.shade300,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          );
-        },
       ),
     );
   }
