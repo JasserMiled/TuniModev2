@@ -180,6 +180,18 @@ class ApiService {
     return res.statusCode >= 200 && res.statusCode < 300;
   }
 
+  static Future<User> fetchUserProfile(int userId) async {
+    final uri = Uri.parse('$baseUrl/api/auth/user/$userId');
+    final res = await http.get(uri, headers: _headers());
+
+    if (res.statusCode != 200) {
+      throw Exception('Impossible de charger le profil utilisateur');
+    }
+
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    return User.fromJson(data['user'] as Map<String, dynamic>);
+  }
+
   static Future<List<Listing>> fetchListings({
     String? query,
     String? gender,
@@ -257,6 +269,20 @@ class ApiService {
     } else {
       throw Exception('Annonce introuvable');
     }
+  }
+
+  static Future<List<Listing>> fetchUserListings(int userId) async {
+    final uri = Uri.parse('$baseUrl/api/listings/user/$userId');
+    final res = await http.get(uri, headers: _headers());
+
+    if (res.statusCode != 200) {
+      throw Exception('Impossible de charger les annonces de cet utilisateur');
+    }
+
+    final data = jsonDecode(res.body) as List<dynamic>;
+    return data
+        .map((e) => Listing.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   static Future<bool> updateListing({

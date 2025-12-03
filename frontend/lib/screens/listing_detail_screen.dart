@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/listing.dart';
 import '../services/api_service.dart';
 import '../widgets/order_form.dart';
+import 'profile_screen.dart';
 
 class ListingDetailScreen extends StatefulWidget {
   final int listingId;
@@ -37,6 +38,13 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   String _formatGender(String gender) {
     if (gender.isEmpty) return gender;
     return '${gender[0].toUpperCase()}${gender.substring(1)}';
+  }
+
+  void _openSellerProfile(Listing listing) {
+    if (listing.userId <= 0) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => ProfileScreen(userId: listing.userId)),
+    );
   }
 
   bool get _isAuthenticated => ApiService.currentUser != null;
@@ -513,9 +521,15 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text(
-                          'Vendeur : ${loadedListing.sellerName}',
-                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        child: GestureDetector(
+                          onTap: () => _openSellerProfile(loadedListing),
+                          child: Text(
+                            'Vendeur : ${loadedListing.sellerName}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),

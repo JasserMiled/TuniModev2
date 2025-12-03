@@ -820,8 +820,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openProfile() {
+    final userId = ApiService.currentUser?.id;
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+      MaterialPageRoute(builder: (_) => ProfileScreen(userId: userId)),
     );
   }
 

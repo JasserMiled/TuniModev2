@@ -1,126 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
+import '../models/listing.dart';
 import '../models/review.dart';
+import '../models/user.dart';
 import '../services/api_service.dart';
+import '../widgets/listing_card.dart';
+import 'listing_detail_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final int? userId;
+
+  const ProfileScreen({super.key, this.userId});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late Future<List<Review>> _reviewsFuture;
-  final _generalFormKey = GlobalKey<FormState>();
-  final _securityFormKey = GlobalKey<FormState>();
-
-  final _nameController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _currentPasswordController = TextEditingController();
-  final _newPasswordController = TextEditingController();
-
-  bool _savingGeneral = false;
-  bool _savingSecurity = false;
-  bool _uploading = false;
-  String? _avatarUrl;
+  late final int? _userId;
+  late final Future<User?> _userFuture;
+  late final Future<List<Review>> _reviewsFuture;
+  late final Future<List<Listing>> _listingsFuture;
 
   @override
   void initState() {
     super.initState();
-    final user = ApiService.currentUser;
-    _nameController.text = user?.name ?? '';
-    _addressController.text = user?.address ?? '';
-    _emailController.text = user?.email ?? '';
-    _phoneController.text = user?.phone ?? '';
-    _avatarUrl = user?.avatarUrl;
-    _reviewsFuture =
-        user != null ? ApiService.fetchUserReviews(user.id) : Future.value([]);
-  }
+    _userId = widget.userId ?? ApiService.currentUser?.id;
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _addressController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _currentPasswordController.dispose();
-    _newPasswordController.dispose();
-    super.dispose();
-  }
-
-  void _showMessage(String text, {bool isError = false}) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text), backgroundColor: isError ? Colors.redAccent : null),
-    );
-  }
-
-  Future<void> _saveGeneralInfo() async {
-    if (!_generalFormKey.currentState!.validate()) return;
-    setState(() => _savingGeneral = true);
-    try {
-      final updated = await ApiService.updateProfile(
-        name: _nameController.text.trim(),
-        address: _addressController.text.trim(),
-      );
-      setState(() {
-        _avatarUrl = updated.avatarUrl;
-      });
-      _showMessage('Informations générales mises à jour');
-    } catch (e) {
-      _showMessage(e.toString(), isError: true);
-    } finally {
-      if (mounted) setState(() => _savingGeneral = false);
-    }
-  }
-
-  Future<void> _saveSecurityInfo() async {
-    if (!_securityFormKey.currentState!.validate()) return;
-    setState(() => _savingSecurity = true);
-    try {
-      await ApiService.updateProfile(
-        email: _emailController.text.trim(),
-        phone: _phoneController.text.trim(),
-        currentPassword: _currentPasswordController.text.isNotEmpty
-            ? _currentPasswordController.text
-            : null,
-        newPassword:
-            _newPasswordController.text.isNotEmpty ? _newPasswordController.text : null,
-      );
-      _currentPasswordController.clear();
-      _newPasswordController.clear();
-      _showMessage('Paramètres de sécurité mis à jour');
-    } catch (e) {
-      _showMessage(e.toString(), isError: true);
-    } finally {
-      if (mounted) setState(() => _savingSecurity = false);
-    }
-  }
-
-  Future<void> _uploadAvatar() async {
-    final picked = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
-    if (picked == null || picked.files.single.bytes == null) return;
-
-    setState(() => _uploading = true);
-    try {
-      final file = picked.files.single;
-      final url = await ApiService.uploadProfileImage(
-        bytes: file.bytes!,
-        filename: file.name,
-      );
-      final updated = await ApiService.updateProfile(avatarUrl: url);
-      setState(() {
-        _avatarUrl = updated.avatarUrl;
-      });
-      _showMessage('Photo de profil mise à jour');
-    } catch (e) {
-      _showMessage(e.toString(), isError: true);
-    } finally {
-      if (mounted) setState(() => _uploading = false);
+    if (_userId != null) {
+      _userFuture = ApiService.fetchUserProfile(_userId!);
+      _reviewsFuture = ApiService.fetchUserReviews(_userId!);
+      _listingsFuture = ApiService.fetchUserListings(_userId!);
+    } else {
+      _userFuture = Future.value(null);
+      _reviewsFuture = Future.value([]);
+      _listingsFuture = Future.value([]);
     }
   }
 
@@ -136,112 +51,274 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '${twoDigits(local.day)}/${twoDigits(local.month)}/${local.year}';
   }
 
-  Widget _buildReviewTile(Review review) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.rate_review, color: Colors.amber),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.star, color: Colors.amber[700], size: 18),
-                    const SizedBox(width: 4),
-                    Text('${review.rating}/5',
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
-                    const SizedBox(width: 8),
-                    Text(
-                      _formatDate(review.createdAt),
-                      style: const TextStyle(color: Colors.black54, fontSize: 12),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  review.reviewerName != null
-                      ? 'Par ${review.reviewerName}'
-                      : 'Avis reçu',
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-                if (review.comment != null && review.comment!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(review.comment!),
-                ],
-              ],
-            ),
-          ),
-        ],
+  int _columnCountForWidth(double width) {
+    if (width >= 1100) return 4;
+    if (width >= 800) return 3;
+    if (width >= 520) return 2;
+    return 1;
+  }
+
+  void _openListing(Listing listing) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ListingDetailScreen(listingId: listing.id),
       ),
     );
   }
 
-  Widget _buildReviewsSection() {
+  Widget _buildRatingRow() {
     return FutureBuilder<List<Review>>(
       future: _reviewsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Center(child: CircularProgressIndicator()),
+          return const SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
           );
         }
 
         if (snapshot.hasError) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Text(
-              'Impossible de charger vos évaluations pour le moment.',
-              style: TextStyle(color: Colors.redAccent),
-            ),
-          );
+          return const Text('Note totale indisponible');
         }
 
         final reviews = snapshot.data ?? [];
         final average = _averageRating(reviews);
 
-        if (reviews.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Text('Aucune évaluation reçue pour le moment.'),
-          );
+        if (average == null) {
+          return const Text('Aucune note pour le moment');
         }
 
-        return Column(
+        return Row(
+          children: [
+            Icon(Icons.star, color: Colors.amber[700]),
+            const SizedBox(width: 6),
+            Text(
+              '${average.toStringAsFixed(1)}/5',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 6),
+            Text('(${reviews.length} avis)'),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader(User user) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 38,
+              backgroundImage:
+                  user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
+              child: user.avatarUrl == null
+                  ? const Icon(Icons.person, size: 36, color: Colors.white)
+                  : null,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user.name,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 6),
+                  _buildRatingRow(),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.location_on_outlined, size: 18),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          user.address?.isNotEmpty == true
+                              ? user.address!
+                              : 'Adresse non renseignée',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReviewTile(Review review) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.star, color: Colors.amber[700]),
+                Icon(Icons.star, color: Colors.amber[700], size: 18),
                 const SizedBox(width: 6),
-                Text(
-                  average != null
-                      ? 'Note totale : ${average.toStringAsFixed(1)}/5'
-                      : 'Note totale indisponible',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                Text('${review.rating}/5',
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
                 const SizedBox(width: 8),
-                Text('(${reviews.length} avis)'),
+                Text(
+                  _formatDate(review.createdAt),
+                  style: const TextStyle(color: Colors.black54, fontSize: 12),
+                ),
               ],
             ),
-            const SizedBox(height: 12),
-            ...reviews.map(_buildReviewTile),
+            const SizedBox(height: 6),
+            Text(
+              review.reviewerName != null
+                  ? 'Par ${review.reviewerName}'
+                  : 'Avis reçu',
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+            if (review.comment != null && review.comment!.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(review.comment!),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildListingsTab() {
+    return FutureBuilder<List<Listing>>(
+      future: _listingsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text('Impossible de charger les annonces de cet utilisateur.'),
+          );
+        }
+
+        final listings = snapshot.data ?? [];
+        if (listings.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Cet utilisateur n\'a pas encore publié d\'annonce.'),
+            ),
+          );
+        }
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = _columnCountForWidth(constraints.maxWidth);
+
+            return MasonryGridView.count(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+              crossAxisCount: columns,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              itemCount: listings.length,
+              itemBuilder: (context, index) => ListingCard(
+                listing: listings[index],
+                onTap: () => _openListing(listings[index]),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildReviewsTab() {
+    return FutureBuilder<List<Review>>(
+      future: _reviewsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text('Impossible de charger les avis pour le moment.'),
+          );
+        }
+
+        final reviews = snapshot.data ?? [];
+        if (reviews.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Text('Aucun avis trouvé pour cet utilisateur.'),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: reviews.length,
+          itemBuilder: (context, index) => _buildReviewTile(reviews[index]),
+        );
+      },
+    );
+  }
+
+  Widget _buildContent() {
+    if (_userId == null) {
+      return const Center(
+        child: Text('Connectez-vous pour accéder à votre profil.'),
+      );
+    }
+
+    return FutureBuilder<User?>(
+      future: _userFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text('Impossible de charger ce profil pour le moment.'),
+          );
+        }
+
+        final user = snapshot.data;
+        if (user == null) {
+          return const Center(child: Text('Profil introuvable.'));
+        }
+
+        return DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              _buildHeader(user),
+              const SizedBox(height: 12),
+              const TabBar(
+                tabs: [
+                  Tab(text: 'Annonces'),
+                  Tab(text: 'Avis'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _buildListingsTab(),
+                    _buildReviewsTab(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -249,182 +326,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ApiService.currentUser;
+    final isCurrentUser = widget.userId == null || widget.userId == ApiService.currentUser?.id;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Mon profil')),
-      body: SingleChildScrollView(
+      appBar: AppBar(
+        title: Text(isCurrentUser ? 'Mon profil' : 'Profil utilisateur'),
+      ),
+      body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
-                      child: _avatarUrl == null
-                          ? const Icon(Icons.person, size: 32, color: Colors.white)
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user?.name ?? 'Utilisateur',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(user?.email ?? 'Email non disponible'),
-                          const SizedBox(height: 6),
-                          Chip(
-                            label: Text(
-                              user?.role == 'pro' ? 'Professionnel' : 'Acheteur',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: _uploading ? null : _uploadAvatar,
-                      icon: _uploading
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.camera_alt_outlined),
-                      label: const Text('Photo de profil'),
-                    )
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Paramètre de compte',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Information générales',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 8),
-                Form(
-                  key: _generalFormKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(labelText: 'Nom'),
-                        validator: (value) =>
-                            (value == null || value.trim().isEmpty) ? 'Le nom est requis' : null,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _addressController,
-                        decoration:
-                            const InputDecoration(labelText: 'Adresse', hintText: 'Adresse complète'),
-                        minLines: 1,
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: ElevatedButton.icon(
-                          onPressed: _savingGeneral ? null : _saveGeneralInfo,
-                          icon: _savingGeneral
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.save_outlined),
-                          label: const Text('Enregistrer'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Sécurité',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 8),
-                Form(
-                  key: _securityFormKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(labelText: 'Email'),
-                        validator: (value) => (value == null || value.isEmpty)
-                            ? 'Email requis'
-                            : null,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _phoneController,
-                        decoration:
-                            const InputDecoration(labelText: 'Numéro de téléphone'),
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _currentPasswordController,
-                        decoration: const InputDecoration(labelText: 'Mot de passe actuel'),
-                        obscureText: true,
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _newPasswordController,
-                        decoration:
-                            const InputDecoration(labelText: 'Nouveau mot de passe (optionnel)'),
-                        obscureText: true,
-                      ),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: ElevatedButton.icon(
-                          onPressed: _savingSecurity ? null : _saveSecurityInfo,
-                          icon: _savingSecurity
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.lock_outline),
-                          label: const Text('Mettre à jour'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 8),
-                const Text(
-                  'Évaluations reçues',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                _buildReviewsSection(),
-              ],
-            ),
-          ),
-        ),
+        child: _buildContent(),
       ),
     );
   }

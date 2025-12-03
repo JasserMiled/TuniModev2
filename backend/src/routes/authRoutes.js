@@ -169,4 +169,31 @@ router.put("/me", authRequired, async (req, res) => {
   }
 });
 
+// GET /api/auth/user/:id
+// Récupère les informations publiques d'un utilisateur
+router.get("/user/:id", async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({ message: "Identifiant utilisateur invalide" });
+    }
+
+    const result = await db.query(
+      "SELECT id, name, email, phone, avatar_url, address, role FROM users WHERE id = $1",
+      [userId]
+    );
+
+    const user = result.rows[0];
+    if (!user) {
+      return res.status(404).json({ message: "Utilisateur introuvable" });
+    }
+
+    return res.json({ user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
 module.exports = router;
