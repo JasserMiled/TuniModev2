@@ -200,6 +200,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _refreshListings(scrollToResults: true);
   }
 
+  int _responsiveColumnCount(double maxWidth) {
+    if (maxWidth >= 1100) return 5;
+    if (maxWidth >= 720) return 3;
+    return 2;
+  }
+
   void _clearColorFilter() {
     if (_selectedColors.isEmpty) return;
     setState(() {
@@ -987,41 +993,43 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final columns = (constraints.maxWidth / 180)
-                              .floor()
-                              .clamp(2, 6);
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            const gridSpacing = 14.0;
+                            final columns = _responsiveColumnCount(constraints.maxWidth);
 
-                          return GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: columns,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 10,
-                              childAspectRatio: 0.72,
-                            ),
-                            itemCount: latestListings.length,
-                            itemBuilder: (context, index) {
-                              final listing = latestListings[index];
-                              return ListingCard(
-                                listing: listing,
-                                onGenderTap: _filterByGender,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => ListingDetailScreen(
-                                        listingId: listing.id,
+                            return GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: columns,
+                                crossAxisSpacing: gridSpacing,
+                                mainAxisSpacing: gridSpacing,
+                                childAspectRatio: 0.66,
+                              ),
+                              itemCount: latestListings.length,
+                              itemBuilder: (context, index) {
+                                final listing = latestListings[index];
+                                return ListingCard(
+                                  listing: listing,
+                                  onGenderTap: _filterByGender,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => ListingDetailScreen(
+                                          listingId: listing.id,
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                          );
-                        },
+                                    );
+                                  },
+                                );
+                              },
+                            );
+                          },
+                        ),
                       ),
                     ],
                   );
