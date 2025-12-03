@@ -10,6 +10,7 @@ import 'orders_screen.dart';
 import 'profile_screen.dart';
 import 'my_listings_screen.dart';
 import 'favorites_screen.dart';
+import 'search_results_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -154,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final query = _searchController.text.trim();
     _searchController.text = query;
     _refreshListings(scrollToResults: true);
+    _openSearchResults(query: query);
   }
 
   void _selectCategory(String category) {
@@ -711,6 +713,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   });
                                   Navigator.of(context).pop();
                                   _refreshListings(scrollToResults: true);
+                                  _openSearchResults();
                                 },
                                 icon: const Icon(Icons.filter_alt),
                                 label: const Text('Appliquer'),
@@ -834,6 +837,26 @@ class _HomeScreenState extends State<HomeScreen> {
   void _openFavorites() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+    );
+  }
+
+  void _openSearchResults({String? query}) {
+    final searchQuery = query?.trim() ?? _searchController.text.trim();
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SearchResultsScreen(
+          initialQuery: searchQuery,
+          initialGender: _selectedGender,
+          initialCity: _selectedCity,
+          initialMinPrice: _minPrice,
+          initialMaxPrice: _maxPrice,
+          initialCategoryId: _selectedCategoryId,
+          initialSizes: _selectedSizes,
+          initialColors: _selectedColors,
+          initialDeliveryAvailable: _deliveryAvailable,
+        ),
+      ),
     );
   }
 
