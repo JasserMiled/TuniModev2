@@ -220,18 +220,23 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     final chips = <Widget>[];
 
     if (_selectedCategoryId != null) {
-      final categoryLabel =
-          _flatCategories.firstWhere((c) => c.id == _selectedCategoryId).label;
-      chips.add(
-        InputChip(
-          avatar: const Icon(Icons.category_outlined, size: 18),
-          label: Text('Catégorie : ${categoryLabel.replaceAll('• ', '')}'),
-          onDeleted: () => setState(() {
-            _selectedCategoryId = null;
-            _refreshResults();
-          }),
-        ),
+      final category = _flatCategories.firstWhere(
+        (c) => c.id == _selectedCategoryId,
+        orElse: () => const _CategoryOption(id: -1, label: ''),
       );
+
+      if (category.id != -1) {
+        chips.add(
+          InputChip(
+            avatar: const Icon(Icons.category_outlined, size: 18),
+            label: Text('Catégorie : ${category.label.replaceAll('• ', '')}'),
+            onDeleted: () => setState(() {
+              _selectedCategoryId = null;
+              _refreshResults();
+            }),
+          ),
+        );
+      }
     }
 
     if (_selectedSizes.isNotEmpty) {
@@ -357,16 +362,19 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       FilterDropdownConfig(
         label: 'Catégorie',
         icon: Icons.category_outlined,
-        value: _selectedCategoryId == null
-            ? null
-            : _flatCategories
-                .firstWhere((c) => c.id == _selectedCategoryId)
-                .label,
+        value: () {
+          if (_selectedCategoryId == null) return null;
+          final selectedCategory = _flatCategories.firstWhere(
+            (c) => c.id == _selectedCategoryId,
+            orElse: () => const _CategoryOption(id: -1, label: ''),
+          );
+          return selectedCategory.id == -1 ? null : selectedCategory.label;
+        }(),
         options: _flatCategories.map((c) => c.label).toList(),
         onChanged: (value) {
           final selected = _flatCategories.firstWhere(
             (c) => c.label == value,
-            orElse: () => _CategoryOption(id: -1, label: ''),
+            orElse: () => const _CategoryOption(id: -1, label: ''),
           );
           setState(() {
             _selectedCategoryId = selected.id == -1 ? null : selected.id;
