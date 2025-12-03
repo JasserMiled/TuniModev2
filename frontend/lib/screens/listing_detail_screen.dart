@@ -55,10 +55,9 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   }
 
   void _ensureFavoriteState(Listing listing) {
-    if (!_isAuthenticated) return;
+    if (!_isAuthenticated || _isLoadingFavorites) return;
     if (_syncedFavoriteForListingId == listing.id) return;
 
-    _syncedFavoriteForListingId = listing.id;
     _loadFavoriteState(listing);
   }
 
@@ -71,6 +70,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       final favorites = await ApiService.fetchFavorites();
       if (!mounted) return;
       setState(() {
+        _syncedFavoriteForListingId = listing.id;
         _isListingFavorite =
             favorites.listings.any((favorite) => favorite.id == listing.id);
         _isSellerFavorite =
