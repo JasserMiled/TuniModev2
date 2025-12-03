@@ -893,7 +893,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final isPro = ApiService.currentUser?.role == 'pro';
     final isAdmin = ApiService.currentUser?.role == 'admin';
     final canSeeListings = isPro || isAdmin;
-    final ordersLabel = isPro ? 'Mes demandes de commandes' : 'Mes commandes';
+    final ordersLabel = isPro ? 'Mes commandes' : 'Mes commandes';
 
     return PopupMenuButton<String>(
       tooltip: 'Menu du compte',
