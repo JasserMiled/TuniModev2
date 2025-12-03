@@ -201,9 +201,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   int _responsiveColumnCount(double maxWidth) {
-    if (maxWidth >= 1100) return 5;
-    if (maxWidth >= 720) return 3;
-    return 2;
+    if (maxWidth >= 1200) return 5;
+    if (maxWidth >= 900) return 4;
+    if (maxWidth >= 700) return 3;
+    if (maxWidth >= 500) return 2;
+    return 1;
+  }
+
+  double _childAspectRatioForColumns(int columns) {
+    switch (columns) {
+      case 5:
+        return 0.7;
+      case 4:
+        return 0.73;
+      case 3:
+        return 0.76;
+      case 2:
+        return 0.8;
+      default:
+        return 0.85;
+    }
   }
 
   void _clearColorFilter() {
@@ -994,11 +1011,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 16),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: LayoutBuilder(
                           builder: (context, constraints) {
-                            const gridSpacing = 14.0;
+                            const gridSpacing = 12.0;
                             final columns = _responsiveColumnCount(constraints.maxWidth);
+                            final aspectRatio = _childAspectRatioForColumns(columns);
 
                             return GridView.builder(
                               shrinkWrap: true,
@@ -1008,7 +1026,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 crossAxisCount: columns,
                                 crossAxisSpacing: gridSpacing,
                                 mainAxisSpacing: gridSpacing,
-                                childAspectRatio: 0.66,
+                                childAspectRatio: aspectRatio,
                               ),
                               itemCount: latestListings.length,
                               itemBuilder: (context, index) {
