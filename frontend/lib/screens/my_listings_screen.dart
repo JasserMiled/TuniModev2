@@ -90,22 +90,22 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              int columnCount = 1;
-
-              if (width >= 1100) {
-                columnCount = 4;
-              } else if (width >= 800) {
-                columnCount = 3;
-              } else if (width >= 520) {
-                columnCount = 2;
-              }
+              final columnCount = width >= 1400
+                  ? 5
+                  : width >= 1100
+                      ? 4
+                      : width >= 800
+                          ? 3
+                          : width >= 520
+                              ? 2
+                              : 1;
 
               return MasonryGridView.count(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 crossAxisCount: columnCount,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
                 itemCount: listings.length,
                 itemBuilder: (context, index) => ListingCard(
                   listing: listings[index],

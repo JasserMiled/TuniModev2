@@ -52,6 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   int _columnCountForWidth(double width) {
+    if (width >= 1400) return 5;
     if (width >= 1100) return 4;
     if (width >= 800) return 3;
     if (width >= 520) return 2;
@@ -222,10 +223,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final columns = _columnCountForWidth(constraints.maxWidth);
 
             return MasonryGridView.count(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
               crossAxisCount: columns,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
               itemCount: listings.length,
               itemBuilder: (context, index) => ListingCard(
                 listing: listings[index],

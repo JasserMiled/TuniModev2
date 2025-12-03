@@ -20,7 +20,7 @@ class ListingCard extends StatelessWidget {
         listing.imageUrls.isNotEmpty ? _resolveImageUrl(listing.imageUrls.first) : null;
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 6),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 1.5,
       shadowColor: Colors.black.withOpacity(0.05),
@@ -28,14 +28,14 @@ class ListingCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(14),
                 child: AspectRatio(
-                  aspectRatio: 4 / 5,
+                  aspectRatio: 0.72,
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
@@ -52,7 +52,7 @@ class ListingCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 listing.title,
                 style: const TextStyle(
@@ -63,7 +63,7 @@ class ListingCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 5),
               if (_buildDetailsLine().isNotEmpty)
                 Text(
                   _buildDetailsLine(),
@@ -75,7 +75,7 @@ class ListingCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -99,8 +99,8 @@ class ListingCard extends StatelessWidget {
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                      horizontal: 10,
+                      vertical: 7,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.blue.shade50,
@@ -147,7 +147,7 @@ class ListingCard extends StatelessWidget {
 
   Widget _buildTag(String label, {VoidCallback? onTap, Widget? leading}) {
     final tag = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(10),
