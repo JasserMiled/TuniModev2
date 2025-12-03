@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/order.dart';
 import '../services/api_service.dart';
+import '../widgets/review_dialog.dart';
 import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -14,6 +15,8 @@ class OrdersScreen extends StatefulWidget {
 class _OrdersScreenState extends State<OrdersScreen> {
   late Future<List<Order>> _ordersFuture;
   int? _confirmingOrderId;
+  int? _reviewingOrderId;
+  final Set<int> _reviewedOrders = {};
 
   @override
   void initState() {
@@ -31,6 +34,75 @@ class _OrdersScreenState extends State<OrdersScreen> {
       _ordersFuture = future;
     });
     await future;
+  }
+
+  Future<void> _startReviewFlow(Order order) async {
+    final user = ApiService.currentUser;
+    if (user == null) return;
+
+    setState(() {
+      _reviewingOrderId = order.id;
+    });
+
+    try {
+      final existingReviews = await ApiService.fetchOrderReviews(order.id);
+      final hasAlreadyReviewed = existingReviews
+              .any((review) => review.reviewerId == user.id) ||
+          _reviewedOrders.contains(order.id);
+
+      if (hasAlreadyReviewed) {
+        setState(() {
+          _reviewedOrders.add(order.id);
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Vous avez déjà évalué cette commande.'),
+            ),
+          );
+        }
+        return;
+      }
+
+      final result = await showDialog<ReviewFormResult>(
+        context: context,
+        builder: (context) => const ReviewDialog(
+          title: 'Noter le vendeur',
+          subtitle:
+              'Attribuez une note et un commentaire au vendeur pour cette commande.',
+        ),
+      );
+
+      if (result != null) {
+        await ApiService.submitReview(
+          orderId: order.id,
+          rating: result.rating,
+          comment: result.comment,
+        );
+
+        setState(() {
+          _reviewedOrders.add(order.id);
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Avis enregistré, merci !')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _reviewingOrderId = null;
+        });
+      }
+    }
   }
 
   Future<void> _confirmReception(Order order) async {
@@ -122,6 +194,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
       subtitleLines.add('Taille : ${order.size}');
     }
 
+    final bool canLeaveReview = order.status == 'completed';
+    final bool hasReviewed = _reviewedOrders.contains(order.id);
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
@@ -165,6 +240,26 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     _confirmingOrderId == order.id
                         ? 'Validation...'
                         : 'Confirmer la réception',
+                  ),
+                ),
+              ],
+              if (canLeaveReview) ...[
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _reviewingOrderId == order.id || hasReviewed
+                      ? null
+                      : () => _startReviewFlow(order),
+                  icon: _reviewingOrderId == order.id
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.reviews_outlined),
+                  label: Text(
+                    hasReviewed
+                        ? 'Avis envoyé'
+                        : 'Évaluer cette commande',
                   ),
                 ),
               ],

@@ -6,6 +6,7 @@ import '../models/category.dart';
 import '../models/favorites.dart';
 import '../models/listing.dart';
 import '../models/order.dart';
+import '../models/review.dart';
 import '../models/user.dart';
 
 class ApiService {
@@ -408,5 +409,44 @@ class ApiService {
     }
 
     return Order.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
+  static Future<List<Review>> fetchOrderReviews(int orderId) async {
+    final uri = Uri.parse('$baseUrl/api/reviews/order/$orderId');
+    final res = await http.get(uri, headers: _headers(withAuth: true));
+
+    if (res.statusCode != 200) {
+      throw Exception('Impossible de charger les avis de cette commande');
+    }
+
+    final data = jsonDecode(res.body) as List<dynamic>;
+    return data
+        .map((item) => Review.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  static Future<Review> submitReview({
+    required int orderId,
+    required int rating,
+    String? comment,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/reviews');
+    final res = await http.post(
+      uri,
+      headers: _headers(withAuth: true),
+      body: jsonEncode({
+        'order_id': orderId,
+        'rating': rating,
+        'comment': comment,
+      }),
+    );
+
+    if (res.statusCode != 201) {
+      final message = jsonDecode(res.body)['message'] ??
+          'Impossible d\'enregistrer votre avis pour cette commande';
+      throw Exception(message);
+    }
+
+    return Review.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 }
