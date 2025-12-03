@@ -84,6 +84,66 @@ class ApiService {
     currentUser = null;
   }
 
+  static Future<String> uploadProfileImage({
+    required Uint8List bytes,
+    required String filename,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/upload/image');
+    final request = http.MultipartRequest('POST', uri);
+    if (authToken != null) {
+      request.headers['Authorization'] = 'Bearer ${authToken!}';
+    }
+    request.files.add(http.MultipartFile.fromBytes('image', bytes, filename: filename));
+
+    final streamed = await request.send();
+    final res = await http.Response.fromStream(streamed);
+
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      return data['url'] as String;
+    }
+
+    throw Exception('Échec du téléchargement de la photo de profil');
+  }
+
+  static Future<User> updateProfile({
+    String? name,
+    String? address,
+    String? email,
+    String? phone,
+    String? currentPassword,
+    String? newPassword,
+    String? avatarUrl,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/auth/me');
+    final payload = <String, dynamic>{};
+
+    if (name != null) payload['name'] = name;
+    if (address != null) payload['address'] = address;
+    if (email != null) payload['email'] = email;
+    if (phone != null) payload['phone'] = phone;
+    if (currentPassword != null) payload['current_password'] = currentPassword;
+    if (newPassword != null) payload['new_password'] = newPassword;
+    if (avatarUrl != null) payload['avatar_url'] = avatarUrl;
+
+    final res = await http.put(
+      uri,
+      headers: _headers(withAuth: true),
+      body: jsonEncode(payload),
+    );
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final updatedUser =
+          User.fromJson(data['user'] != null ? data['user'] as Map<String, dynamic> : data);
+      currentUser = updatedUser;
+      return updatedUser;
+    }
+
+    final message = jsonDecode(res.body)['message'] ?? 'Mise à jour impossible';
+    throw Exception(message);
+  }
+
   static Future<FavoriteCollections> fetchFavorites() async {
     final uri = Uri.parse('$baseUrl/api/favorites/me');
     final res = await http.get(uri, headers: _headers(withAuth: true));
