@@ -17,6 +17,26 @@ class User {
     this.address,
   });
 
+  User copyWith({
+    int? id,
+    String? name,
+    String? email,
+    String? role,
+    String? phone,
+    String? avatarUrl,
+    String? address,
+  }) {
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      phone: phone ?? this.phone,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      address: address ?? this.address,
+    );
+  }
+
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] as int,
