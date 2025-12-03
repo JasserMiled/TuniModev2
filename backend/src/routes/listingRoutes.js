@@ -175,6 +175,49 @@ router.get("/", async (req, res) => {
 });
 
 /**
+ * GET /api/listings/user/:userId
+ * Récupère les annonces actives publiées par un utilisateur donné.
+ */
+router.get("/user/:userId", async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({ message: "Identifiant utilisateur invalide" });
+    }
+
+    const result = await db.query(
+      `SELECT
+        l.*,
+        u.name AS seller_name,
+        c.name AS category_name,
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object('url', li.url, 'sort_order', li.sort_order)
+              ORDER BY li.sort_order
+            )
+            FROM listing_images li
+            WHERE li.listing_id = l.id
+          ),
+          '[]'::json
+        ) AS images
+      FROM listings l
+      JOIN users u ON l.user_id = u.id
+      LEFT JOIN categories c ON l.category_id = c.id
+      WHERE l.status = 'active' AND l.user_id = $1
+      ORDER BY l.created_at DESC`,
+      [userId]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+/**
  * GET /api/listings/:id
  */
 router.get("/:id", async (req, res) => {
