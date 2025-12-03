@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/order.dart';
 import '../services/api_service.dart';
+import 'order_detail_screen.dart';
 
 class OrderRequestsScreen extends StatefulWidget {
   const OrderRequestsScreen({super.key});
@@ -150,6 +151,13 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
             ),
           ],
         ),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => OrderDetailScreen(order: order),
+            ),
+          );
+        },
       ),
     );
   }
