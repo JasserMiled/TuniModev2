@@ -40,6 +40,93 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     return '${gender[0].toUpperCase()}${gender.substring(1)}';
   }
 
+  void _openImagePreview(String imageUrl, Listing listing) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                  child: InteractiveViewer(
+                    child: Image.network(
+                      _resolveImageUrl(imageUrl),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.broken_image, size: 80),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      listing.title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (listing.condition != null)
+                          Chip(
+                            avatar: const Icon(Icons.checkroom, size: 18),
+                            label: Text('État: ${listing.condition}'),
+                          ),
+                        ...listing.sizes
+                            .map((size) => Chip(label: Text('Taille $size'))),
+                        ...listing.colors
+                            .map((color) => Chip(label: Text('Couleur $color'))),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(Icons.place, size: 18),
+                        const SizedBox(width: 6),
+                        Text(listing.city ?? 'Localisation non renseignée'),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.local_shipping,
+                          size: 18,
+                          color: listing.deliveryAvailable ? Colors.green : Colors.grey,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          listing.deliveryAvailable
+                              ? 'Livraison disponible'
+                              : 'Livraison non disponible',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _openSellerProfile(Listing listing) {
     if (listing.userId <= 0) return;
     Navigator.of(context).push(
@@ -392,25 +479,70 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  height: 220,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: loadedListing.imageUrls.isNotEmpty
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            _resolveImageUrl(loadedListing.imageUrls.first),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                const Icon(Icons.broken_image, size: 60),
+                if (loadedListing.imageUrls.isNotEmpty)
+                  Column(
+                    children: [
+                      GestureDetector(
+                        onTap: () =>
+                            _openImagePreview(loadedListing.imageUrls.first, loadedListing),
+                        child: Container(
+                          height: 240,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        )
-                      : const Center(child: Icon(Icons.image, size: 80)),
-                ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              _resolveImageUrl(loadedListing.imageUrls.first),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  const Icon(Icons.broken_image, size: 60),
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (loadedListing.imageUrls.length > 1) ...[
+                        const SizedBox(height: 12),
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: loadedListing.imageUrls.length - 1,
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                          ),
+                          itemBuilder: (context, index) {
+                            final imageUrl = loadedListing.imageUrls[index + 1];
+                            return GestureDetector(
+                              onTap: () => _openImagePreview(imageUrl, loadedListing),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  _resolveImageUrl(imageUrl),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) =>
+                                      const Icon(Icons.broken_image, size: 40),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ],
+                  )
+                else
+                  Container(
+                    height: 220,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(child: Icon(Icons.image, size: 80)),
+                  ),
                 const SizedBox(height: 16),
                 Text(
                   loadedListing.title,
@@ -468,6 +600,20 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                         Text(
                           'Livraison disponible',
                           style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (!loadedListing.deliveryAvailable)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Row(
+                      children: const [
+                        Icon(Icons.local_shipping, size: 18, color: Colors.grey),
+                        SizedBox(width: 6),
+                        Text(
+                          'Livraison non disponible',
+                          style: TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
