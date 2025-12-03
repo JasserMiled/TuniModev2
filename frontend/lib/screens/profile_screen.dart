@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../models/review.dart';
 import '../services/api_service.dart';
@@ -12,13 +13,115 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<List<Review>> _reviewsFuture;
+  final _generalFormKey = GlobalKey<FormState>();
+  final _securityFormKey = GlobalKey<FormState>();
+
+  final _nameController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _currentPasswordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+
+  bool _savingGeneral = false;
+  bool _savingSecurity = false;
+  bool _uploading = false;
+  String? _avatarUrl;
 
   @override
   void initState() {
     super.initState();
     final user = ApiService.currentUser;
+    _nameController.text = user?.name ?? '';
+    _addressController.text = user?.address ?? '';
+    _emailController.text = user?.email ?? '';
+    _phoneController.text = user?.phone ?? '';
+    _avatarUrl = user?.avatarUrl;
     _reviewsFuture =
         user != null ? ApiService.fetchUserReviews(user.id) : Future.value([]);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _addressController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _showMessage(String text, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(text), backgroundColor: isError ? Colors.redAccent : null),
+    );
+  }
+
+  Future<void> _saveGeneralInfo() async {
+    if (!_generalFormKey.currentState!.validate()) return;
+    setState(() => _savingGeneral = true);
+    try {
+      final updated = await ApiService.updateProfile(
+        name: _nameController.text.trim(),
+        address: _addressController.text.trim(),
+      );
+      setState(() {
+        _avatarUrl = updated.avatarUrl;
+      });
+      _showMessage('Informations générales mises à jour');
+    } catch (e) {
+      _showMessage(e.toString(), isError: true);
+    } finally {
+      if (mounted) setState(() => _savingGeneral = false);
+    }
+  }
+
+  Future<void> _saveSecurityInfo() async {
+    if (!_securityFormKey.currentState!.validate()) return;
+    setState(() => _savingSecurity = true);
+    try {
+      await ApiService.updateProfile(
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim(),
+        currentPassword: _currentPasswordController.text.isNotEmpty
+            ? _currentPasswordController.text
+            : null,
+        newPassword:
+            _newPasswordController.text.isNotEmpty ? _newPasswordController.text : null,
+      );
+      _currentPasswordController.clear();
+      _newPasswordController.clear();
+      _showMessage('Paramètres de sécurité mis à jour');
+    } catch (e) {
+      _showMessage(e.toString(), isError: true);
+    } finally {
+      if (mounted) setState(() => _savingSecurity = false);
+    }
+  }
+
+  Future<void> _uploadAvatar() async {
+    final picked = await FilePicker.platform.pickFiles(type: FileType.image, withData: true);
+    if (picked == null || picked.files.single.bytes == null) return;
+
+    setState(() => _uploading = true);
+    try {
+      final file = picked.files.single;
+      final url = await ApiService.uploadProfileImage(
+        bytes: file.bytes!,
+        filename: file.name,
+      );
+      final updated = await ApiService.updateProfile(avatarUrl: url);
+      setState(() {
+        _avatarUrl = updated.avatarUrl;
+      });
+      _showMessage('Photo de profil mise à jour');
+    } catch (e) {
+      _showMessage(e.toString(), isError: true);
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
   }
 
   double? _averageRating(List<Review> reviews) {
@@ -158,39 +261,156 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 32,
+                      backgroundImage: _avatarUrl != null ? NetworkImage(_avatarUrl!) : null,
+                      child: _avatarUrl == null
+                          ? const Icon(Icons.person, size: 32, color: Colors.white)
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user?.name ?? 'Utilisateur',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(user?.email ?? 'Email non disponible'),
+                          const SizedBox(height: 6),
+                          Chip(
+                            label: Text(
+                              user?.role == 'pro' ? 'Professionnel' : 'Acheteur',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _uploading ? null : _uploadAvatar,
+                      icon: _uploading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.camera_alt_outlined),
+                      label: const Text('Photo de profil'),
+                    )
+                  ],
+                ),
+                const SizedBox(height: 16),
                 Text(
-                  user?.name ?? 'Utilisateur',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  'Paramètre de compte',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Information générales',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 8),
-                Text(user?.email ?? 'Email non disponible'),
+                Form(
+                  key: _generalFormKey,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(labelText: 'Nom'),
+                        validator: (value) =>
+                            (value == null || value.trim().isEmpty) ? 'Le nom est requis' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _addressController,
+                        decoration:
+                            const InputDecoration(labelText: 'Adresse', hintText: 'Adresse complète'),
+                        minLines: 1,
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: ElevatedButton.icon(
+                          onPressed: _savingGeneral ? null : _saveGeneralInfo,
+                          icon: _savingGeneral
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.save_outlined),
+                          label: const Text('Enregistrer'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Sécurité',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 8),
-                if (user?.phone != null && user!.phone!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.phone, size: 18),
-                        const SizedBox(width: 6),
-                        Text(user.phone!),
-                      ],
-                    ),
-                  ),
-                if (user?.address != null && user!.address!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.home, size: 18),
-                        const SizedBox(width: 6),
-                        Expanded(child: Text(user.address!)),
-                      ],
-                    ),
-                  ),
-                Chip(
-                  label: Text(
-                    user?.role == 'pro' ? 'Professionnel' : 'Acheteur',
+                Form(
+                  key: _securityFormKey,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(labelText: 'Email'),
+                        validator: (value) => (value == null || value.isEmpty)
+                            ? 'Email requis'
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _phoneController,
+                        decoration:
+                            const InputDecoration(labelText: 'Numéro de téléphone'),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _currentPasswordController,
+                        decoration: const InputDecoration(labelText: 'Mot de passe actuel'),
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _newPasswordController,
+                        decoration:
+                            const InputDecoration(labelText: 'Nouveau mot de passe (optionnel)'),
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: ElevatedButton.icon(
+                          onPressed: _savingSecurity ? null : _saveSecurityInfo,
+                          icon: _savingSecurity
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.lock_outline),
+                          label: const Text('Mettre à jour'),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),

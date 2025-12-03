@@ -4,6 +4,7 @@ class User {
   final String email;
   final String role;
   final String? phone;
+  final String? avatarUrl;
   final String? address;
 
   const User({
@@ -12,6 +13,7 @@ class User {
     required this.email,
     required this.role,
     this.phone,
+    this.avatarUrl,
     this.address,
   });
 
@@ -22,6 +24,7 @@ class User {
       email: json['email'] as String,
       role: json['role'] as String,
       phone: json['phone'] as String?,
+      avatarUrl: json['avatar_url'] as String?,
       address: json['address'] as String?,
     );
   }
