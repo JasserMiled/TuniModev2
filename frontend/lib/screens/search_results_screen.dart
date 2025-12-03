@@ -362,22 +362,19 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       FilterDropdownConfig(
         label: 'Catégorie',
         icon: Icons.category_outlined,
-        value: () {
-          if (_selectedCategoryId == null) return null;
-          final selectedCategory = _flatCategories.firstWhere(
-            (c) => c.id == _selectedCategoryId,
-            orElse: () => const _CategoryOption(id: -1, label: ''),
-          );
-          return selectedCategory.id == -1 ? null : selectedCategory.label;
-        }(),
-        options: _flatCategories.map((c) => c.label).toList(),
+        value: _selectedCategoryId?.toString(),
+        options: _flatCategories
+            .map(
+              (c) => FilterDropdownOption(
+                value: c.id.toString(),
+                label: c.label,
+              ),
+            )
+            .toList(),
         onChanged: (value) {
-          final selected = _flatCategories.firstWhere(
-            (c) => c.label == value,
-            orElse: () => const _CategoryOption(id: -1, label: ''),
-          );
+          final selectedId = int.tryParse(value ?? '');
           setState(() {
-            _selectedCategoryId = selected.id == -1 ? null : selected.id;
+            _selectedCategoryId = selectedId;
             _refreshResults();
           });
         },
@@ -386,7 +383,14 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         label: 'Taille',
         icon: Icons.straighten,
         value: _selectedSizes.isEmpty ? null : _selectedSizes.first,
-        options: _sizeOptions,
+        options: _sizeOptions
+            .map(
+              (size) => FilterDropdownOption(
+                value: size,
+                label: size,
+              ),
+            )
+            .toList(),
         onChanged: (value) {
           setState(() {
             _selectedSizes = value == null ? [] : [value];
@@ -398,7 +402,14 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         label: 'Marque',
         icon: Icons.store_mall_directory_outlined,
         value: _selectedBrand,
-        options: _brandOptions,
+        options: _brandOptions
+            .map(
+              (brand) => FilterDropdownOption(
+                value: brand,
+                label: brand,
+              ),
+            )
+            .toList(),
         onChanged: (value) {
           setState(() {
             _selectedBrand = value;
@@ -409,7 +420,14 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         label: 'État',
         icon: Icons.check_circle_outline,
         value: _selectedCondition,
-        options: _conditionOptions,
+        options: _conditionOptions
+            .map(
+              (condition) => FilterDropdownOption(
+                value: condition,
+                label: condition,
+              ),
+            )
+            .toList(),
         onChanged: (value) {
           setState(() {
             _selectedCondition = value;
@@ -420,7 +438,14 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         label: 'Couleur',
         icon: Icons.palette_outlined,
         value: _selectedColors.isEmpty ? null : _selectedColors.first,
-        options: _colorOptions,
+        options: _colorOptions
+            .map(
+              (color) => FilterDropdownOption(
+                value: color,
+                label: color,
+              ),
+            )
+            .toList(),
         onChanged: (value) {
           setState(() {
             _selectedColors = value == null ? [] : [value];

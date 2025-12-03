@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 
+class FilterDropdownOption {
+  final String value;
+  final String label;
+
+  const FilterDropdownOption({
+    required this.value,
+    required this.label,
+  });
+}
+
 class FilterDropdownConfig {
   final String label;
   final IconData icon;
   final String? value;
-  final List<String> options;
+  final List<FilterDropdownOption> options;
   final ValueChanged<String?> onChanged;
 
   const FilterDropdownConfig({
@@ -132,7 +142,7 @@ class _FilterDropdown extends StatelessWidget {
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        option,
+                        option.label,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
@@ -144,8 +154,8 @@ class _FilterDropdown extends StatelessWidget {
           items: config.options
               .map(
                 (option) => DropdownMenuItem<String>(
-                  value: option,
-                  child: Text(option),
+                  value: option.value,
+                  child: Text(option.label),
                 ),
               )
               .toList(),
