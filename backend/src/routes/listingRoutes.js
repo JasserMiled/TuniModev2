@@ -251,7 +251,7 @@ router.get("/:id", async (req, res) => {
 /**
  * GET /api/listings/me/mine
  */
-router.get("/me/mine", authRequired, requireRole("pro", "admin"), async (req, res) => {
+router.get("/me/mine", authRequired, requireRole("buyer", "pro", "admin"), async (req, res) => {
   try {
     const result = await db.query(
       `SELECT * FROM listings WHERE user_id = $1 ORDER BY created_at DESC`,
@@ -267,7 +267,7 @@ router.get("/me/mine", authRequired, requireRole("pro", "admin"), async (req, re
 /**
  * POST /api/listings
  */
-router.post("/", authRequired, requireRole("pro", "admin"), async (req, res) => {
+router.post("/", authRequired, requireRole("buyer", "pro", "admin"), async (req, res) => {
   try {
     const {
       title,
@@ -358,7 +358,7 @@ router.post("/", authRequired, requireRole("pro", "admin"), async (req, res) => 
 /**
  * PUT /api/listings/:id
  */
-router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) => {
+router.put("/:id", authRequired, requireRole("buyer", "pro", "admin"), async (req, res) => {
   try {
     const listingId = req.params.id;
 
@@ -460,7 +460,7 @@ router.put("/:id", authRequired, requireRole("pro", "admin"), async (req, res) =
 /**
  * DELETE /api/listings/:id
  */
-router.delete("/:id", authRequired, requireRole("pro", "admin"), async (req, res) => {
+router.delete("/:id", authRequired, requireRole("buyer", "pro", "admin"), async (req, res) => {
   try {
     const listingId = req.params.id;
 
