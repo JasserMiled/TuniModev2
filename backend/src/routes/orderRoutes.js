@@ -161,6 +161,7 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     const { status } = req.body;
     const orderId = req.params.id;
 
+    // Align the API with the database constraint orders_status_check
     const allowedStatuses = [
       "pending",
       "confirmed",
@@ -171,7 +172,19 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       "cancelled",
     ];
 
-    if (!allowedStatuses.includes(status)) {
+    // Automatically normalize legacy/front-end values to valid DB statuses
+    const statusAliases = {
+      to_confirm: "pending",
+      ready_for_pickup: "ready_for_pickup",
+      ready: "ready_for_pickup",
+      awaiting_pickup: "ready_for_pickup",
+      done: "completed",
+    };
+
+    const rawStatus = status ? String(status).toLowerCase() : "";
+    const normalizedStatus = statusAliases[rawStatus] || rawStatus;
+
+    if (!allowedStatuses.includes(normalizedStatus)) {
       return res.status(400).json({ message: "Statut invalide" });
     }
 
@@ -193,7 +206,7 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       "cancelled",
     ];
 
-    if (status === "completed") {
+    if (normalizedStatus === "completed") {
       if (!isBuyer) {
         return res.status(403).json({ message: "Seul l'acheteur peut confirmer la réception" });
       }
@@ -209,7 +222,7 @@ router.patch("/:id/status", authRequired, async (req, res) => {
         return res.status(403).json({ message: "Vous ne pouvez pas modifier cette commande" });
       }
 
-      if (!sellerStatuses.includes(status)) {
+      if (!sellerStatuses.includes(normalizedStatus)) {
         return res.status(400).json({ message: "Statut vendeur invalide" });
       }
     }
@@ -220,7 +233,7 @@ router.patch("/:id/status", authRequired, async (req, res) => {
            updated_at = NOW()
        WHERE id = $2
        RETURNING *`,
-      [status, orderId]
+      [normalizedStatus, orderId]
     );
 
     res.json(result.rows[0]);
