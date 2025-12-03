@@ -12,6 +12,16 @@ import '../models/user.dart';
 class ApiService {
   static const String baseUrl = 'http://localhost:4000';
 
+  static String? resolveImageUrl(String? url) {
+    if (url == null || url.isEmpty) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    final normalized = url.startsWith('/') ? url : '/$url';
+    return '$baseUrl$normalized';
+  }
+
   static String? authToken;
   static User? currentUser;
 

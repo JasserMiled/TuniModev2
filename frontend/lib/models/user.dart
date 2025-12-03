@@ -1,3 +1,5 @@
+import '../services/api_service.dart';
+
 class User {
   final int id;
   final String name;
@@ -44,7 +46,7 @@ class User {
       email: json['email'] as String,
       role: json['role'] as String,
       phone: json['phone'] as String?,
-      avatarUrl: json['avatar_url'] as String?,
+      avatarUrl: ApiService.resolveImageUrl(json['avatar_url'] as String?),
       address: json['address'] as String?,
     );
   }
