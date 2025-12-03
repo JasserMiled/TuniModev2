@@ -964,7 +964,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   }
 
-                  final latestListings = listings.take(8).toList();
+                  final latestListings = listings.take(10).toList();
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -987,17 +987,26 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      SizedBox(
-                        height: 340,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: latestListings.length,
-                          separatorBuilder: (_, __) => const SizedBox(width: 12),
-                          itemBuilder: (context, index) {
-                            final listing = latestListings[index];
-                            return SizedBox(
-                              width: 170,
-                              child: ListingCard(
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final columns = (constraints.maxWidth / 220)
+                              .floor()
+                              .clamp(2, 5);
+
+                          return GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: columns,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 0.68,
+                            ),
+                            itemCount: latestListings.length,
+                            itemBuilder: (context, index) {
+                              final listing = latestListings[index];
+                              return ListingCard(
                                 listing: listing,
                                 onGenderTap: _filterByGender,
                                 onTap: () {
@@ -1009,10 +1018,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   );
                                 },
-                              ),
-                            );
-                          },
-                        ),
+                              );
+                            },
+                          );
+                        },
                       ),
                     ],
                   );
