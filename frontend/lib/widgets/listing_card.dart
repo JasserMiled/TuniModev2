@@ -20,22 +20,23 @@ class ListingCard extends StatelessWidget {
         listing.imageUrls.isNotEmpty ? _resolveImageUrl(listing.imageUrls.first) : null;
 
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 1.5,
-      shadowColor: Colors.black.withOpacity(0.05),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      elevation: 1.2,
+      shadowColor: Colors.black.withOpacity(0.04),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         child: Padding(
           padding: const EdgeInsets.all(8),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
                 child: AspectRatio(
-                  aspectRatio: 0.72,
+                  aspectRatio: 1,
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.grey.shade100,
@@ -52,32 +53,32 @@ class ListingCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 listing.title,
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                  height: 1.2,
+                  fontSize: 14,
+                  height: 1.15,
                 ),
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 5),
-              if (_buildDetailsLine().isNotEmpty)
+              if (_buildDetailsLine().isNotEmpty) ...[
+                const SizedBox(height: 4),
                 Text(
                   _buildDetailsLine(),
                   style: const TextStyle(
                     color: Color(0xFF475569),
                     fontWeight: FontWeight.w600,
-                    fontSize: 12.5,
+                    fontSize: 12,
                   ),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+              ],
               const SizedBox(height: 8),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   if (listing.gender != null)
                     _buildTag(
@@ -99,18 +100,19 @@ class ListingCard extends StatelessWidget {
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 7,
+                      horizontal: 9,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       '${listing.price.toStringAsFixed(0)} TND',
                       style: TextStyle(
                         color: Colors.blue.shade700,
                         fontWeight: FontWeight.w800,
+                        fontSize: 13.5,
                       ),
                     ),
                   ),
