@@ -190,7 +190,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       );
 
       final updatedUser = await ApiService.updateProfile(avatarUrl: url);
-      _applyUser(updatedUser.copyWith(avatarUrl: url));
+      final updatedWithAvatar = updatedUser.copyWith(avatarUrl: url);
+      _applyUser(updatedWithAvatar);
       setState(() {
         _avatarBytes = null;
         _avatarName = null;
@@ -208,11 +209,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Widget _buildAvatarSection() {
-    final imageProvider = _avatarBytes != null
-        ? MemoryImage(_avatarBytes!)
-        : _user?.avatarUrl != null
-            ? NetworkImage(_user!.avatarUrl!)
-            : null;
+    ImageProvider? imageProvider;
+    if (_avatarBytes != null) {
+      imageProvider = MemoryImage(_avatarBytes!);
+    } else if (_user?.avatarUrl != null && _user!.avatarUrl!.isNotEmpty) {
+      imageProvider = NetworkImage(_user!.avatarUrl!);
+    }
 
     return Card(
       child: Padding(
@@ -229,7 +231,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundImage: imageProvider as ImageProvider?,
+                  backgroundImage: imageProvider,
+                  backgroundColor: Colors.grey.shade300,
                   child: imageProvider == null
                       ? const Icon(Icons.person, size: 40, color: Colors.white)
                       : null,
