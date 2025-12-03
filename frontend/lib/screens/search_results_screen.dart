@@ -10,8 +10,27 @@ import 'listing_detail_screen.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String initialQuery;
+  final String? initialGender;
+  final String? initialCity;
+  final double? initialMinPrice;
+  final double? initialMaxPrice;
+  final int? initialCategoryId;
+  final List<String>? initialSizes;
+  final List<String>? initialColors;
+  final bool? initialDeliveryAvailable;
 
-  const SearchResultsScreen({super.key, required this.initialQuery});
+  const SearchResultsScreen({
+    super.key,
+    required this.initialQuery,
+    this.initialGender,
+    this.initialCity,
+    this.initialMinPrice,
+    this.initialMaxPrice,
+    this.initialCategoryId,
+    this.initialSizes,
+    this.initialColors,
+    this.initialDeliveryAvailable,
+  });
 
   @override
   State<SearchResultsScreen> createState() => _SearchResultsScreenState();
@@ -65,10 +84,15 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   int? _selectedCategoryId;
-  String? _selectedSize;
+  List<String> _selectedSizes = [];
   String? _selectedBrand;
   String? _selectedCondition;
-  String? _selectedColor;
+  List<String> _selectedColors = [];
+  String? _genderFilter;
+  String? _cityFilter;
+  double? _minPrice;
+  double? _maxPrice;
+  bool? _deliveryAvailable;
 
   late Future<List<Listing>> _futureResults;
   List<Category> _categoryTree = [];
@@ -80,6 +104,14 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     super.initState();
     _searchQuery = widget.initialQuery;
     _searchController.text = widget.initialQuery;
+    _selectedCategoryId = widget.initialCategoryId;
+    _selectedSizes = List.from(widget.initialSizes ?? []);
+    _selectedColors = List.from(widget.initialColors ?? []);
+    _genderFilter = widget.initialGender;
+    _cityFilter = widget.initialCity;
+    _minPrice = widget.initialMinPrice;
+    _maxPrice = widget.initialMaxPrice;
+    _deliveryAvailable = widget.initialDeliveryAvailable;
     _futureResults = _loadResults();
     _loadCategories();
   }
@@ -118,10 +150,15 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
   Future<List<Listing>> _loadResults() {
     return ApiService.fetchListings(
-      query: _searchQuery,
+      query: _searchQuery.isEmpty ? null : _searchQuery,
+      gender: _genderFilter,
+      city: _cityFilter,
+      minPrice: _minPrice,
+      maxPrice: _maxPrice,
       categoryId: _selectedCategoryId,
-      sizes: _selectedSize == null ? null : [_selectedSize!],
-      colors: _selectedColor == null ? null : [_selectedColor!],
+      sizes: _selectedSizes.isEmpty ? null : _selectedSizes,
+      colors: _selectedColors.isEmpty ? null : _selectedColors,
+      deliveryAvailable: _deliveryAvailable,
     );
   }
 
@@ -134,10 +171,15 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   void _clearFilters() {
     setState(() {
       _selectedCategoryId = null;
-      _selectedSize = null;
+      _selectedSizes = [];
       _selectedBrand = null;
       _selectedCondition = null;
-      _selectedColor = null;
+      _selectedColors = [];
+      _genderFilter = null;
+      _cityFilter = null;
+      _minPrice = null;
+      _maxPrice = null;
+      _deliveryAvailable = null;
       _futureResults = _loadResults();
     });
   }
@@ -192,13 +234,13 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       );
     }
 
-    if (_selectedSize != null) {
+    if (_selectedSizes.isNotEmpty) {
       chips.add(
         InputChip(
           avatar: const Icon(Icons.straighten, size: 18),
-          label: Text('Taille : $_selectedSize'),
+          label: Text('Tailles : ${_selectedSizes.join(', ')}'),
           onDeleted: () => setState(() {
-            _selectedSize = null;
+            _selectedSizes = [];
             _refreshResults();
           }),
         ),
@@ -229,13 +271,77 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       );
     }
 
-    if (_selectedColor != null) {
+    if (_selectedColors.isNotEmpty) {
       chips.add(
         InputChip(
           avatar: const Icon(Icons.palette_outlined, size: 18),
-          label: Text('Couleur : $_selectedColor'),
+          label: Text('Couleurs : ${_selectedColors.join(', ')}'),
           onDeleted: () => setState(() {
-            _selectedColor = null;
+            _selectedColors = [];
+            _refreshResults();
+          }),
+        ),
+      );
+    }
+
+    if (_genderFilter != null) {
+      chips.add(
+        InputChip(
+          avatar: const Icon(Icons.wc, size: 18),
+          label: Text('Genre : ${_genderFilter!}'),
+          onDeleted: () => setState(() {
+            _genderFilter = null;
+            _refreshResults();
+          }),
+        ),
+      );
+    }
+
+    if (_cityFilter != null) {
+      chips.add(
+        InputChip(
+          avatar: const Icon(Icons.location_on_outlined, size: 18),
+          label: Text('Ville : $_cityFilter'),
+          onDeleted: () => setState(() {
+            _cityFilter = null;
+            _refreshResults();
+          }),
+        ),
+      );
+    }
+
+    if (_minPrice != null || _maxPrice != null) {
+      final buffer = StringBuffer();
+      if (_minPrice != null && _maxPrice != null) {
+        buffer.write('${_minPrice!.toStringAsFixed(0)} - ${_maxPrice!.toStringAsFixed(0)} TND');
+      } else if (_minPrice != null) {
+        buffer.write('Dès ${_minPrice!.toStringAsFixed(0)} TND');
+      } else if (_maxPrice != null) {
+        buffer.write('Jusqu\'à ${_maxPrice!.toStringAsFixed(0)} TND');
+      }
+
+      chips.add(
+        InputChip(
+          avatar: const Icon(Icons.sell_outlined, size: 18),
+          label: Text('Prix : ${buffer.toString()}'),
+          onDeleted: () => setState(() {
+            _minPrice = null;
+            _maxPrice = null;
+            _refreshResults();
+          }),
+        ),
+      );
+    }
+
+    if (_deliveryAvailable != null) {
+      chips.add(
+        InputChip(
+          avatar: const Icon(Icons.local_shipping_outlined, size: 18),
+          label: Text(_deliveryAvailable == true
+              ? 'Livraison disponible'
+              : 'Retrait uniquement'),
+          onDeleted: () => setState(() {
+            _deliveryAvailable = null;
             _refreshResults();
           }),
         ),
@@ -271,11 +377,11 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       FilterDropdownConfig(
         label: 'Taille',
         icon: Icons.straighten,
-        value: _selectedSize,
+        value: _selectedSizes.isEmpty ? null : _selectedSizes.first,
         options: _sizeOptions,
         onChanged: (value) {
           setState(() {
-            _selectedSize = value;
+            _selectedSizes = value == null ? [] : [value];
             _refreshResults();
           });
         },
@@ -305,11 +411,11 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       FilterDropdownConfig(
         label: 'Couleur',
         icon: Icons.palette_outlined,
-        value: _selectedColor,
+        value: _selectedColors.isEmpty ? null : _selectedColors.first,
         options: _colorOptions,
         onChanged: (value) {
           setState(() {
-            _selectedColor = value;
+            _selectedColors = value == null ? [] : [value];
             _refreshResults();
           });
         },
