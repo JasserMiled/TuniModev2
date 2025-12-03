@@ -9,7 +9,7 @@ const REVIEWS_TABLE = "reviews";
 // Vérifie qu'une commande existe bien entre l'acheteur et le vendeur avant d'autoriser un avis.
 const fetchOrderForReview = async (orderId, userId) => {
   const orderRes = await db.query(
-    "SELECT id, buyer_id, seller_id FROM orders WHERE id = $1",
+    "SELECT id, buyer_id, seller_id, listing_id FROM orders WHERE id = $1",
     [orderId]
   );
   const order = orderRes.rows[0];
@@ -52,6 +52,7 @@ router.post("/", authRequired, async (req, res) => {
 
     const { order, isBuyer } = validation;
     const revieweeId = isBuyer ? order.seller_id : order.buyer_id;
+    const productId = order.listing_id;
 
     const existing = await db.query(
       `SELECT id FROM ${REVIEWS_TABLE} WHERE order_id = $1 AND reviewer_id = $2`,
@@ -64,10 +65,10 @@ router.post("/", authRequired, async (req, res) => {
     }
 
     const result = await db.query(
-      `INSERT INTO ${REVIEWS_TABLE} (order_id, reviewer_id, reviewee_id, rating, comment)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO ${REVIEWS_TABLE} (order_id, product_id, reviewer_id, reviewee_id, rating, comment)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [order_id, req.user.id, revieweeId, normalizedRating, comment || null]
+      [order_id, productId, req.user.id, revieweeId, normalizedRating, comment || null]
     );
 
     res.status(201).json(result.rows[0]);
