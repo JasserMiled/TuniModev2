@@ -14,6 +14,12 @@ class ListingDetailScreen extends StatefulWidget {
 
 class _ListingDetailScreenState extends State<ListingDetailScreen> {
   late Future<Listing> _futureListing;
+  bool _isListingFavorite = false;
+  bool _isSellerFavorite = false;
+  bool _isLoadingFavorites = false;
+  bool _isTogglingListing = false;
+  bool _isTogglingSeller = false;
+  int? _syncedFavoriteForListingId;
 
   @override
   void initState() {
@@ -33,6 +39,8 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     return '${gender[0].toUpperCase()}${gender.substring(1)}';
   }
 
+  bool get _isAuthenticated => ApiService.currentUser != null;
+
   bool _isOwner(Listing listing) {
     final currentId = ApiService.currentUser?.id;
     return currentId != null && currentId == listing.userId;
@@ -44,6 +52,107 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       _futureListing = next;
     });
     await next;
+  }
+
+  void _ensureFavoriteState(Listing listing) {
+    if (!_isAuthenticated) return;
+    if (_syncedFavoriteForListingId == listing.id) return;
+
+    _syncedFavoriteForListingId = listing.id;
+    _loadFavoriteState(listing);
+  }
+
+  Future<void> _loadFavoriteState(Listing listing) async {
+    setState(() {
+      _isLoadingFavorites = true;
+    });
+
+    try {
+      final favorites = await ApiService.fetchFavorites();
+      if (!mounted) return;
+      setState(() {
+        _isListingFavorite =
+            favorites.listings.any((favorite) => favorite.id == listing.id);
+        _isSellerFavorite =
+            favorites.sellers.any((seller) => seller.id == listing.userId);
+      });
+    } catch (_) {
+      // Ignore and keep defaults when favorite state cannot be loaded
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingFavorites = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleListingFavorite(Listing listing) async {
+    if (!_isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connectez-vous pour ajouter des favoris.')),
+      );
+      return;
+    }
+
+    final targetState = !_isListingFavorite;
+    setState(() {
+      _isListingFavorite = targetState;
+      _isTogglingListing = true;
+    });
+
+    final success = targetState
+        ? await ApiService.addFavoriteListing(listing.id)
+        : await ApiService.removeFavoriteListing(listing.id);
+
+    if (!mounted) return;
+
+    if (!success) {
+      setState(() {
+        _isListingFavorite = !targetState;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de mettre à jour vos favoris.')),
+      );
+    }
+
+    setState(() {
+      _isTogglingListing = false;
+    });
+  }
+
+  Future<void> _toggleSellerFavorite(Listing listing) async {
+    if (!_isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connectez-vous pour ajouter des favoris.')),
+      );
+      return;
+    }
+
+    final targetState = !_isSellerFavorite;
+    setState(() {
+      _isSellerFavorite = targetState;
+      _isTogglingSeller = true;
+    });
+
+    final success = targetState
+        ? await ApiService.addFavoriteSeller(listing.userId)
+        : await ApiService.removeFavoriteSeller(listing.userId);
+
+    if (!mounted) return;
+
+    if (!success) {
+      setState(() {
+        _isSellerFavorite = !targetState;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de mettre à jour vos favoris.')),
+      );
+    }
+
+    setState(() {
+      _isTogglingSeller = false;
+    });
   }
 
   void _openOrderSheet(Listing listing) {
@@ -253,23 +362,24 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Détail annonce'),
-      ),
-      body: FutureBuilder<Listing>(
-        future: _futureListing,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError || !snapshot.hasData) {
-            return Center(
-              child: Text('Erreur : ${snapshot.error}'),
-            );
-          }
-          final listing = snapshot.data!;
-          return SingleChildScrollView(
+    return FutureBuilder<Listing>(
+      future: _futureListing,
+      builder: (context, snapshot) {
+        final listing = snapshot.data;
+        if (listing != null) {
+          _ensureFavoriteState(listing);
+        }
+
+        Widget body;
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          body = const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError || !snapshot.hasData) {
+          body = Center(
+            child: Text('Erreur : ${snapshot.error}'),
+          );
+        } else {
+          final loadedListing = snapshot.data!;
+          body = SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,11 +391,11 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                     color: Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: listing.imageUrls.isNotEmpty
+                  child: loadedListing.imageUrls.isNotEmpty
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            _resolveImageUrl(listing.imageUrls.first),
+                            _resolveImageUrl(loadedListing.imageUrls.first),
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) =>
                                 const Icon(Icons.broken_image, size: 60),
@@ -295,24 +405,24 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  listing.title,
+                  loadedListing.title,
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (_isOwner(listing)) ...[
+                if (_isOwner(loadedListing)) ...[
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 10,
                     children: [
                       OutlinedButton.icon(
-                        onPressed: () => _openEditDialog(listing),
+                        onPressed: () => _openEditDialog(loadedListing),
                         icon: const Icon(Icons.edit),
                         label: const Text('Modifier'),
                       ),
                       TextButton.icon(
-                        onPressed: () => _confirmDelete(listing),
+                        onPressed: () => _confirmDelete(loadedListing),
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.red.shade700,
                         ),
@@ -324,7 +434,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                 ],
                 const SizedBox(height: 8),
                 Text(
-                  '${listing.price.toStringAsFixed(0)} TND',
+                  '${loadedListing.price.toStringAsFixed(0)} TND',
                   style: TextStyle(
                     color: Colors.blue.shade700,
                     fontSize: 20,
@@ -332,15 +442,15 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                if (listing.city != null)
+                if (loadedListing.city != null)
                   Row(
                     children: [
                       const Icon(Icons.place, size: 16),
                       const SizedBox(width: 4),
-                      Text(listing.city!),
+                      Text(loadedListing.city!),
                     ],
                   ),
-                if (listing.deliveryAvailable)
+                if (loadedListing.deliveryAvailable)
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: Row(
@@ -355,7 +465,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                     ),
                   ),
                 const SizedBox(height: 8),
-                if (listing.gender != null && listing.gender!.isNotEmpty)
+                if (loadedListing.gender != null && loadedListing.gender!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Row(
@@ -363,30 +473,30 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                         const Icon(Icons.wc, size: 18),
                         const SizedBox(width: 6),
                         Text(
-                          'Genre : ${_formatGender(listing.gender!)}',
+                          'Genre : ${_formatGender(loadedListing.gender!)}',
                           style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
                   ),
-                if (listing.sizes.isNotEmpty)
+                if (loadedListing.sizes.isNotEmpty)
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
-                    children: listing.sizes
+                    children: loadedListing.sizes
                         .map((s) => Chip(label: Text('Taille $s')))
                         .toList(),
                   ),
-                if (listing.colors.isNotEmpty)
+                if (loadedListing.colors.isNotEmpty)
                   Wrap(
                     spacing: 8,
                     runSpacing: 4,
-                    children: listing.colors
+                    children: loadedListing.colors
                         .map((c) => Chip(label: Text('Couleur $c')))
                         .toList(),
                   ),
-                if (listing.condition != null)
-                  Text('État : ${listing.condition}'),
+                if (loadedListing.condition != null)
+                  Text('État : ${loadedListing.condition}'),
                 const SizedBox(height: 16),
                 const Text(
                   'Description',
@@ -396,26 +506,45 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(listing.description ?? 'Pas de description.'),
+                Text(loadedListing.description ?? 'Pas de description.'),
                 const SizedBox(height: 16),
-                if (listing.sellerName != null)
-                  Text(
-                    'Vendeur : ${listing.sellerName}',
-                    style: const TextStyle(fontWeight: FontWeight.w500),
+                if (loadedListing.sellerName != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Vendeur : ${loadedListing.sellerName}',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton.icon(
+                        onPressed:
+                            _isTogglingSeller ? null : () => _toggleSellerFavorite(loadedListing),
+                        icon: Icon(
+                          _isSellerFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: Colors.red,
+                        ),
+                        label: Text(
+                          _isSellerFavorite ? 'Retirer le vendeur' : 'Ajouter le vendeur',
+                        ),
+                      ),
+                    ],
                   ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     const Icon(Icons.inventory_2, size: 18),
                     const SizedBox(width: 6),
-                    Text('Stock disponible : ${listing.stock}'),
+                    Text('Stock disponible : ${loadedListing.stock}'),
                   ],
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _openOrderSheet(listing),
+                    onPressed: () => _openOrderSheet(loadedListing),
                     icon: const Icon(Icons.shopping_cart_checkout),
                     label: const Text('Acheter'),
                   ),
@@ -423,8 +552,32 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
               ],
             ),
           );
-        },
-      ),
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Détail annonce'),
+            actions: [
+              IconButton(
+                tooltip: _isListingFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris',
+                onPressed:
+                    listing == null || _isTogglingListing ? null : () => _toggleListingFavorite(listing),
+                icon: _isLoadingFavorites && listing != null
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(
+                        _isListingFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: _isListingFavorite ? Colors.red : null,
+                      ),
+              ),
+            ],
+          ),
+          body: body,
+        );
+      },
     );
   }
 }

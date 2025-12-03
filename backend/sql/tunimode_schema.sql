@@ -66,6 +66,13 @@ CREATE TABLE IF NOT EXISTS favorites (
     PRIMARY KEY (user_id, listing_id)
 );
 
+CREATE TABLE IF NOT EXISTS favorite_sellers (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    seller_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, seller_id)
+);
+
 CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     buyer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
