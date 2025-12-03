@@ -411,6 +411,20 @@ class ApiService {
     return Order.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  static Future<List<Review>> fetchUserReviews(int userId) async {
+    final uri = Uri.parse('$baseUrl/api/reviews/user/$userId');
+    final res = await http.get(uri, headers: _headers());
+
+    if (res.statusCode != 200) {
+      throw Exception('Impossible de charger les avis de cet utilisateur');
+    }
+
+    final data = jsonDecode(res.body) as List<dynamic>;
+    return data
+        .map((item) => Review.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
   static Future<List<Review>> fetchOrderReviews(int orderId) async {
     final uri = Uri.parse('$baseUrl/api/reviews/order/$orderId');
     final res = await http.get(uri, headers: _headers(withAuth: true));
