@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import '../models/category.dart';
+import '../models/favorites.dart';
 import '../models/listing.dart';
 import '../models/order.dart';
 import '../models/user.dart';
@@ -80,6 +81,42 @@ class ApiService {
   static void logout() {
     authToken = null;
     currentUser = null;
+  }
+
+  static Future<FavoriteCollections> fetchFavorites() async {
+    final uri = Uri.parse('$baseUrl/api/favorites/me');
+    final res = await http.get(uri, headers: _headers(withAuth: true));
+
+    if (res.statusCode != 200) {
+      throw Exception('Impossible de charger vos favoris');
+    }
+
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    return FavoriteCollections.fromJson(data);
+  }
+
+  static Future<bool> addFavoriteListing(int listingId) async {
+    final uri = Uri.parse('$baseUrl/api/favorites/listings/$listingId');
+    final res = await http.post(uri, headers: _headers(withAuth: true));
+    return res.statusCode >= 200 && res.statusCode < 300;
+  }
+
+  static Future<bool> removeFavoriteListing(int listingId) async {
+    final uri = Uri.parse('$baseUrl/api/favorites/listings/$listingId');
+    final res = await http.delete(uri, headers: _headers(withAuth: true));
+    return res.statusCode >= 200 && res.statusCode < 300;
+  }
+
+  static Future<bool> addFavoriteSeller(int sellerId) async {
+    final uri = Uri.parse('$baseUrl/api/favorites/sellers/$sellerId');
+    final res = await http.post(uri, headers: _headers(withAuth: true));
+    return res.statusCode >= 200 && res.statusCode < 300;
+  }
+
+  static Future<bool> removeFavoriteSeller(int sellerId) async {
+    final uri = Uri.parse('$baseUrl/api/favorites/sellers/$sellerId');
+    final res = await http.delete(uri, headers: _headers(withAuth: true));
+    return res.statusCode >= 200 && res.statusCode < 300;
   }
 
   static Future<List<Listing>> fetchListings({

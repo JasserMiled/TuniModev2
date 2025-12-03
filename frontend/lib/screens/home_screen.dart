@@ -9,6 +9,7 @@ import 'order_requests_screen.dart';
 import 'orders_screen.dart';
 import 'profile_screen.dart';
 import 'my_listings_screen.dart';
+import 'favorites_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -799,6 +800,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _openFavorites() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+    );
+  }
+
   void _handleLogout() {
     ApiService.logout();
     setState(() {});
@@ -840,6 +847,9 @@ class _HomeScreenState extends State<HomeScreen> {
           case 'orders':
             _openOrders();
             break;
+          case 'favorites':
+            _openFavorites();
+            break;
           case 'logout':
             _handleLogout();
             break;
@@ -849,6 +859,10 @@ class _HomeScreenState extends State<HomeScreen> {
         const PopupMenuItem(
           value: 'profile',
           child: Text('Mon profil'),
+        ),
+        const PopupMenuItem(
+          value: 'favorites',
+          child: Text('Mes favoris'),
         ),
         if (canSeeListings)
           const PopupMenuItem(
