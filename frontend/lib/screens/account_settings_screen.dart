@@ -190,7 +190,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       );
 
       final updatedUser = await ApiService.updateProfile(avatarUrl: url);
-      _applyUser(updatedUser);
+      _applyUser(updatedUser.copyWith(avatarUrl: url));
       setState(() {
         _avatarBytes = null;
         _avatarName = null;
