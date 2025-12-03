@@ -29,20 +29,10 @@ router.post("/register", async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
 
     const result = await db.query(
-      `INSERT INTO users (name, email, password_hash, phone, avatar_url, address, role, business_name, business_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      `INSERT INTO users (name, email, password, phone, avatar_url, address, role)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id, name, email, phone, avatar_url, address, role`,
-      [
-        name,
-        email,
-        hashed,
-        phone,
-        null,
-        address || null,
-        role,
-        business_name || null,
-        business_id || null,
-      ]
+      [name, email, hashed, phone, null, address || null, role]
     );
 
     const user = result.rows[0];
@@ -155,7 +145,7 @@ router.put("/me", authRequired, async (req, res) => {
 
     values.push(req.user.id);
 
-    const updateQuery = `UPDATE users SET ${updates.join(", ")} WHERE id = $$${index} RETURNING id, name, email, phone, avatar_url, address, role`;
+    const updateQuery = `UPDATE users SET ${updates.join(", ")} WHERE id = $${index} RETURNING id, name, email, phone, avatar_url, address, role`;
     const updateResult = await db.query(updateQuery, values);
     const updatedUser = updateResult.rows[0];
 
