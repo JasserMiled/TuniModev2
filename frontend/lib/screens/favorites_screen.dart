@@ -5,6 +5,7 @@ import '../models/listing.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'listing_detail_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
@@ -83,33 +84,47 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     return RefreshIndicator(
       onRefresh: _refresh,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: listings.length,
-        itemBuilder: (context, index) {
-          final listing = listings[index];
-          return Stack(
-            children: [
-              ListingCard(
-                listing: listing,
-                onTap: () => _openListing(listing),
-                onGenderTap: (_) {},
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Material(
-                  color: Colors.white,
-                  shape: const CircleBorder(),
-                  elevation: 2,
-                  child: IconButton(
-                    tooltip: 'Retirer des favoris',
-                    icon: const Icon(Icons.favorite, color: Colors.red),
-                    onPressed: () => _removeListing(listing.id),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final crossAxisCount = width >= 1100
+              ? 4
+              : width >= 850
+                  ? 3
+                  : 2;
+
+          return MasonryGridView.count(
+            padding: const EdgeInsets.all(12),
+            crossAxisCount: crossAxisCount,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            itemCount: listings.length,
+            itemBuilder: (context, index) {
+              final listing = listings[index];
+              return Stack(
+                children: [
+                  ListingCard(
+                    listing: listing,
+                    onTap: () => _openListing(listing),
+                    onGenderTap: (_) {},
                   ),
-                ),
-              ),
-            ],
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Material(
+                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      elevation: 2,
+                      child: IconButton(
+                        tooltip: 'Retirer des favoris',
+                        icon: const Icon(Icons.favorite, color: Colors.red),
+                        onPressed: () => _removeListing(listing.id),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
