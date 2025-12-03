@@ -44,48 +44,18 @@ class FilterBar extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: dropdowns
-                  .map(
-                    (config) => Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: SizedBox(
-                        width: 180,
-                        child: DropdownButtonFormField<String>(
-                          value: config.value,
-                          decoration: InputDecoration(
-                            isDense: true,
-                            labelText: config.label,
-                            prefixIcon: Icon(config.icon, size: 18),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                          ),
-                          items: config.options
-                              .map(
-                                (option) => DropdownMenuItem<String>(
-                                  value: option,
-                                  child: Text(option),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: config.onChanged,
-                        ),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: dropdowns
+                .map(
+                  (config) => _FilterDropdown(config: config),
+                )
+                .toList(),
           ),
           const SizedBox(height: 12),
           Row(
@@ -117,6 +87,70 @@ class FilterBar extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FilterDropdown extends StatelessWidget {
+  final FilterDropdownConfig config;
+
+  const _FilterDropdown({required this.config});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      constraints: const BoxConstraints(minWidth: 160, maxWidth: 200),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isExpanded: true,
+          value: config.value,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded),
+          hint: Row(
+            children: [
+              Icon(config.icon, size: 18, color: theme.primaryColor),
+              const SizedBox(width: 8),
+              Text(
+                config.label,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          selectedItemBuilder: (context) => config.options
+              .map(
+                (option) => Row(
+                  children: [
+                    Icon(config.icon, size: 18, color: theme.primaryColor),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        option,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+              .toList(),
+          items: config.options
+              .map(
+                (option) => DropdownMenuItem<String>(
+                  value: option,
+                  child: Text(option),
+                ),
+              )
+              .toList(),
+          onChanged: config.onChanged,
+        ),
       ),
     );
   }
