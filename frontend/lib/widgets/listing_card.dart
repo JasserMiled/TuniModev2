@@ -19,172 +19,97 @@ class ListingCard extends StatelessWidget {
     final imageUrl =
         listing.imageUrls.isNotEmpty ? _resolveImageUrl(listing.imageUrls.first) : null;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 1.2,
-      shadowColor: Colors.black.withOpacity(0.04),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: imageUrl != null
-                        ? Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const _PlaceholderImage(),
-                          )
-                        : const _PlaceholderImage(),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                listing.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                  height: 1.15,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              if (_buildDetailsLine().isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  _buildDetailsLine(),
-                  style: const TextStyle(
-                    color: Color(0xFF475569),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-              const SizedBox(height: 8),
-              Row(
+return SizedBox(
+  height: 310, // hauteur EXACTE comme Vinted desktop
+  child: Card(
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    elevation: 1,
+    clipBehavior: Clip.hardEdge,
+    child: InkWell(
+      onTap: onTap,
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
+            // IMAGE CARRÉE VINTED
+            AspectRatio(
+              aspectRatio: 1,
+              child: imageUrl != null
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                    )
+                  : const _PlaceholderImage(),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (listing.gender != null)
-                    _buildTag(
-                      _formatLabel(listing.gender!),
-                      onTap: () => onGenderTap?.call(listing.gender!),
+
+                  // TITRE
+                  Text(
+                    listing.title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                     ),
-                  if (listing.deliveryAvailable)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: _buildTag(
-                        'Livraison',
-                        leading: const Icon(
-                          Icons.local_shipping,
-                          size: 14,
-                          color: Color(0xFF475569),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  // DETAILS
+                  if (_buildDetails().isNotEmpty)
+                    Text(
+                      _buildDetails(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF475569),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                  const SizedBox(height: 6),
+
+                  // PRIX ALIGNÉ À DROITE
+                  Row(
+                    children: [
+                      const Spacer(),
+                      Text(
+                        '${listing.price.toStringAsFixed(0)} TND',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: Color(0xFF0B6EFE),
                         ),
                       ),
-                    ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '${listing.price.toStringAsFixed(0)} TND',
-                      style: TextStyle(
-                        color: Colors.blue.shade700,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13.5,
-                      ),
-                    ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            )
+          ],
         ),
       ),
+	  ),
     );
   }
 
   String _resolveImageUrl(String url) {
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
+    if (url.startsWith('http')) return url;
 
-    final normalized = url.startsWith('/') ? url : '/$url';
-    return '${ApiService.baseUrl}$normalized';
+    // FIX : éviter les doubles slash + bon port
+    final normalized = url.startsWith('/') ? url.substring(1) : url;
+    return '${ApiService.baseUrl}/$normalized';
   }
 
-  String _buildDetailsLine() {
-    final details = <String>[];
-
-    if (listing.sizes.isNotEmpty) {
-      details.add(listing.sizes.join(', '));
-    }
-    if (listing.condition != null && listing.condition!.isNotEmpty) {
-      details.add(listing.condition!);
-    }
-
-    return details.join(' - ');
-  }
-
-  Widget _buildTag(String label, {VoidCallback? onTap, Widget? leading}) {
-    final tag = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (leading != null) ...[
-            leading,
-            const SizedBox(width: 4),
-          ],
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF475569),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (onTap == null) return tag;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: tag,
-    );
-  }
-
-  String _formatLabel(String label) {
-    if (label.isEmpty) return label;
-    return '${label[0].toUpperCase()}${label.substring(1)}';
+  String _buildDetails() {
+    final l = <String>[];
+    if (listing.sizes.isNotEmpty) l.add(listing.sizes.join(', '));
+    if (listing.condition != null) l.add(listing.condition!);
+    return l.join(' • ');
   }
 }
 
@@ -194,9 +119,9 @@ class _PlaceholderImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.grey.shade100,
+      color: const Color(0xFFF2F2F2),
       alignment: Alignment.center,
-      child: const Icon(Icons.image_outlined, size: 38),
+      child: const Icon(Icons.image_outlined, size: 32, color: Colors.grey),
     );
   }
 }
