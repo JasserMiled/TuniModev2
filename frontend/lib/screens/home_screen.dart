@@ -320,90 +320,95 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildListingsSection() {
-    return FutureBuilder<List<Listing>>(
-      key: _listingsSectionKey,
-      future: _futureListings,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Center(
-              child: Text('Erreur : ${snapshot.error}'),
-            ),
-          );
-        }
-
-        final listings = snapshot.data ?? [];
-        if (listings.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: Center(child: Text('Aucune annonce pour le moment.')),
-          );
-        }
-
-        final latestListings = listings.take(10).toList();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Derniers articles mis en ligne',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF111827),
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Choisis tes prochaines trouvailles parmi des milliers de vêtements et accessoires.',
-              style: TextStyle(
-                color: Color(0xFF475569),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 16),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final columns = _responsiveColumnCount(constraints.maxWidth);
-                final aspectRatio = _childAspectRatioForColumns(columns);
-
-                return GridView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: columns,
-                    crossAxisSpacing: _gridSpacing,
-                    mainAxisSpacing: _gridSpacing,
-                    childAspectRatio: aspectRatio,
-                  ),
-                  itemCount: latestListings.length,
-                  itemBuilder: (context, index) {
-                    final listing = latestListings[index];
-                    return ListingCard(
-                      listing: listing,
-                      onGenderTap: _filterByGender,
-                      onTap: () => _openListingDetail(listing.id),
-                    );
-                  },
-                );
-              },
-            ),
-          ],
+Widget _buildListingsSection() {
+  return FutureBuilder<List<Listing>>(
+    key: _listingsSectionKey,
+    future: _futureListings,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 24),
+          child: Center(child: CircularProgressIndicator()),
         );
-      },
-    );
-  }
+      }
+
+      if (snapshot.hasError) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Center(
+            child: Text('Erreur : ${snapshot.error}'),
+          ),
+        );
+      }
+
+      final listings = snapshot.data ?? [];
+      if (listings.isEmpty) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 24),
+          child: Center(child: Text('Aucune annonce pour le moment.')),
+        );
+      }
+
+      final latestListings = listings.take(10).toList();
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Derniers articles mis en ligne',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF111827),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Choisis tes prochaines trouvailles parmi des milliers de vêtements et accessoires.',
+            style: TextStyle(
+              color: Color(0xFF475569),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          /// 📌 GRID VINTED-LIKE CENTRÉ + PLUS PETIT
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return Align(
+                alignment: Alignment.center,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 1100, // 👈 limite la largeur du grid
+                  ),
+                  child: GridView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 24), // 👈 espace à gauche/droite
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,       // 👈 toujours 4 cartes par ligne
+                      crossAxisSpacing: 24,
+                      mainAxisSpacing: 32,
+                      childAspectRatio: 0.70,  // 👈 rend les cartes plus fines
+                    ),
+                    itemCount: latestListings.length,
+                    itemBuilder: (context, index) {
+                      return ListingCard(
+                        listing: latestListings[index],
+                        onTap: () => _openListingDetail(latestListings[index].id),
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
 
   Widget _buildSearchBar() {
     return Material(
@@ -1258,20 +1263,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return 1;
   }
 
-  double _childAspectRatioForColumns(int columns) {
-    switch (columns) {
-      case 5:
-        return 1.28;
-      case 4:
-        return 1.15;
-      case 3:
-        return 1.05;
-      case 2:
-        return 0.9;
-      default:
-        return 0.8;
-    }
-  }
+double _childAspectRatioForColumns(int c) {
+  if (c == 5) return 0.66;   // Vinted desktop EXACT
+  if (c == 4) return 0.70;   // desktop un peu plus large
+  if (c == 3) return 0.78;   // tablette paysage
+  if (c == 2) return 0.95;   // tablette portrait
+  return 1.15;               // mobile
+}
 
   String _formatPriceRange() {
     final min = _minPrice?.toStringAsFixed(0);

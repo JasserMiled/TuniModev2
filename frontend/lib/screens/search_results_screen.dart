@@ -574,41 +574,45 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                   }
 
                   return LayoutBuilder(
-                    builder: (context, constraints) {
-                      final width = constraints.maxWidth;
-                      final crossAxisCount = width >= 1400
-                          ? 5
-                          : width >= 1100
-                              ? 4
-                              : width >= 850
-                                  ? 3
-                                  : 2;
+  builder: (context, constraints) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: 1100,   // 👈 même largeur que home
+        ),
+        child: GridView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 4,        // 👈 4 cartes par ligne (desktop)
+            crossAxisSpacing: 24,
+            mainAxisSpacing: 32,
+            childAspectRatio: 0.70,   // 👈 même ratio que HomeScreen
+          ),
+          itemCount: results.length,
+          itemBuilder: (context, index) {
+            final listing = results[index];
+            return ListingCard(
+              listing: listing,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ListingDetailScreen(
+                      listingId: listing.id,
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  },
+);
 
-                      return MasonryGridView.count(
-                        padding: const EdgeInsets.all(10),
-                        crossAxisCount: crossAxisCount,
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        itemCount: results.length,
-                        itemBuilder: (context, index) {
-                          final listing = results[index];
-                          return ListingCard(
-                            listing: listing,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ListingDetailScreen(
-                                    listingId: listing.id,
-                                  ),
-                                ),
-                              );
-                            },
-                            onGenderTap: (_) {},
-                          );
-                        },
-                      );
-                    },
-                  );
                 },
               ),
             ),
