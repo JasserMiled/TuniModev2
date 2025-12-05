@@ -18,6 +18,7 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
   int? _updatingOrderId;
   int? _reviewingOrderId;
   int? _confirmingOrderId;
+  int? _cancellingOrderId;
   final Set<int> _reviewedOrders = {};
 
   @override
@@ -277,16 +278,53 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
     } finally {
       if (mounted) {
         setState(() {
-          _confirmingOrderId = null;
+        _confirmingOrderId = null;
+      });
+    }
+  }
+
+  Future<void> _cancelOrder(Order order) async {
+    setState(() {
+      _cancellingOrderId = order.id;
+    });
+
+    try {
+      await ApiService.cancelOrder(order.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Commande annulée.')),
+        );
+      }
+      await Future.wait([
+        _refreshBuyer(),
+        _refreshSeller(),
+      ]);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _cancellingOrderId = null;
         });
       }
     }
+  }
   }
 
   List<Widget> _buildSellerActions(Order order) {
     final actions = <Widget>[];
 
     final bool isUpdating = _updatingOrderId == order.id;
+    final bool isCancelling = _cancellingOrderId == order.id;
+    final bool canCancel =
+        order.status == 'pending' ||
+        order.status == 'confirmed' ||
+        order.status == 'shipped' ||
+        order.status == 'ready_for_pickup';
 
     if (order.status == 'pending') {
       actions.add(
@@ -343,6 +381,22 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
         ElevatedButton(
           onPressed: isUpdating ? null : () => _updateStatus(order, 'completed'),
           child: Text(isUpdating ? 'Mise à jour...' : 'Marquer comme terminée'),
+        ),
+      );
+    }
+
+    if (canCancel) {
+      actions.add(
+        OutlinedButton(
+          onPressed:
+              isUpdating || isCancelling ? null : () => _cancelOrder(order),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.redAccent,
+            side: const BorderSide(color: Colors.redAccent),
+          ),
+          child: Text(
+            isCancelling ? 'Annulation...' : 'Annuler la commande',
+          ),
         ),
       );
     }
@@ -539,6 +593,7 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
     final bool canConfirmReception =
         order.status == 'shipped' || order.status == 'picked_up';
     final bool canRefuseReception = order.status == 'shipped';
+    final bool canCancel = order.status == 'pending';
 
     if (order.color != null && order.color!.isNotEmpty) {
       subtitleLines.add('Couleur : ${order.color}');
@@ -592,12 +647,29 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text('Votre note : ${order.buyerNote}'),
                 ),
-              if (canConfirmReception || canRefuseReception || canLeaveReview) ...[
+              if (canCancel || canConfirmReception || canRefuseReception || canLeaveReview) ...[
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
+                    if (canCancel)
+                      OutlinedButton(
+                        onPressed: _cancellingOrderId == order.id
+                            ? null
+                            : () => _cancelOrder(order),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                          side: const BorderSide(color: Colors.redAccent),
+                        ),
+                        child: _cancellingOrderId == order.id
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Annuler la commande'),
+                      ),
                     if (canConfirmReception)
                       ElevatedButton(
                         onPressed: _confirmingOrderId == order.id

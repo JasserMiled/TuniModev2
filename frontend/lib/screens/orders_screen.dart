@@ -15,6 +15,7 @@ class OrdersScreen extends StatefulWidget {
 class _OrdersScreenState extends State<OrdersScreen> {
   late Future<List<Order>> _ordersFuture;
   int? _confirmingOrderId;
+  int? _cancellingOrderId;
   int? _reviewingOrderId;
   final Set<int> _reviewedOrders = {};
 
@@ -162,6 +163,34 @@ class _OrdersScreenState extends State<OrdersScreen> {
     }
   }
 
+  Future<void> _cancelOrder(Order order) async {
+    setState(() {
+      _cancellingOrderId = order.id;
+    });
+
+    try {
+      await ApiService.cancelOrder(order.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Commande annulée.')),
+        );
+      }
+      await _refresh();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _cancellingOrderId = null;
+        });
+      }
+    }
+  }
+
   String _formatDate(DateTime date) {
     final d = date.toLocal();
     final twoDigits = (int value) => value.toString().padLeft(2, '0');
@@ -224,6 +253,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     final bool canConfirmReception =
         order.status == 'shipped' || order.status == 'picked_up';
     final bool canRefuseReception = order.status == 'shipped';
+    final bool canCancel = order.status == 'pending';
 
     if (order.color != null && order.color!.isNotEmpty) {
       subtitleLines.add('Couleur : ${order.color}');
@@ -295,6 +325,23 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     _confirmingOrderId == order.id
                         ? 'Traitement...'
                         : 'Refuser la réception',
+                  ),
+                ),
+              ],
+              if (canCancel) ...[
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: _cancellingOrderId == order.id
+                      ? null
+                      : () => _cancelOrder(order),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.redAccent,
+                    side: const BorderSide(color: Colors.redAccent),
+                  ),
+                  child: Text(
+                    _cancellingOrderId == order.id
+                        ? 'Annulation...'
+                        : 'Annuler la commande',
                   ),
                 ),
               ],
