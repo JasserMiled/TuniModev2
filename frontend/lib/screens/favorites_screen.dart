@@ -76,30 +76,34 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildListingTab(List<Listing> listings) {
-    if (listings.isEmpty) {
-      return const Center(
-        child: Text('Aucune annonce dans vos favoris pour le moment.'),
-      );
-    }
+  if (listings.isEmpty) {
+    return const Center(
+      child: Text('Aucune annonce dans vos favoris pour le moment.'),
+    );
+  }
 
-    return RefreshIndicator(
-      onRefresh: _refresh,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final crossAxisCount = width >= 1400
-              ? 5
-              : width >= 1100
-                  ? 4
-                  : width >= 850
-                      ? 3
-                      : 2;
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      return Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 1100, // comme HomeScreen
+          ),
+          child: GridView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
 
-          return MasonryGridView.count(
-            padding: const EdgeInsets.all(10),
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
+            // 🟢 IMPORTANT : on laisse le GridView SCROLLER
+            shrinkWrap: false,
+            physics: const AlwaysScrollableScrollPhysics(),
+
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 5,
+              crossAxisSpacing: 24,
+              mainAxisSpacing: 32,
+              childAspectRatio: 0.70,
+            ),
+
             itemCount: listings.length,
             itemBuilder: (context, index) {
               final listing = listings[index];
@@ -108,7 +112,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   ListingCard(
                     listing: listing,
                     onTap: () => _openListing(listing),
-                    onGenderTap: (_) {},
                   ),
                   Positioned(
                     right: 8,
@@ -127,11 +130,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ],
               );
             },
-          );
-        },
-      ),
-    );
-  }
+          ),
+        ),
+      );
+    },
+  );
+}
+
 
   Widget _buildSellerInfo(User seller) {
     final details = <Widget>[];

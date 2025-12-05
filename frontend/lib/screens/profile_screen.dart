@@ -193,51 +193,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
+Widget _buildListingsTab() {
+  return FutureBuilder<List<Listing>>(
+    future: _listingsFuture,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
 
-  Widget _buildListingsTab() {
-    return FutureBuilder<List<Listing>>(
-      future: _listingsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      if (snapshot.hasError) {
+        return const Center(
+          child: Text('Impossible de charger les annonces de cet utilisateur.'),
+        );
+      }
 
-        if (snapshot.hasError) {
-          return const Center(
-            child: Text('Impossible de charger les annonces de cet utilisateur.'),
-          );
-        }
+      final listings = snapshot.data ?? [];
 
-        final listings = snapshot.data ?? [];
-        if (listings.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Cet utilisateur n\'a pas encore publié d\'annonce.'),
+      if (listings.isEmpty) {
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Cet utilisateur n\'a pas encore publié d\'annonce.'),
+          ),
+        );
+      }
+
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: 1100, // 👈 identique à SearchResultsScreen
+              ),
+              child: GridView.builder(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24, vertical: 10),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 5,          // 👈 même nombre de colonnes
+                  crossAxisSpacing: 24,       // 👈 même espacement
+                  mainAxisSpacing: 32,
+                  childAspectRatio: 0.70,     // 👈 même proportion
+                ),
+                itemCount: listings.length,
+                itemBuilder: (context, index) {
+                  final listing = listings[index];
+                  return ListingCard(
+                    listing: listing,
+                    onTap: () => _openListing(listing),
+                  );
+                },
+              ),
             ),
           );
-        }
+        },
+      );
+    },
+  );
+}
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final columns = _columnCountForWidth(constraints.maxWidth);
-
-            return MasonryGridView.count(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-              crossAxisCount: columns,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              itemCount: listings.length,
-              itemBuilder: (context, index) => ListingCard(
-                listing: listings[index],
-                onTap: () => _openListing(listings[index]),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+  
 
   Widget _buildReviewsTab() {
     return FutureBuilder<List<Review>>(

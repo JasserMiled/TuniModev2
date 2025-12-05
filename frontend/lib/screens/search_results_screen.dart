@@ -586,7 +586,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,        // 👈 4 cartes par ligne (desktop)
+            crossAxisCount: 5,        // 👈 4 cartes par ligne (desktop)
             crossAxisSpacing: 24,
             mainAxisSpacing: 32,
             childAspectRatio: 0.70,   // 👈 même ratio que HomeScreen

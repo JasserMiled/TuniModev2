@@ -43,81 +43,85 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   }
 
   Widget _buildBody() {
-    return FutureBuilder<List<Listing>>(
-      future: _listingsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+  return FutureBuilder<List<Listing>>(
+    future: _listingsFuture,
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
 
-        if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Une erreur est survenue lors du chargement de vos annonces.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: _refresh,
-                    child: const Text('Réessayer'),
-                  )
-                ],
-              ),
-            ),
-          );
-        }
-
-        final listings = snapshot.data ?? [];
-        if (listings.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Text(
-                "Vous n'avez pas encore publié d'annonce. Vos annonces apparaîtront ici.",
-                textAlign: TextAlign.center,
-              ),
-            ),
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: _refresh,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth;
-              final columnCount = width >= 1400
-                  ? 5
-                  : width >= 1100
-                      ? 4
-                      : width >= 800
-                          ? 3
-                          : width >= 520
-                              ? 2
-                              : 1;
-
-              return MasonryGridView.count(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                crossAxisCount: columnCount,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                itemCount: listings.length,
-                itemBuilder: (context, index) => ListingCard(
-                  listing: listings[index],
-                  onTap: () => _openListing(listings[index]),
+      if (snapshot.hasError) {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Une erreur est survenue lors du chargement de vos annonces.',
+                  textAlign: TextAlign.center,
                 ),
-              );
-            },
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: _refresh,
+                  child: const Text('Réessayer'),
+                )
+              ],
+            ),
           ),
         );
-      },
-    );
-  }
+      }
+
+      final listings = snapshot.data ?? [];
+      if (listings.isEmpty) {
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              "Vous n'avez pas encore publié d'annonce. Vos annonces apparaîtront ici.",
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+      }
+
+      return RefreshIndicator(
+        onRefresh: _refresh,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 1100, // 👈 identique à SearchResultsScreen
+                ),
+                child: GridView.builder(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 5,        // 👈 même grille fixée
+                    crossAxisSpacing: 24,
+                    mainAxisSpacing: 32,
+                    childAspectRatio: 0.70,   // 👈 même ratio que Search
+                  ),
+                  itemCount: listings.length,
+                  itemBuilder: (context, index) {
+                    final listing = listings[index];
+                    return ListingCard(
+                      listing: listing,
+                      onTap: () => _openListing(listing),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    },
+  );
+}
 
   @override
   Widget build(BuildContext context) {

@@ -11,7 +11,7 @@ import 'my_listings_screen.dart';
 import 'order_requests_screen.dart';
 import 'profile_screen.dart';
 import 'search_results_screen.dart';
-
+import 'package:flutter_svg/flutter_svg.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -133,106 +133,109 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _lightBackground,
-      appBar: _buildAppBar(),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openDashboard,
-        icon: const Icon(Icons.store),
-        label: const Text('Espace Pro'),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(_pagePadding),
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildActiveFilters(),
-                const SizedBox(height: 16),
-                _buildHeroBanner(),
-                const SizedBox(height: 16),
-                _buildListingsSection(),
-              ],
-            ),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: _lightBackground,
+    appBar: _buildAppBar(),
+    floatingActionButton: FloatingActionButton.extended(
+      onPressed: _openDashboard,
+      icon: const Icon(Icons.store),
+      label: const Text('Espace Pro'),
+    ),
+
+    body: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          _pagePadding,
+          0,               // ✔ plus de padding top ici !
+          _pagePadding,
+          _pagePadding,
+        ),
+
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildActiveFilters(),
+              _buildHeroBanner(),
+			  const SizedBox(height: 24),  // 🔥 ajout d’espace sous le banner
+
+              _buildListingsSection(),
+            ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      titleSpacing: _pagePadding,
-      toolbarHeight: 86,
-      backgroundColor: _lightBackground,
-      surfaceTintColor: _lightBackground,
-      elevation: 0.3,
-      shadowColor: Colors.black12,
-      title: Row(
+
+
+PreferredSizeWidget _buildAppBar() {
+  return AppBar(
+    backgroundColor: _lightBackground,
+    elevation: 0.3,
+    shadowColor: Colors.black12,
+    toolbarHeight: 80, // <-- augmente la barre pour laisser la place au logo
+    automaticallyImplyLeading: false,
+
+    // LOGO LARGE À GAUCHE 👇
+    leadingWidth: 120, // <-- SUPER IMPORTANT !! largeur personnalisée
+    leading: Padding(
+      padding: const EdgeInsets.only(left: 16),
+      child: SizedBox(
+        height: 80,
+        child: SvgPicture.asset(
+          'assets/images/tunimode_logo.svg',
+          fit: BoxFit.contain,
+        ),
+      ),
+    ),
+
+    // BOUTON À DROITE 👇
+    actions: [
+      _buildAccountButton(),
+      const SizedBox(width: 16),
+    ],
+  );
+}
+
+Widget _buildHeroBanner() {
+  return Container(
+    height: 500,                          // 🔥 hauteur fixe partout
+    width: double.infinity,
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Stack(
+        fit: StackFit.expand,             // remplit tout l'espace
         children: [
-          const Icon(Icons.auto_awesome, color: _primaryBlue),
-          const SizedBox(width: 8),
-          const Text(
-            'TuniMode',
-            style: TextStyle(
-              color: Color(0xFF0F172A),
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.2,
+          Image.asset(
+            'assets/images/banner.jpg',
+            fit: BoxFit.cover,            // 🟦 uniforme sur toutes les tailles d’écran
+            alignment: Alignment.center,
+          ),
+
+          _buildHeroGradient(),           // dégradé noir léger
+
+          Positioned(
+            bottom: 40,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: FractionallySizedBox(
+                widthFactor: 0.75,        // search bar centrée à 75%
+                child: _buildSearchBar(),
+              ),
             ),
           ),
-          const SizedBox(width: 18),
-          Expanded(child: _buildSearchBar()),
-          _buildAccountButton(),
-          const SizedBox(width: 6),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
-  Widget _buildHeroBanner() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bannerHeight = (constraints.maxWidth / 16 * 7).clamp(180.0, 320.0);
-
-        return ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: bannerHeight),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                _buildHeroImage(),
-                _buildHeroGradient(),
-                _buildHeroContent(),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildHeroImage() {
-    return Image.network(
-      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1400&q=80',
-      fit: BoxFit.cover,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return const Center(child: CircularProgressIndicator());
-      },
-      errorBuilder: (context, _, __) {
-        return Container(
-          color: Colors.grey.shade200,
-          alignment: Alignment.center,
-          child: const Icon(Icons.image_not_supported, size: 40),
-        );
-      },
-    );
-  }
 
   Widget _buildHeroGradient() {
     return Container(
@@ -387,7 +390,7 @@ Widget _buildListingsSection() {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,       // 👈 toujours 4 cartes par ligne
+                      crossAxisCount: 5,       // 👈 toujours 4 cartes par ligne
                       crossAxisSpacing: 24,
                       mainAxisSpacing: 32,
                       childAspectRatio: 0.70,  // 👈 rend les cartes plus fines
@@ -413,7 +416,7 @@ Widget _buildListingsSection() {
   Widget _buildSearchBar() {
     return Material(
       elevation: 2,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -569,13 +572,29 @@ Widget _buildListingsSection() {
     );
   }
 
-  Widget _buildAccountButton() {
-    if (!_isAuthenticated) {
-      return TextButton(
-        onPressed: _openLogin,
-        child: const Text('Se connecter'),
-      );
-    }
+Widget _buildAccountButton() {
+  if (!_isAuthenticated) {
+    return TextButton.icon(
+      onPressed: _openLogin,
+      icon: const Icon(
+        Icons.login,          // icône "se connecter"
+        color: Color(0xFF1E5B96),
+        size: 16,
+      ),
+      label: const Text(
+        "SE CONNECTER",
+        style: TextStyle(
+          color: Color(0xFF1E5B96),   // 🔵 bleu moderne
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.6,
+		  fontSize: 12,      
+        ),
+      ),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+      ),
+    );
+  }
 
     final isPro = ApiService.currentUser?.role == 'pro';
     final isAdmin = ApiService.currentUser?.role == 'admin';
@@ -775,390 +794,404 @@ Widget _buildListingsSection() {
       }
     });
   }
+void _openQuickFilters() {
+  final cityController = TextEditingController(text: _selectedCity ?? "");
 
-  void _openQuickFilters() {
-    final TextEditingController cityController =
-        TextEditingController(text: _selectedCity ?? '');
-    double tempMin = _minPrice ?? 0;
-    double tempMax = _maxPrice ?? 500;
-    int? tempCategoryId = _selectedCategoryId;
-    bool? tempDelivery = _deliveryAvailable;
-    final List<String> tempSelectedSizes = List.from(_selectedSizes);
-    final List<String> tempSelectedColors = List.from(_selectedColors);
+  double tempMin = _minPrice ?? 0;
+  double tempMax = _maxPrice ?? 500;
+  int? tempCategoryId = _selectedCategoryId;
+  bool? tempDelivery = _deliveryAvailable;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+  List<String> tempSizes = List.from(_selectedSizes);
+  List<String> tempColors = List.from(_selectedColors);
+
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (ctx) {
+      return StatefulBuilder(
+        builder: (context, setModalState) {
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: 650,   // largeur max de la popup
+              ),
+              child: Material(
+                borderRadius: BorderRadius.circular(20),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // CONTENU (header + formulaire)
+                    _buildFiltersContent(
+                      cityController: cityController,
+                      tempMin: tempMin,
+                      tempMax: tempMax,
+                      tempCategoryId: tempCategoryId,
+                      tempDelivery: tempDelivery,
+                      tempSizes: tempSizes,
+                      tempColors: tempColors,
+                      setModalState: setModalState,
+                    ),
+
+                    // FOOTER boutons
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: Colors.grey.shade300),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _selectedCity = cityController.text.trim().isEmpty
+                                      ? null
+                                      : cityController.text.trim();
+                                  _minPrice = tempMin;
+                                  _maxPrice = tempMax;
+                                  _selectedCategoryId = tempCategoryId;
+                                  _selectedSizes = tempSizes;
+                                  _selectedColors = tempColors;
+                                  _deliveryAvailable = tempDelivery;
+                                });
+                                Navigator.pop(context);
+                                _refreshListings(scrollToResults: true);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                backgroundColor: _primaryBlue,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+  "Appliquer les filtres",
+  style: TextStyle(color: Colors.white),   // 🔥 texte blanc
+),
+							  
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _selectedCity = null;
+                                  _minPrice = null;
+                                  _maxPrice = null;
+                                  _selectedCategoryId = null;
+                                  _selectedSizes = [];
+                                  _selectedColors = [];
+                                  _deliveryAvailable = null;
+                                });
+                                Navigator.pop(context);
+                                _refreshListings(scrollToResults: true);
+                              },
+                              child: const Text("Réinitialiser"),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+
+Widget _buildFiltersContent({
+  required TextEditingController cityController,
+  required double tempMin,
+  required double tempMax,
+  required int? tempCategoryId,
+  required bool? tempDelivery,
+  required List<String> tempSizes,
+  required List<String> tempColors,
+  required void Function(void Function()) setModalState,
+}) {
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      // HEADER
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: const [
+            Text(
+              "Filtres rapides",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
       ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            void setPreset(double min, double max) {
-              setModalState(() {
-                tempMin = min;
-                tempMax = max;
-              });
-            }
 
-            return DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.9,
-              minChildSize: 0.6,
-              maxChildSize: 0.95,
-              builder: (context, scrollController) {
-                return SingleChildScrollView(
-                  controller: scrollController,
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    16,
-                    16,
-                    MediaQuery.of(context).viewInsets.bottom + 16,
+      // CONTENU
+      Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Ville
+            _filterSection(
+              title: "Ville",
+              child: TextField(
+                controller: cityController,
+                decoration: const InputDecoration(
+                  hintText: "Ex : Tunis, Sousse, Bizerte...",
+                  prefixIcon: Icon(Icons.location_on_outlined),
+                ),
+              ),
+            ),
+
+            // Catégorie
+            _filterSection(
+              title: "Catégorie",
+              trailing: _isLoadingCategories
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : null,
+              child: DropdownButtonFormField<int?>(
+                value: tempCategoryId,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  hintText: "Toutes les catégories",
+                  prefixIcon: Icon(Icons.category_outlined),
+                ),
+                items: [
+                  const DropdownMenuItem(
+                    value: null,
+                    child: Text("Toutes les catégories"),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Filtres rapides',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                        ],
+                  ..._flattenCategories(_categoryTree).map(
+                    (c) => DropdownMenuItem(
+                      value: c.id,
+                      child: Text(c.label),
+                    ),
+                  ),
+                ],
+                onChanged: (v) => setModalState(() => tempCategoryId = v),
+              ),
+            ),
+
+            // Tailles / Couleurs / Livraison
+            Row(
+              children: [
+                // Tailles
+                Expanded(
+                  child: _filterSection(
+                    title: "Tailles",
+                    child: DropdownButtonFormField<String?>(
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        hintText: "Ajouter",
+                        prefixIcon: Icon(Icons.straighten),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Ville',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: cityController,
-                        decoration: const InputDecoration(
-                          hintText: 'Ex: Tunis, Sousse, Bizerte...',
-                          prefixIcon: Icon(Icons.location_on_outlined),
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text("Ajouter"),
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Catégorie',
-                            style: TextStyle(fontWeight: FontWeight.w700),
+                        ..._sizeOptions.map(
+                          (s) => DropdownMenuItem(
+                            value: s,
+                            child: Row(
+                              children: [
+                                Expanded(child: Text(s)),
+                                if (tempSizes.contains(s))
+                                  const Icon(Icons.check,
+                                      color: Colors.green, size: 18),
+                              ],
+                            ),
                           ),
-                          if (_isLoadingCategories)
-                            const SizedBox(
-                              height: 16,
-                              width: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          if (_categoryLoadError != null)
-                            const Icon(Icons.error_outline, color: Colors.redAccent),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      if (_isLoadingCategories)
-                        const Center(child: CircularProgressIndicator(strokeWidth: 2))
-                      else if (_categoryLoadError != null)
-                        Text(
-                          _categoryLoadError!,
-                          style: const TextStyle(color: Colors.redAccent),
-                        )
-                      else
-                        DropdownButtonFormField<int?>(
-                          value: tempCategoryId,
-                          decoration: const InputDecoration(
-                            hintText: 'Sélectionner une catégorie',
-                            prefixIcon: Icon(Icons.category_outlined),
-                          ),
-                          items: [
-                            const DropdownMenuItem<int?>(
-                              value: null,
-                              child: Text('Toutes les catégories'),
-                            ),
-                            ..._flattenCategories(_categoryTree).map(
-                              (option) => DropdownMenuItem<int?>(
-                                value: option.id,
-                                child: Text(option.label),
-                              ),
-                            ),
-                          ],
-                          onChanged: (value) => setModalState(() {
-                            tempCategoryId = value;
-                          }),
                         ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'Tailles',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ],
+                      onChanged: (v) {
+                        if (v != null && !tempSizes.contains(v)) {
+                          setModalState(() => tempSizes.add(v));
+                        }
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // Couleurs
+                Expanded(
+                  child: _filterSection(
+                    title: "Couleurs",
+                    child: DropdownButtonFormField<String?>(
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        hintText: "Ajouter",
+                        prefixIcon: Icon(Icons.palette_outlined),
                       ),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String?>(
-                        value: null,
-                        decoration: const InputDecoration(
-                          hintText: 'Sélectionner une taille',
-                          prefixIcon: Icon(Icons.straighten),
-                        ),
-                        items: [
-                          const DropdownMenuItem<String?>(
-                            value: null,
-                            child: Text('Ajouter une taille'),
-                          ),
-                          ..._sizeOptions.map(
-                            (option) => DropdownMenuItem<String?>(
-                              value: option,
-                              child: Text(option),
-                            ),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setModalState(() {
-                            if (!tempSelectedSizes.contains(value)) {
-                              tempSelectedSizes.add(value);
-                            }
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: tempSelectedSizes
-                            .map(
-                              (size) => InputChip(
-                                label: Text(size),
-                                onDeleted: () => setModalState(() {
-                                  tempSelectedSizes.remove(size);
-                                }),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'Couleurs',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String?>(
-                        value: null,
-                        decoration: const InputDecoration(
-                          hintText: 'Sélectionner une couleur',
-                          prefixIcon: Icon(Icons.palette_outlined),
-                        ),
-                        items: [
-                          const DropdownMenuItem<String?>(
-                            value: null,
-                            child: Text('Ajouter une couleur'),
-                          ),
-                          ..._colorOptions.map(
-                            (option) => DropdownMenuItem<String?>(
-                              value: option.name,
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 14,
-                                    height: 14,
-                                    margin: const EdgeInsets.only(right: 8),
-                                    decoration: BoxDecoration(
-                                      color: option.color,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.grey.shade300),
+                      items: [
+                        const DropdownMenuItem(
+                            value: null, child: Text("Ajouter")),
+                        ..._colorOptions.map(
+                          (c) => DropdownMenuItem(
+                            value: c.name,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 14,
+                                  height: 14,
+                                  decoration: BoxDecoration(
+                                    color: c.color,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Colors.grey.shade300,
                                     ),
                                   ),
-                                  Text(option.name),
-                                ],
-                              ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(child: Text(c.name)),
+                                if (tempColors.contains(c.name))
+                                  const Icon(Icons.check,
+                                      color: Colors.green, size: 18),
+                              ],
                             ),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setModalState(() {
-                            if (!tempSelectedColors.contains(value)) {
-                              tempSelectedColors.add(value);
-                            }
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: tempSelectedColors
-                            .map(
-                              (color) => InputChip(
-                                label: Text(color),
-                                onDeleted: () => setModalState(() {
-                                  tempSelectedColors.remove(color);
-                                }),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'Livraison',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<bool?>(
-                        value: tempDelivery,
-                        decoration: const InputDecoration(
-                          hintText: 'Mode de réception',
-                          prefixIcon: Icon(Icons.local_shipping_outlined),
-                        ),
-                        items: const [
-                          DropdownMenuItem<bool?>(
-                            value: null,
-                            child: Text('Livraison ou retrait'),
-                          ),
-                          DropdownMenuItem<bool?>(
-                            value: true,
-                            child: Text('Livraison disponible'),
-                          ),
-                          DropdownMenuItem<bool?>(
-                            value: false,
-                            child: Text('Retrait uniquement'),
-                          ),
-                        ],
-                        onChanged: (value) => setModalState(() {
-                          tempDelivery = value;
-                        }),
-                      ),
-                      const SizedBox(height: 14),
-                      const Text(
-                        'Budget',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              initialValue: tempMin.toStringAsFixed(0),
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Min',
-                                prefixIcon: Icon(Icons.euro),
-                              ),
-                              onChanged: (value) {
-                                final parsed = double.tryParse(value) ?? 0;
-                                setModalState(() {
-                                  tempMin = parsed;
-                                });
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              initialValue: tempMax.toStringAsFixed(0),
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Max',
-                                prefixIcon: Icon(Icons.euro),
-                              ),
-                              onChanged: (value) {
-                                final parsed = double.tryParse(value) ?? 0;
-                                setModalState(() {
-                                  tempMax = parsed;
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 10,
-                        children: [
-                          _buildPresetChip('0 - 50', () => setPreset(0, 50), tempMin, tempMax, 0, 50),
-                          _buildPresetChip('50 - 150', () => setPreset(50, 150), tempMin, tempMax, 50, 150),
-                          _buildPresetChip('150 - 300', () => setPreset(150, 300), tempMin, tempMax, 150, 300),
-                          _buildPresetChip('300+', () => setPreset(300, 9999), tempMin, tempMax, 300, 9999),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _selectedCity = cityController.text.trim().isEmpty
-                                  ? null
-                                  : cityController.text.trim();
-                              _minPrice = tempMin;
-                              _maxPrice = tempMax;
-                              _selectedCategoryId = tempCategoryId;
-                              _selectedSizes = List.from(tempSelectedSizes);
-                              _selectedColors = List.from(tempSelectedColors);
-                              _deliveryAvailable = tempDelivery;
-                            });
-                            Navigator.of(context).pop();
-                            _refreshListings(scrollToResults: true);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _primaryBlue,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'Appliquer les filtres',
-                            style: TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setState(() {
-                              _selectedCity = null;
-                              _minPrice = null;
-                              _maxPrice = null;
-                              _selectedCategoryId = null;
-                              _selectedSizes = [];
-                              _selectedColors = [];
-                              _deliveryAvailable = null;
-                            });
-                            Navigator.of(context).pop();
-                            _refreshListings(scrollToResults: true);
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text('Réinitialiser'),
-                        ),
-                      ),
-                    ],
+                      ],
+                      onChanged: (v) {
+                        if (v != null && !tempColors.contains(v)) {
+                          setModalState(() => tempColors.add(v));
+                        }
+                      },
+                    ),
                   ),
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
+                ),
+                const SizedBox(width: 12),
+
+                // Livraison
+                Expanded(
+                  child: _filterSection(
+                    title: "Livraison",
+                    child: DropdownButtonFormField<bool?>(
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        hintText: "Tous",
+                        prefixIcon: Icon(Icons.local_shipping_outlined),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: null, child: Text("Tous")),
+                        DropdownMenuItem(value: true, child: Text("Livraison")),
+                        DropdownMenuItem(value: false, child: Text("Retrait")),
+                      ],
+                      onChanged: (v) => setModalState(() => tempDelivery = v),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // Budget
+_filterSection(
+  title: "Budget",
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Champs Min / Max
+      Row(
+        children: [
+          Expanded(
+            child: TextFormField(
+              initialValue: tempMin.toStringAsFixed(0),
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: "Min"),
+              onChanged: (v) => tempMin = double.tryParse(v) ?? 0,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              initialValue: tempMax.toStringAsFixed(0),
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: "Max"),
+              onChanged: (v) => tempMax = double.tryParse(v) ?? 10000,
+            ),
+          ),
+        ],
+      ),
+
+      const SizedBox(height: 16),
+    ],
+  ),
+),
+
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+
+
+Widget _filterSection({
+  required String title,
+  Widget? child,
+  Widget? trailing,
+  double bottomPadding = 18,
+}) {
+  return Padding(
+    padding: EdgeInsets.only(bottom: bottomPadding),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+            if (trailing != null) trailing,
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (child != null) child,
+      ],
+    ),
+  );
+}
+
+Widget _presetBudgetChip(
+  String label,
+  double min,
+  double max,
+  double currentMin,
+  double currentMax,
+  Function(double, double) onSelect,
+) {
+  final isSelected = currentMin == min && currentMax == max;
+
+  return ChoiceChip(
+    selected: isSelected,
+    label: Text(label),
+    onSelected: (_) => onSelect(min, max),
+  );
+}
+
 
   Widget _buildPresetChip(
     String label,
