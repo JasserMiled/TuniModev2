@@ -9,6 +9,7 @@ import '../widgets/listing_card.dart';
 import '../widgets/account_menu_button.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'listing_detail_screen.dart';
+import 'profile_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -102,6 +103,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ListingDetailScreen(listingId: listing.id),
+      ),
+    );
+  }
+
+  void _openSellerProfile(User seller) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(userId: seller.id),
       ),
     );
   }
@@ -203,95 +212,98 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           final seller = sellers[index];
           return Card(
             margin: const EdgeInsets.symmetric(vertical: 8),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 22,
-                        backgroundColor: Colors.blue.shade50,
-                        backgroundImage:
-                            seller.avatarUrl != null ? NetworkImage(seller.avatarUrl!) : null,
-                        child: seller.avatarUrl == null
-                            ? Icon(Icons.person_outline, color: Colors.blueGrey.shade700)
-                            : null,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              seller.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              seller.role == 'pro' ? 'Vendeur professionnel' : 'Vendeur particulier',
-                              style: const TextStyle(color: Colors.black54),
-                            ),
-                            const SizedBox(height: 4),
-                            FutureBuilder<List<Review>>(
-                              future: _loadSellerReviews(seller.id),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                  return const SizedBox(
-                                    height: 18,
-                                    width: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  );
-                                }
-
-                                if (snapshot.hasError) {
-                                  return const Text(
-                                    'Note indisponible',
-                                    style: TextStyle(color: Colors.black54),
-                                  );
-                                }
-
-                                final reviews = snapshot.data ?? [];
-                                final average = _averageRating(reviews);
-
-                                if (average == null) {
-                                  return const Text(
-                                    'Aucun avis pour le moment',
-                                    style: TextStyle(color: Colors.black54),
-                                  );
-                                }
-
-                                return Row(
-                                  children: [
-                                    _buildStarRating(average),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '${reviews.length} avis',
-                                      style: const TextStyle(
-                                        color: Colors.black87,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ],
+            child: InkWell(
+              onTap: () => _openSellerProfile(seller),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundColor: Colors.blue.shade50,
+                          backgroundImage:
+                              seller.avatarUrl != null ? NetworkImage(seller.avatarUrl!) : null,
+                          child: seller.avatarUrl == null
+                              ? Icon(Icons.person_outline, color: Colors.blueGrey.shade700)
+                              : null,
                         ),
-                      ),
-                      IconButton(
-                        tooltip: 'Retirer ce vendeur',
-                        icon: const Icon(Icons.favorite, color: Colors.red),
-                        onPressed: () => _removeSeller(seller.id),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  _buildSellerInfo(seller),
-                ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                seller.name,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                seller.role == 'pro' ? 'Vendeur professionnel' : 'Vendeur particulier',
+                                style: const TextStyle(color: Colors.black54),
+                              ),
+                              const SizedBox(height: 4),
+                              FutureBuilder<List<Review>>(
+                                future: _loadSellerReviews(seller.id),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return const SizedBox(
+                                      height: 18,
+                                      width: 18,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    );
+                                  }
+
+                                  if (snapshot.hasError) {
+                                    return const Text(
+                                      'Note indisponible',
+                                      style: TextStyle(color: Colors.black54),
+                                    );
+                                  }
+
+                                  final reviews = snapshot.data ?? [];
+                                  final average = _averageRating(reviews);
+
+                                  if (average == null) {
+                                    return const Text(
+                                      'Aucun avis pour le moment',
+                                      style: TextStyle(color: Colors.black54),
+                                    );
+                                  }
+
+                                  return Row(
+                                    children: [
+                                      _buildStarRating(average),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '${reviews.length} avis',
+                                        style: const TextStyle(
+                                          color: Colors.black87,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Retirer ce vendeur',
+                          icon: const Icon(Icons.favorite, color: Colors.red),
+                          onPressed: () => _removeSeller(seller.id),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _buildSellerInfo(seller),
+                  ],
+                ),
               ),
             ),
           );
