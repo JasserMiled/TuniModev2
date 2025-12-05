@@ -278,8 +278,9 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
     } finally {
       if (mounted) {
         setState(() {
-        _confirmingOrderId = null;
-      });
+          _confirmingOrderId = null;
+        });
+      }
     }
   }
 
@@ -312,7 +313,6 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
         });
       }
     }
-  }
   }
 
   List<Widget> _buildSellerActions(Order order) {
