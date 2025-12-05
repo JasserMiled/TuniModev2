@@ -7,6 +7,10 @@ class Order {
   final String status;
   final String receptionMode;
   final DateTime createdAt;
+  final int? sellerId;
+  final String? sellerName;
+  final int? buyerId;
+  final String? buyerName;
   final String? color;
   final String? size;
   final String? shippingAddress;
@@ -22,6 +26,10 @@ class Order {
     required this.status,
     required this.receptionMode,
     required this.createdAt,
+    this.sellerId,
+    this.sellerName,
+    this.buyerId,
+    this.buyerName,
     this.color,
     this.size,
     this.shippingAddress,
@@ -40,6 +48,12 @@ class Order {
       return int.tryParse(value?.toString() ?? '0') ?? 0;
     }
 
+    int? _parseNullableInt(dynamic value) {
+      if (value == null) return null;
+      if (value is num) return value.toInt();
+      return int.tryParse(value.toString());
+    }
+
     return Order(
       id: _parseInt(json['id']),
       listingId: _parseInt(json['listing_id']),
@@ -50,6 +64,10 @@ class Order {
       receptionMode: json['reception_mode']?.toString() ?? 'retrait',
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ??
           DateTime.now(),
+      sellerId: _parseNullableInt(json['seller_id'] ?? json['sellerId']),
+      sellerName: json['seller_name']?.toString(),
+      buyerId: _parseNullableInt(json['buyer_id'] ?? json['buyerId']),
+      buyerName: json['buyer_name']?.toString(),
       color: json['color']?.toString(),
       size: json['size']?.toString(),
       shippingAddress: json['shipping_address']?.toString(),
