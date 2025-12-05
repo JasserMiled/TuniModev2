@@ -314,6 +314,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
       future: _sellerFuture,
       builder: (context, snapshot) {
         final avatarUrl = snapshot.data?.avatarUrl;
+        final isProfessional = snapshot.data?.role == 'pro';
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -350,6 +351,27 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      const SizedBox(height: 2),
+                      if (isProfessional) ...[
+                        Row(
+                          children: const [
+                            Icon(
+                              Icons.verified,
+                              color: Colors.blueAccent,
+                              size: 18,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'Vendeur professionnel',
+                              style: TextStyle(
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                      ],
                       const SizedBox(height: 2),
                       FutureBuilder<List<Review>>(
                         future: _loadSellerReviews(listing.userId),
