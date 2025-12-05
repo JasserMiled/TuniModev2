@@ -207,7 +207,23 @@ router.patch("/:id/status", authRequired, async (req, res) => {
 
     const sellerStatuses = ["confirmed", "shipped", "ready_for_pickup", "picked_up", "cancelled"];
 
-    if (normalizedStatus === "received") {
+    if (normalizedStatus === "cancelled") {
+      if (!isSeller && !isBuyer) {
+        return res.status(403).json({ message: "Vous ne pouvez pas modifier cette commande" });
+      }
+
+      const buyerCancellableStatuses = ["pending"];
+      const sellerCancellableStatuses = ["pending", "confirmed", "shipped", "ready_for_pickup"];
+
+      const canBuyerCancel = isBuyer && buyerCancellableStatuses.includes(found.current_status);
+      const canSellerCancel = isSeller && sellerCancellableStatuses.includes(found.current_status);
+
+      if (!canBuyerCancel && !canSellerCancel) {
+        return res
+          .status(400)
+          .json({ message: "La commande ne peut pas être annulée à ce stade" });
+      }
+    } else if (normalizedStatus === "received") {
       if (!isBuyer) {
         return res.status(403).json({ message: "Seul l'acheteur peut confirmer la réception" });
       }
