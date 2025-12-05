@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../widgets/filter_bar.dart';
 import '../widgets/listing_card.dart';
 import 'listing_detail_screen.dart';
+import '../widgets/account_menu_button.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String initialQuery;
@@ -501,6 +502,10 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             ],
           ),
         ),
+        actions: const [
+          AccountMenuButton(),
+          SizedBox(width: 16),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

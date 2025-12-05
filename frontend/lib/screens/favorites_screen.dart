@@ -5,6 +5,7 @@ import '../models/listing.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
+import '../widgets/account_menu_button.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'listing_detail_screen.dart';
 
@@ -247,7 +248,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Widget build(BuildContext context) {
     if (ApiService.authToken == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Mes favoris')),
+        appBar: AppBar(
+          title: const Text('Mes favoris'),
+          actions: const [
+            AccountMenuButton(),
+            SizedBox(width: 16),
+          ],
+        ),
         body: const Center(
           child: Text('Connectez-vous pour enregistrer et consulter vos favoris.'),
         ),
@@ -259,6 +266,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Mes favoris'),
+          actions: const [
+            AccountMenuButton(),
+            SizedBox(width: 16),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Annonces'),

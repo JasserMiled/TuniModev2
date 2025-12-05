@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/order.dart';
 import 'listing_detail_screen.dart';
 import 'profile_screen.dart';
+import '../widgets/account_menu_button.dart';
 
 class OrderDetailScreen extends StatelessWidget {
   const OrderDetailScreen({super.key, required this.order});
@@ -83,7 +84,13 @@ class OrderDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Détails de la commande')),
+      appBar: AppBar(
+        title: const Text('Détails de la commande'),
+        actions: const [
+          AccountMenuButton(),
+          SizedBox(width: 16),
+        ],
+      ),
       body: ListView(
         children: [
           Padding(

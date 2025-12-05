@@ -4,6 +4,7 @@ import '../models/user.dart';
 import '../services/api_service.dart';
 import '../widgets/order_form.dart';
 import 'profile_screen.dart';
+import '../widgets/account_menu_button.dart';
 
 class ListingDetailScreen extends StatefulWidget {
   final int listingId;
@@ -717,7 +718,9 @@ Future<void> _toggleListingFavorite(Listing listing) async {
                   _isListingFavorite ? Icons.favorite : Icons.favorite_border,
                   color: _isListingFavorite ? Colors.red : Colors.white,
                 ),
-              )
+              ),
+              const AccountMenuButton(),
+              const SizedBox(width: 16),
             ],
           ),
 

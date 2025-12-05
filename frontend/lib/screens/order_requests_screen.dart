@@ -4,6 +4,7 @@ import '../models/order.dart';
 import '../services/api_service.dart';
 import '../widgets/review_dialog.dart';
 import 'order_detail_screen.dart';
+import '../widgets/account_menu_button.dart';
 
 class OrderRequestsScreen extends StatefulWidget {
   const OrderRequestsScreen({super.key});
@@ -977,6 +978,10 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Mes commandes'),
+          actions: const [
+            AccountMenuButton(),
+            SizedBox(width: 16),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Vente'),
