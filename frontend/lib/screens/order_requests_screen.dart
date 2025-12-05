@@ -201,7 +201,10 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
           SnackBar(content: Text('Statut mis à jour en ${_statusLabel(status)}')),
         );
       }
-      await _refreshSeller();
+      await Future.wait([
+        _refreshSeller(),
+        _refreshBuyer(),
+      ]);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -230,7 +233,10 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
               content: Text('Réception confirmée, en attente de finalisation par le vendeur.')),
         );
       }
-      await _refreshBuyer();
+      await Future.wait([
+        _refreshBuyer(),
+        _refreshSeller(),
+      ]);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -258,7 +264,10 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
           const SnackBar(content: Text('Réception refusée.')),
         );
       }
-      await _refreshBuyer();
+      await Future.wait([
+        _refreshBuyer(),
+        _refreshSeller(),
+      ]);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -329,7 +338,7 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
       );
     }
 
-    if (order.status == 'received') {
+    if (order.status == 'received' || order.status == 'reception_refused') {
       actions.add(
         ElevatedButton(
           onPressed: isUpdating ? null : () => _updateStatus(order, 'completed'),

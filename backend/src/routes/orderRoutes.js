@@ -180,6 +180,10 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       ready_for_pickup: "ready_for_pickup",
       ready: "ready_for_pickup",
       awaiting_pickup: "ready_for_pickup",
+      expédié: "shipped",
+      expédiée: "shipped",
+      expedie: "shipped",
+      expediee: "shipped",
       recu: "received",
       reçu: "received",
       refus_de_reception: "reception_refused",
@@ -247,10 +251,11 @@ router.patch("/:id/status", authRequired, async (req, res) => {
         return res.status(403).json({ message: "Seul le vendeur peut clôturer la commande" });
       }
 
-      if (found.current_status !== "received") {
+      const completableStatuses = ["received", "reception_refused"];
+      if (!completableStatuses.includes(found.current_status)) {
         return res
           .status(400)
-          .json({ message: "La commande doit être marquée comme reçue avant d'être terminée" });
+          .json({ message: "La commande doit être reçue ou refusée avant d'être terminée" });
       }
     } else {
       if (!isSeller) {
