@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/favorites.dart';
 import '../models/listing.dart';
 import '../models/user.dart';
+import '../models/review.dart';
 import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/account_menu_button.dart';
@@ -18,6 +19,7 @@ class FavoritesScreen extends StatefulWidget {
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
   late Future<FavoriteCollections> _futureFavorites;
+  final Map<int, Future<List<Review>>> _sellerReviewsCache = {};
 
   @override
   void initState() {
@@ -34,6 +36,34 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       _futureFavorites = _loadFavorites();
     });
     await _futureFavorites;
+  }
+
+  Future<List<Review>> _loadSellerReviews(int sellerId) {
+    return _sellerReviewsCache.putIfAbsent(
+      sellerId,
+      () => ApiService.fetchUserReviews(sellerId),
+    );
+  }
+
+  double? _averageRating(List<Review> reviews) {
+    if (reviews.isEmpty) return null;
+    final total = reviews.fold<int>(0, (sum, review) => sum + review.rating);
+    return total / reviews.length;
+  }
+
+  Widget _buildStarRating(double rating) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        final starIndex = index + 1;
+        if (rating >= starIndex) {
+          return const Icon(Icons.star, color: Colors.amber, size: 16);
+        } else if (rating >= starIndex - 0.5) {
+          return const Icon(Icons.star_half, color: Colors.amber, size: 16);
+        }
+        return const Icon(Icons.star_border, color: Colors.amber, size: 16);
+      }),
+    );
   }
 
   Future<void> _removeListing(int listingId) async {
@@ -204,6 +234,50 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                             Text(
                               seller.role == 'pro' ? 'Vendeur professionnel' : 'Vendeur particulier',
                               style: const TextStyle(color: Colors.black54),
+                            ),
+                            const SizedBox(height: 4),
+                            FutureBuilder<List<Review>>(
+                              future: _loadSellerReviews(seller.id),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  return const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  );
+                                }
+
+                                if (snapshot.hasError) {
+                                  return const Text(
+                                    'Note indisponible',
+                                    style: TextStyle(color: Colors.black54),
+                                  );
+                                }
+
+                                final reviews = snapshot.data ?? [];
+                                final average = _averageRating(reviews);
+
+                                if (average == null) {
+                                  return const Text(
+                                    'Aucun avis pour le moment',
+                                    style: TextStyle(color: Colors.black54),
+                                  );
+                                }
+
+                                return Row(
+                                  children: [
+                                    _buildStarRating(average),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${reviews.length} avis',
+                                      style: const TextStyle(
+                                        color: Colors.black87,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                           ],
                         ),
