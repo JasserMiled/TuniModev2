@@ -254,7 +254,26 @@ router.get("/:id", async (req, res) => {
 router.get("/me/mine", authRequired, requireRole("buyer", "pro", "admin"), async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT * FROM listings WHERE user_id = $1 ORDER BY created_at DESC`,
+      `SELECT
+        l.*,
+        u.name AS seller_name,
+        c.name AS category_name,
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object('url', li.url, 'sort_order', li.sort_order)
+              ORDER BY li.sort_order
+            )
+            FROM listing_images li
+            WHERE li.listing_id = l.id
+          ),
+          '[]'::json
+        ) AS images
+      FROM listings l
+      JOIN users u ON l.user_id = u.id
+      LEFT JOIN categories c ON l.category_id = c.id
+      WHERE l.user_id = $1
+      ORDER BY l.created_at DESC`,
       [req.user.id]
     );
     res.json(result.rows);
