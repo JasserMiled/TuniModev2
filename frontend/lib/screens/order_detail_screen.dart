@@ -19,6 +19,8 @@ class OrderDetailScreen extends StatelessWidget {
         return 'À retirer';
       case 'picked_up':
         return 'Retirée';
+      case 'received':
+        return 'Reçu';
       case 'completed':
         return 'Terminée';
       case 'cancelled':
@@ -38,6 +40,8 @@ class OrderDetailScreen extends StatelessWidget {
         return Colors.orange;
       case 'picked_up':
         return Colors.teal;
+      case 'received':
+        return Colors.lightGreen;
       case 'completed':
         return Colors.green;
       case 'cancelled':
