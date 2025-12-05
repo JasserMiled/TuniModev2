@@ -259,12 +259,252 @@ Widget buildImageGallery(List<String> images, Listing listing) {
   }
 
   void _openEditListing(Listing listing) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Interface de modification à venir : vous pourrez bientôt éditer votre annonce.',
-        ),
-      ),
+    if (!_isListingOwner(listing)) return;
+
+    final formKey = GlobalKey<FormState>();
+    final titleController = TextEditingController(text: listing.title);
+    final descriptionController =
+        TextEditingController(text: listing.description ?? '');
+    final priceController =
+        TextEditingController(text: listing.price.toStringAsFixed(0));
+    final sizesController =
+        TextEditingController(text: listing.sizes.join(', '));
+    final colorsController =
+        TextEditingController(text: listing.colors.join(', '));
+    final cityController = TextEditingController(text: listing.city ?? '');
+    final stockController =
+        TextEditingController(text: listing.stock.toString());
+
+    final conditionOptions = [
+      'Neuf avec étiquette',
+      'Neuf sans étiquette',
+      'Très bon état',
+      'Bon état',
+      'Satisfaisant',
+    ];
+
+    String? condition = listing.condition;
+    bool deliveryAvailable = listing.deliveryAvailable;
+    bool submitting = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              Future<void> submit() async {
+                if (!formKey.currentState!.validate()) return;
+
+                final parsedPrice = double.tryParse(
+                  priceController.text.replaceAll(',', '.'),
+                );
+                if (parsedPrice == null) {
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Veuillez saisir un prix valide.'),
+                    ),
+                  );
+                  return;
+                }
+
+                final parsedStock =
+                    int.tryParse(stockController.text.trim().isEmpty ? '1' : stockController.text.trim());
+
+                setModalState(() => submitting = true);
+
+                final success = await ApiService.updateListing(
+                  id: listing.id,
+                  title: titleController.text.trim(),
+                  description: descriptionController.text.trim(),
+                  price: parsedPrice,
+                  sizes: sizesController.text
+                      .split(',')
+                      .map((e) => e.trim())
+                      .where((e) => e.isNotEmpty)
+                      .toList(),
+                  colors: colorsController.text
+                      .split(',')
+                      .map((e) => e.trim())
+                      .where((e) => e.isNotEmpty)
+                      .toList(),
+                  condition: condition,
+                  city: cityController.text.trim().isEmpty
+                      ? null
+                      : cityController.text.trim(),
+                  deliveryAvailable: deliveryAvailable,
+                  stock: parsedStock ?? listing.stock,
+                );
+
+                if (!mounted) return;
+
+                setModalState(() => submitting = false);
+
+                if (success) {
+                  setState(() {
+                    _futureListing = ApiService.fetchListingDetail(listing.id);
+                  });
+                  Navigator.of(sheetContext).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Annonce mise à jour avec succès.'),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Impossible de mettre à jour l\'annonce.'),
+                    ),
+                  );
+                }
+              }
+
+              return SingleChildScrollView(
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Modifier l\'annonce',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: submitting
+                                ? null
+                                : () => Navigator.of(sheetContext).pop(),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: titleController,
+                        decoration: const InputDecoration(labelText: 'Titre'),
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty
+                                ? 'Le titre est obligatoire'
+                                : null,
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: descriptionController,
+                        decoration:
+                            const InputDecoration(labelText: 'Description'),
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: priceController,
+                              decoration: const InputDecoration(
+                                labelText: 'Prix (TND)',
+                              ),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(decimal: true),
+                              validator: (value) =>
+                                  value == null || value.trim().isEmpty
+                                      ? 'Prix obligatoire'
+                                      : null,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              controller: stockController,
+                              decoration: const InputDecoration(
+                                labelText: 'Stock',
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: sizesController,
+                        decoration: const InputDecoration(
+                          labelText: 'Tailles (séparées par des virgules)',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: colorsController,
+                        decoration: const InputDecoration(
+                          labelText: 'Couleurs (séparées par des virgules)',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: condition,
+                        decoration:
+                            const InputDecoration(labelText: 'État du produit'),
+                        items: conditionOptions
+                            .map(
+                              (c) => DropdownMenuItem(
+                                value: c,
+                                child: Text(c),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) => setModalState(() => condition = value),
+                        isExpanded: true,
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: cityController,
+                        decoration: const InputDecoration(labelText: 'Ville'),
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Livraison disponible'),
+                        value: deliveryAvailable,
+                        onChanged: (value) {
+                          setModalState(() => deliveryAvailable = value);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: submitting ? null : submit,
+                          icon: submitting
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.save),
+                          label: Text(submitting ? 'Enregistrement...' : 'Enregistrer'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
