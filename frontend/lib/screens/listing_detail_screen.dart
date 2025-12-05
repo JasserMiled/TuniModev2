@@ -3,6 +3,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import '../models/listing.dart';
 import '../models/user.dart';
+import '../models/review.dart';
 import '../services/api_service.dart';
 import '../widgets/order_form.dart';
 import 'profile_screen.dart';
@@ -31,6 +32,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
 
   Future<User>? _sellerFuture;
   Future<List<Listing>>? _otherListingsFuture;
+  Future<List<Review>>? _sellerReviewsFuture;
 
   @override
   void initState() {
@@ -57,6 +59,32 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   Future<List<Listing>> _loadOtherListings(Listing listing) {
     _otherListingsFuture ??= ApiService.fetchUserListings(listing.userId);
     return _otherListingsFuture!;
+  }
+
+  Future<List<Review>> _loadSellerReviews(int sellerId) {
+    _sellerReviewsFuture ??= ApiService.fetchUserReviews(sellerId);
+    return _sellerReviewsFuture!;
+  }
+
+  double? _averageRating(List<Review> reviews) {
+    if (reviews.isEmpty) return null;
+    final total = reviews.fold<int>(0, (sum, review) => sum + review.rating);
+    return total / reviews.length;
+  }
+
+  Widget _buildStarRating(double rating) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        final starIndex = index + 1;
+        if (rating >= starIndex) {
+          return const Icon(Icons.star, color: Colors.amber, size: 18);
+        } else if (rating >= starIndex - 0.5) {
+          return const Icon(Icons.star_half, color: Colors.amber, size: 18);
+        }
+        return const Icon(Icons.star_border, color: Colors.amber, size: 18);
+      }),
+    );
   }
 
   // -----------------------------------------------------------
@@ -321,6 +349,51 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
+                      ),
+                      const SizedBox(height: 2),
+                      FutureBuilder<List<Review>>(
+                        future: _loadSellerReviews(listing.userId),
+                        builder: (context, reviewSnapshot) {
+                          if (reviewSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            );
+                          }
+
+                          if (reviewSnapshot.hasError) {
+                            return const Text(
+                              'Note indisponible',
+                              style: TextStyle(color: Colors.black54),
+                            );
+                          }
+
+                          final reviews = reviewSnapshot.data ?? [];
+                          final average = _averageRating(reviews);
+
+                          if (average == null) {
+                            return const Text(
+                              'Aucun avis pour le moment',
+                              style: TextStyle(color: Colors.black54),
+                            );
+                          }
+
+                          return Row(
+                            children: [
+                              _buildStarRating(average),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${reviews.length} avis',
+                                style: const TextStyle(
+                                  color: Colors.black87,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: 2),
                       const Text(
