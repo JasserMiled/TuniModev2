@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/account_menu_button.dart';
 import 'listing_detail_screen.dart';
+import 'account_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final int? userId;
@@ -107,7 +108,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildHeader(User user) {
+  void _openAccountSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AccountSettingsScreen()),
+    );
+  }
+
+  Widget _buildHeader(User user, {required bool isCurrentUser}) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -152,6 +159,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
+            if (isCurrentUser) ...[
+              const SizedBox(width: 12),
+              ElevatedButton.icon(
+                onPressed: _openAccountSettings,
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Modifier profil'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -194,7 +215,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-Widget _buildListingsTab() {
+
+  Widget _buildListingsTab() {
   return FutureBuilder<List<Listing>>(
     future: _listingsFuture,
     builder: (context, snapshot) {
@@ -317,7 +339,10 @@ Widget _buildListingsTab() {
           length: 2,
           child: Column(
             children: [
-              _buildHeader(user),
+              _buildHeader(
+                user,
+                isCurrentUser: user.id == ApiService.currentUser?.id,
+              ),
               const SizedBox(height: 12),
               const TabBar(
                 tabs: [
