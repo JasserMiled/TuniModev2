@@ -15,6 +15,8 @@ class OrderRequestsScreen extends StatefulWidget {
 class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
   late Future<List<Order>> _sellerOrdersFuture;
   late Future<List<Order>> _buyerOrdersFuture;
+  String? _sellerStatusFilter;
+  String? _buyerStatusFilter;
   int? _updatingOrderId;
   int? _reviewingOrderId;
   int? _confirmingOrderId;
@@ -433,6 +435,51 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
     }
   }
 
+  String? _validatedStatusValue(String? value, Set<String> availableStatuses) {
+    if (value != null && availableStatuses.contains(value)) {
+      return value;
+    }
+    return null;
+  }
+
+  Widget _buildStatusFilterDropdown({
+    required String? value,
+    required Set<String> statuses,
+    required ValueChanged<String?> onChanged,
+  }) {
+    final safeValue = _validatedStatusValue(value, statuses);
+    final statusItems = statuses.toList();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: DropdownButtonFormField<String?>(
+        value: safeValue,
+        decoration: const InputDecoration(
+          labelText: 'Filtrer par statut',
+          border: OutlineInputBorder(),
+        ),
+        items: [
+          const DropdownMenuItem<String?>(
+            value: null,
+            child: Text('Tous les statuts'),
+          ),
+          ...statusItems.map(
+            (status) => DropdownMenuItem<String?>(
+              value: status,
+              child: Text(_statusLabel(status)),
+            ),
+          ),
+        ],
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  List<Order> _filterOrdersByStatus(List<Order> orders, String? status) {
+    if (status == null) return orders;
+    return orders.where((order) => order.status == status).toList();
+  }
+
   Color _statusColor(String status) {
     switch (status) {
       case 'confirmed':
@@ -800,12 +847,40 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
           );
         }
 
+        final sellerStatuses = orders.map((order) => order.status).toSet();
+        final sellerStatusValue =
+            _validatedStatusValue(_sellerStatusFilter, sellerStatuses);
+        if (_sellerStatusFilter != null && sellerStatusValue == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() {
+              _sellerStatusFilter = null;
+            });
+          });
+        }
+        final filteredOrders =
+            _filterOrdersByStatus(orders, sellerStatusValue);
+
         return RefreshIndicator(
           onRefresh: _refreshSeller,
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
-            itemCount: orders.length,
-            itemBuilder: (context, index) => _buildSellerOrderCard(orders[index]),
+            itemCount: filteredOrders.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return _buildStatusFilterDropdown(
+                  value: sellerStatusValue,
+                  statuses: sellerStatuses,
+                  onChanged: (value) {
+                    setState(() {
+                      _sellerStatusFilter = value;
+                    });
+                  },
+                );
+              }
+
+              final order = filteredOrders[index - 1];
+              return _buildSellerOrderCard(order);
+            },
           ),
         );
       },
@@ -855,12 +930,40 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
           );
         }
 
+        final buyerStatuses = orders.map((order) => order.status).toSet();
+        final buyerStatusValue =
+            _validatedStatusValue(_buyerStatusFilter, buyerStatuses);
+        if (_buyerStatusFilter != null && buyerStatusValue == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() {
+              _buyerStatusFilter = null;
+            });
+          });
+        }
+        final filteredOrders =
+            _filterOrdersByStatus(orders, buyerStatusValue);
+
         return RefreshIndicator(
           onRefresh: _refreshBuyer,
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
-            itemCount: orders.length,
-            itemBuilder: (context, index) => _buildBuyerOrderCard(orders[index]),
+            itemCount: filteredOrders.length + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return _buildStatusFilterDropdown(
+                  value: buyerStatusValue,
+                  statuses: buyerStatuses,
+                  onChanged: (value) {
+                    setState(() {
+                      _buyerStatusFilter = value;
+                    });
+                  },
+                );
+              }
+
+              final order = filteredOrders[index - 1];
+              return _buildBuyerOrderCard(order);
+            },
           ),
         );
       },
