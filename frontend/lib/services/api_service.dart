@@ -491,6 +491,22 @@ class ApiService {
     return Order.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  static Future<Order> cancelOrder(int orderId) async {
+    final uri = Uri.parse('$baseUrl/api/orders/$orderId/status');
+    final res = await http.patch(
+      uri,
+      headers: _headers(withAuth: true),
+      body: jsonEncode({'status': 'cancelled'}),
+    );
+
+    if (res.statusCode != 200) {
+      final message = jsonDecode(res.body)['message'] ?? 'Impossible d\'annuler la commande';
+      throw Exception(message);
+    }
+
+    return Order.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
   static Future<Order> confirmOrderReception(int orderId) async {
     final uri = Uri.parse('$baseUrl/api/orders/$orderId/status');
     final res = await http.patch(
