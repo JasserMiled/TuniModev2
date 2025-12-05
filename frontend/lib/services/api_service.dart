@@ -507,6 +507,22 @@ class ApiService {
     return Order.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
   }
 
+  static Future<Order> refuseOrderReception(int orderId) async {
+    final uri = Uri.parse('$baseUrl/api/orders/$orderId/status');
+    final res = await http.patch(
+      uri,
+      headers: _headers(withAuth: true),
+      body: jsonEncode({'status': 'reception_refused'}),
+    );
+
+    if (res.statusCode != 200) {
+      final message = jsonDecode(res.body)['message'] ?? 'Impossible de refuser la réception';
+      throw Exception(message);
+    }
+
+    return Order.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
   static Future<List<Review>> fetchUserReviews(int userId) async {
     final uri = Uri.parse('$baseUrl/api/reviews/user/$userId');
     final res = await http.get(uri, headers: _headers());

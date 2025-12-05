@@ -169,6 +169,7 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       "ready_for_pickup",
       "picked_up",
       "received",
+      "reception_refused",
       "completed",
       "cancelled",
     ];
@@ -181,6 +182,9 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       awaiting_pickup: "ready_for_pickup",
       recu: "received",
       reçu: "received",
+      refus_de_reception: "reception_refused",
+      "refus de reception": "reception_refused",
+      "refus_de_réception": "reception_refused",
       done: "completed",
     };
 
@@ -213,6 +217,14 @@ router.patch("/:id/status", authRequired, async (req, res) => {
         return res
           .status(400)
           .json({ message: "La commande ne peut pas être marquée comme reçue pour le moment" });
+      }
+    } else if (normalizedStatus === "reception_refused") {
+      if (!isSeller && !isBuyer) {
+        return res.status(403).json({ message: "Vous ne pouvez pas modifier cette commande" });
+      }
+
+      if (found.current_status !== "shipped") {
+        return res.status(400).json({ message: "La commande doit être expédiée pour refuser la réception" });
       }
     } else if (normalizedStatus === "completed") {
       if (!isSeller) {

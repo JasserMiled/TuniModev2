@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS orders (
                 'ready_for_pickup',
                 'picked_up',
                 'received',
+                'reception_refused',
                 'completed',
                 'cancelled'
             )

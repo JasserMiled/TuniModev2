@@ -15,6 +15,8 @@ class OrderDetailScreen extends StatelessWidget {
         return 'Confirmée';
       case 'shipped':
         return 'Expédiée';
+      case 'reception_refused':
+        return 'Refus de réception';
       case 'ready_for_pickup':
         return 'À retirer';
       case 'picked_up':
@@ -36,6 +38,8 @@ class OrderDetailScreen extends StatelessWidget {
         return Colors.blueAccent;
       case 'shipped':
         return Colors.deepPurple;
+      case 'reception_refused':
+        return Colors.redAccent;
       case 'ready_for_pickup':
         return Colors.orange;
       case 'picked_up':

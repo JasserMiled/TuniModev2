@@ -246,6 +246,34 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
     }
   }
 
+  Future<void> _refuseReception(Order order) async {
+    setState(() {
+      _confirmingOrderId = order.id;
+    });
+
+    try {
+      await ApiService.refuseOrderReception(order.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Réception refusée.')),
+        );
+      }
+      await _refreshBuyer();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _confirmingOrderId = null;
+        });
+      }
+    }
+  }
+
   List<Widget> _buildSellerActions(Order order) {
     final actions = <Widget>[];
 
@@ -288,6 +316,19 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
       );
     }
 
+    if (order.status == 'shipped') {
+      actions.add(
+        OutlinedButton(
+          onPressed: isUpdating ? null : () => _updateStatus(order, 'reception_refused'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.redAccent,
+            side: const BorderSide(color: Colors.redAccent),
+          ),
+          child: Text(isUpdating ? 'Mise à jour...' : 'Refus de réception'),
+        ),
+      );
+    }
+
     if (order.status == 'received') {
       actions.add(
         ElevatedButton(
@@ -312,6 +353,8 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
         return 'Confirmée';
       case 'shipped':
         return 'Expédiée';
+      case 'reception_refused':
+        return 'Refus de réception';
       case 'ready_for_pickup':
         return 'À retirer';
       case 'picked_up':
@@ -333,6 +376,8 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
         return Colors.blueAccent;
       case 'shipped':
         return Colors.deepPurple;
+      case 'reception_refused':
+        return Colors.redAccent;
       case 'ready_for_pickup':
         return Colors.orange;
       case 'picked_up':
@@ -484,6 +529,7 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
 
     final bool canConfirmReception =
         order.status == 'shipped' || order.status == 'picked_up';
+    final bool canRefuseReception = order.status == 'shipped';
 
     if (order.color != null && order.color!.isNotEmpty) {
       subtitleLines.add('Couleur : ${order.color}');
@@ -537,7 +583,7 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text('Votre note : ${order.buyerNote}'),
                 ),
-              if (canConfirmReception || canLeaveReview) ...[
+              if (canConfirmReception || canRefuseReception || canLeaveReview) ...[
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -555,6 +601,23 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Text('Confirmer la réception'),
+                      ),
+                    if (canRefuseReception)
+                      OutlinedButton(
+                        onPressed: _confirmingOrderId == order.id
+                            ? null
+                            : () => _refuseReception(order),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                          side: const BorderSide(color: Colors.redAccent),
+                        ),
+                        child: _confirmingOrderId == order.id
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Refuser la réception'),
                       ),
                     if (canLeaveReview)
                       OutlinedButton.icon(
