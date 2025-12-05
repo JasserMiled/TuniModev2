@@ -179,8 +179,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.storefront_outlined, size: 22),
-                      const SizedBox(width: 8),
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundColor: Colors.blue.shade50,
+                        backgroundImage:
+                            seller.avatarUrl != null ? NetworkImage(seller.avatarUrl!) : null,
+                        child: seller.avatarUrl == null
+                            ? Icon(Icons.person_outline, color: Colors.blueGrey.shade700)
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
