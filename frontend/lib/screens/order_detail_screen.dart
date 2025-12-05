@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/order.dart';
+import 'listing_detail_screen.dart';
+import 'profile_screen.dart';
 
 class OrderDetailScreen extends StatelessWidget {
   const OrderDetailScreen({super.key, required this.order});
@@ -56,6 +58,7 @@ class OrderDetailScreen extends StatelessWidget {
     required String title,
     String? subtitle,
     Widget? trailing,
+    VoidCallback? onTap,
   }) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -64,6 +67,7 @@ class OrderDetailScreen extends StatelessWidget {
         title: Text(title),
         subtitle: subtitle != null ? Text(subtitle) : null,
         trailing: trailing,
+        onTap: onTap,
       ),
     );
   }
@@ -121,8 +125,43 @@ class OrderDetailScreen extends StatelessWidget {
           ),
           _buildTile(
             icon: Icons.local_shipping,
-            title: 'Mode de réception : ${order.receptionMode == 'livraison' ? 'Livraison' : 'Retrait sur place'}',
+            title:
+                "Mode de réception : ${order.receptionMode == 'livraison' ? 'Livraison' : 'Retrait sur place'}",
           ),
+          _buildTile(
+            icon: Icons.storefront_outlined,
+            title: 'Voir l\'annonce utilisée',
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ListingDetailScreen(listingId: order.listingId),
+              ),
+            ),
+          ),
+          if (order.sellerId != null)
+            _buildTile(
+              icon: Icons.badge_outlined,
+              title: 'Profil du vendeur',
+              subtitle: order.sellerName,
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ProfileScreen(userId: order.sellerId!),
+                ),
+              ),
+            ),
+          if (order.buyerId != null)
+            _buildTile(
+              icon: Icons.person_outline,
+              title: 'Profil de l\'acheteur',
+              subtitle: order.buyerName,
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ProfileScreen(userId: order.buyerId!),
+                ),
+              ),
+            ),
           if (order.color != null && order.color!.isNotEmpty)
             _buildTile(
               icon: Icons.palette,
