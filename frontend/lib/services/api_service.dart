@@ -496,7 +496,7 @@ class ApiService {
     final res = await http.patch(
       uri,
       headers: _headers(withAuth: true),
-      body: jsonEncode({'status': 'completed'}),
+      body: jsonEncode({'status': 'received'}),
     );
 
     if (res.statusCode != 200) {

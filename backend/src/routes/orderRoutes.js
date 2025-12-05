@@ -168,6 +168,7 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       "shipped",
       "ready_for_pickup",
       "picked_up",
+      "received",
       "completed",
       "cancelled",
     ];
@@ -178,6 +179,8 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       ready_for_pickup: "ready_for_pickup",
       ready: "ready_for_pickup",
       awaiting_pickup: "ready_for_pickup",
+      recu: "received",
+      reçu: "received",
       done: "completed",
     };
 
@@ -198,15 +201,9 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     const isSeller = found.seller_id === req.user.id;
     const isBuyer = found.buyer_id === req.user.id;
 
-    const sellerStatuses = [
-      "confirmed",
-      "shipped",
-      "ready_for_pickup",
-      "picked_up",
-      "cancelled",
-    ];
+    const sellerStatuses = ["confirmed", "shipped", "ready_for_pickup", "picked_up", "cancelled"];
 
-    if (normalizedStatus === "completed") {
+    if (normalizedStatus === "received") {
       if (!isBuyer) {
         return res.status(403).json({ message: "Seul l'acheteur peut confirmer la réception" });
       }
@@ -215,7 +212,17 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       if (!allowedCurrentStatuses.includes(found.current_status)) {
         return res
           .status(400)
-          .json({ message: "La commande ne peut pas être marquée comme terminée pour le moment" });
+          .json({ message: "La commande ne peut pas être marquée comme reçue pour le moment" });
+      }
+    } else if (normalizedStatus === "completed") {
+      if (!isSeller) {
+        return res.status(403).json({ message: "Seul le vendeur peut clôturer la commande" });
+      }
+
+      if (found.current_status !== "received") {
+        return res
+          .status(400)
+          .json({ message: "La commande doit être marquée comme reçue avant d'être terminée" });
       }
     } else {
       if (!isSeller) {

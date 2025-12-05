@@ -226,7 +226,8 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
       await ApiService.confirmOrderReception(order.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Réception confirmée, commande terminée.')),
+          const SnackBar(
+              content: Text('Réception confirmée, en attente de finalisation par le vendeur.')),
         );
       }
       await _refreshBuyer();
@@ -287,6 +288,15 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
       );
     }
 
+    if (order.status == 'received') {
+      actions.add(
+        ElevatedButton(
+          onPressed: isUpdating ? null : () => _updateStatus(order, 'completed'),
+          child: Text(isUpdating ? 'Mise à jour...' : 'Marquer comme terminée'),
+        ),
+      );
+    }
+
     return actions;
   }
 
@@ -306,6 +316,8 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
         return 'À retirer';
       case 'picked_up':
         return 'Retirée';
+      case 'received':
+        return 'Reçu';
       case 'completed':
         return 'Terminée';
       case 'cancelled':
@@ -325,6 +337,8 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
         return Colors.orange;
       case 'picked_up':
         return Colors.teal;
+      case 'received':
+        return Colors.lightGreen;
       case 'completed':
         return Colors.green;
       case 'cancelled':
