@@ -134,6 +134,34 @@ class _OrdersScreenState extends State<OrdersScreen> {
     }
   }
 
+  Future<void> _refuseReception(Order order) async {
+    setState(() {
+      _confirmingOrderId = order.id;
+    });
+
+    try {
+      await ApiService.refuseOrderReception(order.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Réception refusée.')),
+        );
+      }
+      await _refresh();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _confirmingOrderId = null;
+        });
+      }
+    }
+  }
+
   String _formatDate(DateTime date) {
     final d = date.toLocal();
     final twoDigits = (int value) => value.toString().padLeft(2, '0');
@@ -146,6 +174,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
         return 'Confirmée';
       case 'shipped':
         return 'Expédiée';
+      case 'reception_refused':
+        return 'Refus de réception';
       case 'ready_for_pickup':
         return 'À retirer';
       case 'picked_up':
@@ -167,6 +197,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
         return Colors.blueAccent;
       case 'shipped':
         return Colors.deepPurple;
+      case 'reception_refused':
+        return Colors.redAccent;
       case 'ready_for_pickup':
         return Colors.orange;
       case 'picked_up':
@@ -191,6 +223,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
     final bool canConfirmReception =
         order.status == 'shipped' || order.status == 'picked_up';
+    final bool canRefuseReception = order.status == 'shipped';
 
     if (order.color != null && order.color!.isNotEmpty) {
       subtitleLines.add('Couleur : ${order.color}');
@@ -245,6 +278,23 @@ class _OrdersScreenState extends State<OrdersScreen> {
                     _confirmingOrderId == order.id
                         ? 'Validation...'
                         : 'Confirmer la réception',
+                  ),
+                ),
+              ],
+              if (canRefuseReception) ...[
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: _confirmingOrderId == order.id
+                      ? null
+                      : () => _refuseReception(order),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.redAccent,
+                    side: const BorderSide(color: Colors.redAccent),
+                  ),
+                  child: Text(
+                    _confirmingOrderId == order.id
+                        ? 'Traitement...'
+                        : 'Refuser la réception',
                   ),
                 ),
               ],
