@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../models/listing.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
 import '../widgets/order_form.dart';
 import 'profile_screen.dart';
 import '../widgets/account_menu_button.dart';
+import '../widgets/listing_card.dart';
 
 class ListingDetailScreen extends StatefulWidget {
   final int listingId;
@@ -16,7 +18,7 @@ class ListingDetailScreen extends StatefulWidget {
 }
 
 class _ListingDetailScreenState extends State<ListingDetailScreen> {
-int _selectedIndex = 0;
+  int _selectedIndex = 0;
   late Future<Listing> _futureListing;
 
   bool _isListingFavorite = false;
@@ -26,13 +28,15 @@ int _selectedIndex = 0;
   bool _isTogglingSeller = false;
   bool _isDeleting = false;
   Future<User>? _sellerFuture;
+  Future<List<Listing>>? _otherListingsFuture;
 
   @override
   void initState() {
     super.initState();
     _futureListing = ApiService.fetchListingDetail(widget.listingId);
   }
-bool get _isAuthenticated => ApiService.currentUser != null;
+
+  bool get _isAuthenticated => ApiService.currentUser != null;
   // -----------------------------------------------------------
   // UTILITIES
   // -----------------------------------------------------------
@@ -44,6 +48,63 @@ bool get _isAuthenticated => ApiService.currentUser != null;
   String _capitalize(String s) {
     if (s.isEmpty) return s;
     return s[0].toUpperCase() + s.substring(1);
+  }
+
+  Future<List<Listing>> _loadOtherListings(Listing listing) {
+    _otherListingsFuture ??= ApiService.fetchUserListings(listing.userId);
+    return _otherListingsFuture!;
+  }
+
+  Widget _buildOtherListingsSection(Listing listing) {
+    return FutureBuilder<List<Listing>>(
+      future: _loadOtherListings(listing),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError || !snapshot.hasData) {
+          return const SizedBox();
+        }
+
+        final otherListings = snapshot.data!
+            .where((item) => item.id != listing.id)
+            .toList();
+
+        if (otherListings.isEmpty) {
+          return const SizedBox();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Autres articles du vendeur',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            MasonryGridView.count(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: otherListings.length,
+              itemBuilder: (context, index) {
+                final item = otherListings[index];
+                return ListingCard(
+                  listing: item,
+                  onTap: () => _openListingDetail(item.id),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // -----------------------------------------------------------
@@ -253,6 +314,15 @@ Widget buildImageGallery(List<String> images, Listing listing) {
   // EVENT HANDLERS
   // -----------------------------------------------------------
 
+  void _openListingDetail(int listingId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ListingDetailScreen(listingId: listingId),
+      ),
+    );
+  }
+
   void _openImagePreview(String url, Listing listing) {
     showDialog(
       context: context,
@@ -367,6 +437,7 @@ Widget buildImageGallery(List<String> images, Listing listing) {
                   setState(() {
                     _futureListing = ApiService.fetchListingDetail(listing.id);
                     _sellerFuture = null;
+                    _otherListingsFuture = null;
                   });
                   Navigator.of(sheetContext).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -603,72 +674,73 @@ Widget buildImageGallery(List<String> images, Listing listing) {
       );
     }
   }
-Future<void> _toggleSellerFavorite(Listing listing) async {
-  if (!_isAuthenticated) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Connectez-vous pour ajouter des favoris.')),
-    );
-    return;
-  }
+  Future<void> _toggleSellerFavorite(Listing listing) async {
+    if (!_isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connectez-vous pour ajouter des favoris.')),
+      );
+      return;
+    }
 
-  final targetState = !_isSellerFavorite;
-  setState(() {
-    _isSellerFavorite = targetState;
-    _isTogglingSeller = true;
-  });
-
-  final success = targetState
-      ? await ApiService.addFavoriteSeller(listing.userId)
-      : await ApiService.removeFavoriteSeller(listing.userId);
-
-  if (!mounted) return;
-
-  if (!success) {
+    final targetState = !_isSellerFavorite;
     setState(() {
-      _isSellerFavorite = !targetState;
+      _isSellerFavorite = targetState;
+      _isTogglingSeller = true;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Impossible de mettre à jour vos favoris.')),
-    );
-  }
 
-  setState(() {
-    _isTogglingSeller = false;
-  });
-}
-Future<void> _toggleListingFavorite(Listing listing) async {
-  if (!_isAuthenticated) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Connectez-vous pour ajouter des favoris.')),
-    );
-    return;
-  }
+    final success = targetState
+        ? await ApiService.addFavoriteSeller(listing.userId)
+        : await ApiService.removeFavoriteSeller(listing.userId);
 
-  final targetState = !_isListingFavorite;
-  setState(() {
-    _isListingFavorite = targetState;
-    _isTogglingListing = true;
-  });
+    if (!mounted) return;
 
-  final success = targetState
-      ? await ApiService.addFavoriteListing(listing.id)
-      : await ApiService.removeFavoriteListing(listing.id);
+    if (!success) {
+      setState(() {
+        _isSellerFavorite = !targetState;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de mettre à jour vos favoris.')),
+      );
+    }
 
-  if (!mounted) return;
-
-  if (!success) {
     setState(() {
-      _isListingFavorite = !targetState;
+      _isTogglingSeller = false;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Impossible de mettre à jour vos favoris.')),
-    );
   }
 
-  setState(() {
-    _isTogglingListing = false;
-  });
-}
+  Future<void> _toggleListingFavorite(Listing listing) async {
+    if (!_isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connectez-vous pour ajouter des favoris.')),
+      );
+      return;
+    }
+
+    final targetState = !_isListingFavorite;
+    setState(() {
+      _isListingFavorite = targetState;
+      _isTogglingListing = true;
+    });
+
+    final success = targetState
+        ? await ApiService.addFavoriteListing(listing.id)
+        : await ApiService.removeFavoriteListing(listing.id);
+
+    if (!mounted) return;
+
+    if (!success) {
+      setState(() {
+        _isListingFavorite = !targetState;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de mettre à jour vos favoris.')),
+      );
+    }
+
+    setState(() {
+      _isTogglingListing = false;
+    });
+  }
 
   void _openOrderSheet(Listing listing) {
     if (ApiService.currentUser == null) {
@@ -725,268 +797,269 @@ Future<void> _toggleListingFavorite(Listing listing) async {
           ),
 
           // 🟢 CONTENU PRINCIPAL
-body: LayoutBuilder(
-  builder: (context, constraints) {
-    final isWide = constraints.maxWidth > 800; // écran web
+          body: LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 800; // écran web
 
-    if (isWide) {
-  // 🖥️ MODE WEB → 2 colonnes encadrées
-  return Padding(
-    padding: const EdgeInsets.all(16),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+              if (isWide) {
+                // 🖥️ MODE WEB → 2 colonnes encadrées
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // -----------------------------------------------------
+                      // 🟧 ZONE GAUCHE : IMAGE PRINCIPALE + MINIATURES
+                      // -----------------------------------------------------
+                      Expanded(
+                        flex: 7,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  height: 550,
+                                  width: double.infinity,
+                                  child: GestureDetector(
+                                    onTap: listing.imageUrls.isEmpty
+                                        ? null
+                                        : () => _openImagePreview(
+                                              listing.imageUrls[_selectedIndex],
+                                              listing,
+                                            ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: listing.imageUrls.isEmpty
+                                          ? Container(
+                                              color: Colors.grey.shade300,
+                                              child: const Center(
+                                                child: Icon(
+                                                  Icons.image_not_supported,
+                                                  size: 120,
+                                                ),
+                                              ),
+                                            )
+                                          : Image.network(
+                                              _resolveImageUrl(
+                                                  listing.imageUrls[_selectedIndex]),
+                                              width: double.infinity,
+                                              height: double.infinity,
+                                              fit: BoxFit.cover,
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                                if (listing.imageUrls.length > 1) ...[
+                                  const SizedBox(height: 15),
+                                  SizedBox(
+                                    height: 100,
+                                    child: ListView.separated(
+                                      scrollDirection: Axis.horizontal,
+                                      separatorBuilder: (_, __) =>
+                                          const SizedBox(width: 12),
+                                      itemCount: listing.imageUrls.length,
+                                      itemBuilder: (_, i) {
+                                        final url =
+                                            _resolveImageUrl(listing.imageUrls[i]);
+                                        final isSelected = i == _selectedIndex;
 
-        // -----------------------------------------------------
-        // 🟧 ZONE GAUCHE : IMAGE PRINCIPALE + MINIATURES
-        // -----------------------------------------------------
-        Expanded(
-          flex: 7,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
+                                        return GestureDetector(
+                                          onTap: () =>
+                                              setState(() => _selectedIndex = i),
+                                          child: Container(
+                                            width: 90,
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(8),
+                                              border: Border.all(
+                                                color: isSelected
+                                                    ? Colors.blueAccent
+                                                    : Colors.grey.shade300,
+                                                width: isSelected ? 3 : 1,
+                                              ),
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child:
+                                                  Image.network(url, fit: BoxFit.cover),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                                const SizedBox(height: 24),
+                                _buildOtherListingsSection(listing),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      // -----------------------------------------------------
+                      // 🟩 ZONE DROITE : INFORMATIONS PRODUIT
+                      // -----------------------------------------------------
+                      Expanded(
+                        flex: 5,
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                buildPriceSection(listing),
+                                const SizedBox(height: 20),
+                                buildInfoTable(listing),
+                                const SizedBox(height: 20),
+                                const Text(
+                                  "Description",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(listing.description ?? "Aucune description."),
+                                const SizedBox(height: 20),
+                                buildSellerCard(listing),
+                                const SizedBox(height: 30),
+                                _buildPrimaryActionButton(listing),
+                                const SizedBox(height: 10),
+                                if (_isListingOwner(listing))
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed:
+                                          _isDeleting ? null : () => _deleteListing(listing),
+                                      icon: _isDeleting
+                                          ? const SizedBox(
+                                              width: 18,
+                                              height: 18,
+                                              child: CircularProgressIndicator(
+                                                  strokeWidth: 2, color: Colors.white),
+                                            )
+                                          : const Icon(Icons.delete_forever, color: Colors.white),
+                                      label: Text(
+                                        _isDeleting ? 'Suppression...' : 'Supprimer',
+                                        style: const TextStyle(
+                                            color: Colors.white, fontWeight: FontWeight.bold),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent,
+                                        padding: const EdgeInsets.symmetric(vertical: 14),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
 
-            /// ⭐ Structure verticale : image qui prend tout + miniatures en bas
-            child: Column(
-              children: [
-                
-                // ⭐ IMAGE PRINCIPALE QUI PREND TOUT L’ESPACE DISPONIBLE
-Expanded(
-  child: GestureDetector(
-    onTap: listing.imageUrls.isEmpty
-        ? null
-        : () => _openImagePreview(
-              listing.imageUrls[_selectedIndex],
-              listing,
-            ),
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: listing.imageUrls.isEmpty
-          ? Container(
-              color: Colors.grey.shade300,
-              child: const Center(
-                child: Icon(Icons.image_not_supported, size: 120),
-              ),
-            )
-          : Image.network(
-              _resolveImageUrl(listing.imageUrls[_selectedIndex]),
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.cover,
-            ),
-    ),
-  ),
-),
-
-
-if (listing.imageUrls.length > 1) ...[
-  const SizedBox(height: 15),
-
-  SizedBox(
-    height: 100,
-    child: ListView.separated(
-      scrollDirection: Axis.horizontal,
-      separatorBuilder: (_, __) => const SizedBox(width: 12),
-      itemCount: listing.imageUrls.length,
-      itemBuilder: (_, i) {
-        final url = _resolveImageUrl(listing.imageUrls[i]);
-        final isSelected = i == _selectedIndex;
-
-        return GestureDetector(
-          onTap: () => setState(() => _selectedIndex = i),
-          child: Container(
-            width: 90,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isSelected ? Colors.blueAccent : Colors.grey.shade300,
-                width: isSelected ? 3 : 1,
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(url, fit: BoxFit.cover),
-            ),
+              // -----------------------------------------------------
+              // 📱 MODE MOBILE → 1 colonne classique
+              // -----------------------------------------------------
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    buildImageGallery(listing.imageUrls, listing),
+                    const SizedBox(height: 20),
+                    buildPriceSection(listing),
+                    const SizedBox(height: 20),
+                    buildInfoTable(listing),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "Description",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(listing.description ?? "Aucune description."),
+                    const SizedBox(height: 20),
+                    buildSellerCard(listing),
+                    const SizedBox(height: 20),
+                    _buildPrimaryActionButton(listing),
+                    const SizedBox(height: 12),
+                    if (_isListingOwner(listing))
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _isDeleting ? null : () => _deleteListing(listing),
+                          icon: _isDeleting
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Icon(Icons.delete_forever, color: Colors.white),
+                          label: Text(
+                            _isDeleting ? 'Suppression...' : 'Supprimer',
+                            style: const TextStyle(
+                                color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (_isListingOwner(listing)) const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _toggleListingFavorite(listing),
+                        icon: Icon(
+                          _isListingFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: Colors.white,
+                        ),
+                        label: Text(
+                          _isListingFavorite
+                              ? "Retirer des favoris"
+                              : "Ajouter aux favoris",
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
-        );
-      },
-    ),
-  ),
-],
-
-                
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(width: 24),
-
-        // -----------------------------------------------------
-        // 🟩 ZONE DROITE : INFORMATIONS PRODUIT
-        // -----------------------------------------------------
-        Expanded(
-          flex: 5,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: SingleChildScrollView(
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      buildPriceSection(listing),
-      const SizedBox(height: 20),
-
-      buildInfoTable(listing),
-      const SizedBox(height: 20),
-
-      const Text(
-        "Description",
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-      const SizedBox(height: 6),
-      Text(listing.description ?? "Aucune description."),
-      const SizedBox(height: 20),
-
-      buildSellerCard(listing),
-      const SizedBox(height: 30),
-
-      _buildPrimaryActionButton(listing),
-      const SizedBox(height: 10),
-      if (_isListingOwner(listing))
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: _isDeleting ? null : () => _deleteListing(listing),
-            icon: _isDeleting
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : const Icon(Icons.delete_forever, color: Colors.white),
-            label: Text(
-              _isDeleting ? 'Suppression...' : 'Supprimer',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-        ),
-    ],
-  ),
-),
-
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-
-    // -----------------------------------------------------
-    // 📱 MODE MOBILE → 1 colonne classique
-    // -----------------------------------------------------
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          buildImageGallery(listing.imageUrls, listing),
-          const SizedBox(height: 20),
-
-          buildPriceSection(listing),
-          const SizedBox(height: 20),
-
-          buildInfoTable(listing),
-          const SizedBox(height: 20),
-
-      const Text(
-        "Description",
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-      const SizedBox(height: 6),
-          Text(listing.description ?? "Aucune description."),
-          const SizedBox(height: 20),
-
-      buildSellerCard(listing),
-      const SizedBox(height: 20),
-
-      _buildPrimaryActionButton(listing),
-      const SizedBox(height: 12),
-      if (_isListingOwner(listing))
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: _isDeleting ? null : () => _deleteListing(listing),
-            icon: _isDeleting
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : const Icon(Icons.delete_forever, color: Colors.white),
-            label: Text(
-              _isDeleting ? 'Suppression...' : 'Supprimer',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-        ),
-      if (_isListingOwner(listing)) const SizedBox(height: 12),
-
-SizedBox(
-  width: double.infinity,
-  child: ElevatedButton.icon(
-    onPressed: () => _toggleListingFavorite(listing),
-    icon: Icon(
-      _isListingFavorite ? Icons.favorite : Icons.favorite_border,
-      color: Colors.white,
-    ),
-    label: Text(
-      _isListingFavorite ? "Retirer des favoris" : "Ajouter aux favoris",
-      style: const TextStyle(fontSize: 16),
-    ),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.redAccent,
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-    ),
-  ),
-),
-
-        ],
-      ),
-    );
-  },
-),
-
-
         );
       },
     );
   }
-  
+
 }
