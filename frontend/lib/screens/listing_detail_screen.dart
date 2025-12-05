@@ -258,6 +258,44 @@ Widget buildImageGallery(List<String> images, Listing listing) {
     );
   }
 
+  void _openEditListing(Listing listing) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Interface de modification à venir : vous pourrez bientôt éditer votre annonce.',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrimaryActionButton(Listing listing) {
+    final isOwner = _isListingOwner(listing);
+    final buttonLabel = isOwner ? 'Modifier' : 'Acheter';
+    final onPressed = isOwner ? () => _openEditListing(listing) : () => _openOrderSheet(listing);
+
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF1E5B96),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        child: Text(
+          buttonLabel,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
   bool _isListingOwner(Listing listing) {
     final user = ApiService.currentUser;
     return user != null && user.id == listing.userId;
@@ -562,27 +600,7 @@ if (listing.imageUrls.length > 1) ...[
       buildSellerCard(listing),
       const SizedBox(height: 30),
 
-      SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () => _openOrderSheet(listing),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1E5B96),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: const Text(
-            "Acheter",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-        ),
-      ),
+      _buildPrimaryActionButton(listing),
       const SizedBox(height: 10),
       if (_isListingOwner(listing))
         SizedBox(
@@ -649,27 +667,7 @@ if (listing.imageUrls.length > 1) ...[
       buildSellerCard(listing),
       const SizedBox(height: 20),
 
-      SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () => _openOrderSheet(listing),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1E5B96),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: const Text(
-            "Acheter",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-        ),
-      ),
+      _buildPrimaryActionButton(listing),
       const SizedBox(height: 12),
       if (_isListingOwner(listing))
         SizedBox(
