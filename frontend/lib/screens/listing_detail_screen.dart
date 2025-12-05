@@ -22,6 +22,7 @@ int _selectedIndex = 0;
   bool _isLoadingFavorites = false;
   bool _isTogglingListing = false;
   bool _isTogglingSeller = false;
+  bool _isDeleting = false;
 
   @override
   void initState() {
@@ -255,6 +256,57 @@ Widget buildImageGallery(List<String> images, Listing listing) {
         builder: (_) => ProfileScreen(userId: listing.userId),
       ),
     );
+  }
+
+  bool _isListingOwner(Listing listing) {
+    final user = ApiService.currentUser;
+    return user != null && user.id == listing.userId;
+  }
+
+  Future<void> _deleteListing(Listing listing) async {
+    final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Supprimer l\'annonce'),
+            content: const Text('Voulez-vous vraiment supprimer cette annonce ?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Annuler'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Supprimer'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirm) return;
+
+    setState(() {
+      _isDeleting = true;
+    });
+
+    final success = await ApiService.deleteListing(listing.id);
+
+    if (!mounted) return;
+
+    setState(() {
+      _isDeleting = false;
+    });
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Annonce supprimée avec succès.')),
+      );
+      Navigator.of(context).pop(true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de supprimer l\'annonce.')),
+      );
+    }
   }
 Future<void> _toggleSellerFavorite(Listing listing) async {
   if (!_isAuthenticated) {
@@ -531,6 +583,32 @@ if (listing.imageUrls.length > 1) ...[
           ),
         ),
       ),
+      const SizedBox(height: 10),
+      if (_isListingOwner(listing))
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _isDeleting ? null : () => _deleteListing(listing),
+            icon: _isDeleting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Icon(Icons.delete_forever, color: Colors.white),
+            label: Text(
+              _isDeleting ? 'Suppression...' : 'Supprimer',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ),
     ],
   ),
 ),
@@ -560,16 +638,65 @@ if (listing.imageUrls.length > 1) ...[
           buildInfoTable(listing),
           const SizedBox(height: 20),
 
-          const Text(
-            "Description",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
+      const Text(
+        "Description",
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 6),
           Text(listing.description ?? "Aucune description."),
           const SizedBox(height: 20),
 
-          buildSellerCard(listing),
-          const SizedBox(height: 20),
+      buildSellerCard(listing),
+      const SizedBox(height: 20),
+
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () => _openOrderSheet(listing),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1E5B96),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text(
+            "Acheter",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      if (_isListingOwner(listing))
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _isDeleting ? null : () => _deleteListing(listing),
+            icon: _isDeleting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : const Icon(Icons.delete_forever, color: Colors.white),
+            label: Text(
+              _isDeleting ? 'Suppression...' : 'Supprimer',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ),
+      if (_isListingOwner(listing)) const SizedBox(height: 12),
 
 SizedBox(
   width: double.infinity,
