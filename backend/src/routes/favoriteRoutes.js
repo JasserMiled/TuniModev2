@@ -22,7 +22,7 @@ router.get("/me", authRequired, async (req, res) => {
     );
 
     const favoriteSellers = await db.query(
-      `SELECT u.id, u.name, u.email, u.phone, u.address, u.role, u.business_name
+      `SELECT u.id, u.name, u.email, u.phone, u.address, u.role, u.business_name, u.avatar_url
        FROM favorite_sellers fs
        JOIN users u ON fs.seller_id = u.id
        WHERE fs.user_id = $1
