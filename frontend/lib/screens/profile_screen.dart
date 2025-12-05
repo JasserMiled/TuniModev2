@@ -6,6 +6,7 @@ import '../models/review.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
+import '../widgets/account_menu_button.dart';
 import 'listing_detail_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -347,6 +348,10 @@ Widget _buildListingsTab() {
     return Scaffold(
       appBar: AppBar(
         title: Text(isCurrentUser ? 'Mon profil' : 'Profil utilisateur'),
+        actions: const [
+          AccountMenuButton(),
+          SizedBox(width: 16),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),

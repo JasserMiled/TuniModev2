@@ -4,6 +4,7 @@ import '../models/order.dart';
 import '../services/api_service.dart';
 import '../widgets/review_dialog.dart';
 import 'order_detail_screen.dart';
+import '../widgets/account_menu_button.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -461,7 +462,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mes commandes')),
+      appBar: AppBar(
+        title: const Text('Mes commandes'),
+        actions: const [
+          AccountMenuButton(),
+          SizedBox(width: 16),
+        ],
+      ),
       body: _buildBody(),
     );
   }

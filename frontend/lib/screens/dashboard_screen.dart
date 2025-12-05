@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../models/category.dart';
 import '../services/api_service.dart';
+import '../widgets/account_menu_button.dart';
 
 class _ColorOption {
   final String name;
@@ -529,6 +530,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Espace Pro - TuniMode'),
+        actions: const [
+          AccountMenuButton(),
+          SizedBox(width: 16),
+        ],
       ),
       body: Center(
         child: ConstrainedBox(

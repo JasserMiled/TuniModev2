@@ -2,14 +2,9 @@ import 'package:flutter/material.dart';
 import '../models/category.dart';
 import '../models/listing.dart';
 import '../services/api_service.dart';
+import '../widgets/account_menu_button.dart';
 import '../widgets/listing_card.dart';
-import 'account_settings_screen.dart';
-import 'favorites_screen.dart';
 import 'listing_detail_screen.dart';
-import 'login_screen.dart';
-import 'my_listings_screen.dart';
-import 'order_requests_screen.dart';
-import 'profile_screen.dart';
 import 'search_results_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 class HomeScreen extends StatefulWidget {
@@ -117,8 +112,6 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoadingCategories = false;
   String? _categoryLoadError;
 
-  bool get _isAuthenticated => ApiService.authToken != null;
-
   @override
   void initState() {
     super.initState();
@@ -196,7 +189,9 @@ PreferredSizeWidget _buildAppBar() {
 
     // BOUTON À DROITE 👇
     actions: [
-      _buildAccountButton(),
+      AccountMenuButton(
+        onAuthChanged: () => setState(() {}),
+      ),
       const SizedBox(width: 16),
     ],
   );
@@ -569,91 +564,6 @@ Widget _buildListingsSection() {
         runSpacing: 6,
         children: chips,
       ),
-    );
-  }
-
-Widget _buildAccountButton() {
-  if (!_isAuthenticated) {
-    return TextButton.icon(
-      onPressed: _openLogin,
-      icon: const Icon(
-        Icons.login,          // icône "se connecter"
-        color: Color(0xFF1E5B96),
-        size: 16,
-      ),
-      label: const Text(
-        "SE CONNECTER",
-        style: TextStyle(
-          color: Color(0xFF1E5B96),   // 🔵 bleu moderne
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.6,
-		  fontSize: 12,      
-        ),
-      ),
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-      ),
-    );
-  }
-
-    final isPro = ApiService.currentUser?.role == 'pro';
-    final isAdmin = ApiService.currentUser?.role == 'admin';
-    final canSeeListings = isPro || isAdmin;
-    final ordersLabel = isPro ? 'Mes commandes' : 'Mes commandes';
-
-    return PopupMenuButton<String>(
-      tooltip: 'Menu du compte',
-      icon: const Icon(Icons.menu, color: Color(0xFF0F172A)),
-      onSelected: (value) {
-        switch (value) {
-          case 'profile':
-            _openProfile();
-            break;
-          case 'my_listings':
-            _openMyListings();
-            break;
-          case 'orders':
-            _openOrders();
-            break;
-          case 'favorites':
-            _openFavorites();
-            break;
-          case 'account_settings':
-            _openAccountSettings();
-            break;
-          case 'logout':
-            _handleLogout();
-            break;
-        }
-      },
-      itemBuilder: (context) => [
-        const PopupMenuItem(
-          value: 'profile',
-          child: Text('Mon profil'),
-        ),
-        const PopupMenuItem(
-          value: 'favorites',
-          child: Text('Mes favoris'),
-        ),
-        if (canSeeListings)
-          const PopupMenuItem(
-            value: 'my_listings',
-            child: Text('Mes annonces'),
-          ),
-        PopupMenuItem(
-          value: 'orders',
-          child: Text(ordersLabel),
-        ),
-        const PopupMenuItem(
-          value: 'account_settings',
-          child: Text('Paramètres de compte'),
-        ),
-        const PopupMenuDivider(),
-        const PopupMenuItem(
-          value: 'logout',
-          child: Text('Se déconnecter'),
-        ),
-      ],
     );
   }
 
@@ -1229,47 +1139,8 @@ Widget _presetBudgetChip(
     );
   }
 
-  void _openLogin() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
-    if (!mounted) return;
-    setState(() {});
-  }
-
   void _openDashboard() {
     Navigator.of(context).pushNamed('/dashboard');
-  }
-
-  void _openProfile() {
-    final userId = ApiService.currentUser?.id;
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ProfileScreen(userId: userId)),
-    );
-  }
-
-  void _openOrders() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const OrderRequestsScreen()),
-    );
-  }
-
-  void _openFavorites() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const FavoritesScreen()),
-    );
-  }
-
-  void _openAccountSettings() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AccountSettingsScreen()),
-    );
-  }
-
-  void _openMyListings() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const MyListingsScreen()),
-    );
   }
 
   void _openListingDetail(int listingId) {
@@ -1277,14 +1148,6 @@ Widget _presetBudgetChip(
       MaterialPageRoute(
         builder: (_) => ListingDetailScreen(listingId: listingId),
       ),
-    );
-  }
-
-  void _handleLogout() {
-    ApiService.logout();
-    setState(() {});
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Vous êtes déconnecté')),
     );
   }
 
