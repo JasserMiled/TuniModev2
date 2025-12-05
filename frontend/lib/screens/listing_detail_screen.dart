@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/listing.dart';
+import '../models/user.dart';
 import '../services/api_service.dart';
 import '../widgets/order_form.dart';
 import 'profile_screen.dart';
@@ -23,6 +24,7 @@ int _selectedIndex = 0;
   bool _isTogglingListing = false;
   bool _isTogglingSeller = false;
   bool _isDeleting = false;
+  Future<User>? _sellerFuture;
 
   @override
   void initState() {
@@ -190,46 +192,59 @@ Widget buildImageGallery(List<String> images, Listing listing) {
 
   /// 🔵 CARTE VENDEUR (comme Vinted)
   Widget buildSellerCard(Listing listing) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            radius: 26,
-            child: Icon(Icons.person, size: 28),
+    _sellerFuture ??= ApiService.fetchUserProfile(listing.userId);
+
+    return FutureBuilder<User>(
+      future: _sellerFuture,
+      builder: (context, snapshot) {
+        final avatarUrl = snapshot.data?.avatarUrl;
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _openSellerProfile(listing),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    listing.sellerName ?? "Vendeur inconnu",
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const Text(
-                    "Voir le profil",
-                    style: TextStyle(color: Colors.blue),
-                  ),
-                ],
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 26,
+                backgroundColor: Colors.blue.shade50,
+                backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                child: avatarUrl == null
+                    ? Icon(Icons.person, size: 28, color: Colors.blueGrey.shade700)
+                    : null,
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _openSellerProfile(listing),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        listing.sellerName ?? "Vendeur inconnu",
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const Text(
+                        "Voir le profil",
+                        style: TextStyle(color: Colors.blue),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => _toggleSellerFavorite(listing),
+                icon: Icon(
+                  _isSellerFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: Colors.red,
+                ),
+              ),
+            ],
           ),
-          IconButton(
-            onPressed: () => _toggleSellerFavorite(listing),
-            icon: Icon(
-              _isSellerFavorite ? Icons.favorite : Icons.favorite_border,
-              color: Colors.red,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -350,6 +365,7 @@ Widget buildImageGallery(List<String> images, Listing listing) {
                 if (success) {
                   setState(() {
                     _futureListing = ApiService.fetchListingDetail(listing.id);
+                    _sellerFuture = null;
                   });
                   Navigator.of(sheetContext).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
