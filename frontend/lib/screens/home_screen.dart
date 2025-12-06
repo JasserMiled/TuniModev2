@@ -707,8 +707,8 @@ Widget _buildListingsSection() {
 void _openQuickFilters() {
   final cityController = TextEditingController(text: _selectedCity ?? "");
 
-  double tempMin = _minPrice ?? 0;
-  double tempMax = _maxPrice ?? 500;
+  double? tempMin = _minPrice;
+  double? tempMax = _maxPrice;
   int? tempCategoryId = _selectedCategoryId;
   bool? tempDelivery = _deliveryAvailable;
 
@@ -825,8 +825,8 @@ void _openQuickFilters() {
 
 Widget _buildFiltersContent({
   required TextEditingController cityController,
-  required double tempMin,
-  required double tempMax,
+  required double? tempMin,
+  required double? tempMax,
   required int? tempCategoryId,
   required bool? tempDelivery,
   required List<String> tempSizes,
@@ -1018,38 +1018,44 @@ Widget _buildFiltersContent({
             ),
 
             // Budget
-_filterSection(
-  title: "Budget",
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // Champs Min / Max
-      Row(
-        children: [
-          Expanded(
-            child: TextFormField(
-              initialValue: tempMin.toStringAsFixed(0),
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Min"),
-              onChanged: (v) => tempMin = double.tryParse(v) ?? 0,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextFormField(
-              initialValue: tempMax.toStringAsFixed(0),
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Max"),
-              onChanged: (v) => tempMax = double.tryParse(v) ?? 10000,
-            ),
-          ),
-        ],
-      ),
+            _filterSection(
+              title: "Budget",
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Champs Min / Max
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: tempMin?.toStringAsFixed(0) ?? '',
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(labelText: "Min"),
+                          onChanged: (v) {
+                            final value = double.tryParse(v.trim());
+                            tempMin = v.trim().isEmpty ? null : value;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          initialValue: tempMax?.toStringAsFixed(0) ?? '',
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(labelText: "Max"),
+                          onChanged: (v) {
+                            final value = double.tryParse(v.trim());
+                            tempMax = v.trim().isEmpty ? null : value;
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
 
-      const SizedBox(height: 16),
-    ],
-  ),
-),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
 
           ],
         ),
