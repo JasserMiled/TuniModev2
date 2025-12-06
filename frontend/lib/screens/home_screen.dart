@@ -771,7 +771,7 @@ void _openQuickFilters() {
                                   _deliveryAvailable = tempDelivery;
                                 });
                                 Navigator.pop(context);
-                                _refreshListings(scrollToResults: true);
+                                _openSearchResults();
                               },
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -802,7 +802,7 @@ void _openQuickFilters() {
                                   _deliveryAvailable = null;
                                 });
                                 Navigator.pop(context);
-                                _refreshListings(scrollToResults: true);
+                                _openSearchResults();
                               },
                               child: const Text("Réinitialiser"),
                             ),
