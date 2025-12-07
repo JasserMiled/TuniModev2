@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../models/category.dart';
 import '../services/api_service.dart';
+import '../services/search_navigation_service.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
 
@@ -130,11 +131,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _uploadingImages = false;
   String? _message;
   String? _categoryError;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadCategories();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _handleSearch(String query) {
+    SearchNavigationService.openSearchResults(
+      context: context,
+      query: query,
+    );
   }
 
   Future<void> _loadCategories() async {
@@ -529,10 +544,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const TuniModeAppBar(
-        showBackButton: true,
-        customTitle: Text('Espace Pro - TuniMode'),
-        actions: [
+      appBar: TuniModeAppBar(
+        showSearchBar: true,
+        searchController: _searchController,
+        onSearch: _handleSearch,
+        actions: const [
           AccountMenuButton(),
           SizedBox(width: 16),
         ],

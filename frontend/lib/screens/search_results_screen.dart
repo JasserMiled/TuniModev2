@@ -484,7 +484,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       backgroundColor: const Color(0xFFF7F9FC),
       appBar: TuniModeAppBar(
         showSearchBar: true,
-        showBackButton: true,
         searchController: _searchController,
         onSearch: _handleSearch,
         onQuickFilters: _scrollToFilters,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/order.dart';
 import '../services/api_service.dart';
 import '../widgets/account_menu_button.dart';
+import '../services/search_navigation_service.dart';
 import 'listing_detail_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/tunimode_app_bar.dart';
@@ -21,11 +22,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   bool _isUpdatingStatus = false;
   bool _isConfirmingReception = false;
   bool _isCancelling = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _order = widget.order;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _handleSearch(String query) {
+    SearchNavigationService.openSearchResults(
+      context: context,
+      query: query,
+    );
   }
 
   String _statusLabel(String status) {
@@ -400,10 +415,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const TuniModeAppBar(
-        showBackButton: true,
-        customTitle: Text('Détails de la commande'),
-        actions: [
+      appBar: TuniModeAppBar(
+        showSearchBar: true,
+        searchController: _searchController,
+        onSearch: _handleSearch,
+        actions: const [
           AccountMenuButton(),
           SizedBox(width: 16),
         ],

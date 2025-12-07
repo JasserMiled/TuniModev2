@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/order.dart';
 import '../services/api_service.dart';
 import '../widgets/review_dialog.dart';
+import '../services/search_navigation_service.dart';
 import 'order_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
@@ -26,12 +27,26 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
   int? _confirmingOrderId;
   int? _cancellingOrderId;
   final Set<int> _reviewedOrders = {};
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _sellerOrdersFuture = _fetchSellerOrders();
     _buyerOrdersFuture = _fetchBuyerOrders();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _handleSearch(String query) {
+    SearchNavigationService.openSearchResults(
+      context: context,
+      query: query,
+    );
   }
 
   Future<List<Order>> _fetchSellerOrders() {
@@ -980,10 +995,11 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
 
     if (!hasSellerTab) {
       return Scaffold(
-        appBar: const TuniModeAppBar(
-          showBackButton: true,
-          customTitle: Text('Mes commandes'),
-          actions: [
+        appBar: TuniModeAppBar(
+          showSearchBar: true,
+          searchController: _searchController,
+          onSearch: _handleSearch,
+          actions: const [
             AccountMenuButton(),
             SizedBox(width: 16),
           ],
@@ -995,14 +1011,15 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: const TuniModeAppBar(
-          showBackButton: true,
-          customTitle: Text('Mes commandes'),
-          actions: [
+        appBar: TuniModeAppBar(
+          showSearchBar: true,
+          searchController: _searchController,
+          onSearch: _handleSearch,
+          actions: const [
             AccountMenuButton(),
             SizedBox(width: 16),
           ],
-          bottom: TabBar(
+          bottom: const TabBar(
             tabs: [
               Tab(text: 'Vente'),
               Tab(text: 'Achat'),
