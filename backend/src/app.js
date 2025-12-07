@@ -12,6 +12,8 @@ const favoriteRoutes = require("./routes/favoriteRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
+const sizeRoutes = require("./routes/sizeRoutes");
+const adRoutes = require("./routes/adRoutes");
 
 const app = express();
 app.use(cors());
@@ -32,5 +34,7 @@ app.use("/api/favorites", favoriteRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/sizes", sizeRoutes);
+app.use("/api/ads", adRoutes);
 
 module.exports = app;
