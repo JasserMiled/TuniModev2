@@ -3,87 +3,100 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const db = require("../db");
-const { authRequired } = require("../middleware/auth");
 require("dotenv").config();
 
 const router = express.Router();
 
-// POST /api/auth/register
-router.post("/register", async (req, res) => {
+// Middleware pour vérifier et décoder un token JWT
+function verifyToken(req, res, next) {
+  const authHeader = req.headers.authorization || "";
+  const [scheme, token] = authHeader.split(" ");
+
+  if (scheme !== "Bearer" || !token) {
+    return res.status(401).json({ message: "Token manquant ou invalide" });
+  }
+
   try {
-    const {
-      name,
-      email,
-      password,
-      phone,
-      address,
-      role,
-      business_name,
-      business_id,
-    } = req.body;
-
-    if (!["buyer", "pro"].includes(role)) {
-      return res.status(400).json({ message: "Role invalide" });
-    }
-
-    const hashed = await bcrypt.hash(password, 10);
-
-    const result = await db.query(
-      `INSERT INTO users (name, email, password, phone, avatar_url, address, role)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id, name, email, phone, avatar_url, address, role`,
-      [name, email, hashed, phone, null, address || null, role]
-    );
-
-    const user = result.rows[0];
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.status(201).json({ user, token });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
   } catch (err) {
-    console.error(err);
-    if (err.code === "23505") {
-      return res.status(400).json({ message: "Email déjà utilisé" });
+    console.error("JWT verification failed", err);
+    return res.status(401).json({ message: "Token invalide" });
+  }
+}
+
+// POST /api/auth/register
+// Inscription d'un utilisateur avec hash du mot de passe
+router.post("/register", async (req, res) => {
+  const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: "Nom, email et mot de passe requis" });
+  }
+
+  try {
+    const existingUser = await db.query("SELECT 1 FROM users WHERE email = $1", [email]);
+    if (existingUser.rows.length) {
+      return res.status(409).json({ message: "Email déjà utilisé" });
     }
-    res.status(500).json({ message: "Erreur serveur" });
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const insertResult = await db.query(
+      `INSERT INTO users (name, email, password_hash, role)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, name, email`,
+      [name, email, passwordHash, "buyer"]
+    );
+
+    const user = insertResult.rows[0];
+    return res.status(201).json(user);
+  } catch (err) {
+    console.error("Error during registration", err);
+    return res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
 // POST /api/auth/login
+// Authentifie l'utilisateur et génère un token JWT valable 1h
 router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email et mot de passe requis" });
+  }
+
+  try {
     const result = await db.query(
-      "SELECT id, name, email, phone, avatar_url, address, password_hash, role FROM users WHERE email = $1",
+      "SELECT id, name, email, password_hash, role FROM users WHERE email = $1",
       [email]
     );
     const user = result.rows[0];
-    if (!user) return res.status(401).json({ message: "Identifiants invalides" });
 
-    const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok) return res.status(401).json({ message: "Identifiants invalides" });
+    if (!user) {
+      return res.status(401).json({ message: "Identifiants invalides" });
+    }
 
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const passwordMatches = await bcrypt.compare(password, user.password_hash);
+    if (!passwordMatches) {
+      return res.status(401).json({ message: "Identifiants invalides" });
+    }
 
-    delete user.password_hash;
-    res.json({ user, token });
+    const tokenPayload = { id: user.id, email: user.email, role: user.role };
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+    const { password_hash: _passwordHash, ...safeUser } = user;
+    return res.json({ user: safeUser, token });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Erreur serveur" });
+    console.error("Error during login", err);
+    return res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
 // PUT /api/auth/me
 // Permet à l'utilisateur connecté de mettre à jour ses informations de compte
-router.put("/me", authRequired, async (req, res) => {
+router.put("/me", verifyToken, async (req, res) => {
   try {
     const { name, address, email, phone, current_password, new_password, avatar_url } = req.body;
 
@@ -186,4 +199,5 @@ router.get("/user/:id", async (req, res) => {
   }
 });
 
+router.verifyToken = verifyToken;
 module.exports = router;
