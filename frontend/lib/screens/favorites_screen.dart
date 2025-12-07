@@ -183,6 +183,17 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           ? _handleUnavailableListing
                           : () => _openListing(listing),
                     ),
+                    if (listing.isDeleted)
+                      Positioned.fill(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _handleUnavailableListing,
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.black12,
+                          ),
+                        ),
+                      ),
                     Positioned(
                       right: 8,
                       top: 8,

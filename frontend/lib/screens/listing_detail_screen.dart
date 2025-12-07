@@ -462,10 +462,70 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     );
   }
 
+  Widget _buildDeletedBanner({required bool isOwner}) {
+    final message = isOwner
+        ? 'Cette annonce est actuellement supprimée. Republiez-la pour la rendre à nouveau visible.'
+        : 'Cet article a été supprimé par le vendeur et n\'est plus disponible.';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, color: Colors.orange),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 🔵 Bouton principal "Acheter" ou "Modifier"
   Widget _buildPrimaryActionButton(Listing listing) {
     final isOwner = _isListingOwner(listing);
     final isRepublish = isOwner && listing.isDeleted;
+    if (listing.isDeleted && !isOwner) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildDeletedBanner(isOwner: false),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey,
+                disabledBackgroundColor: Colors.grey.shade400,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'Annonce indisponible',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     final buttonLabel = isRepublish
         ? 'Re publier'
         : isOwner
@@ -477,7 +537,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             ? () => _openEditListing(listing)
             : () => _openOrderSheet(listing);
 
-    return SizedBox(
+    final button = SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: onPressed,
@@ -498,79 +558,96 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         ),
       ),
     );
+
+    if (listing.isDeleted && isOwner) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildDeletedBanner(isOwner: true),
+          const SizedBox(height: 12),
+          button,
+        ],
+      );
+    }
+
+    return button;
   }
 
   /// 🔵 Zone de droite (mode Web) : infos produit + actions
   Widget _buildInfoZone(Listing listing) {
-  return Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.grey.shade300),
-    ),
-    child: SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          buildPriceSection(listing),
-          const SizedBox(height: 20),
-          buildInfoTable(listing),
-          const SizedBox(height: 20),
-          const Text(
-            "Description",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 6),
-          Text(listing.description ?? "Aucune description."),
-          const SizedBox(height: 20),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (listing.isDeleted) ...[
+              _buildDeletedBanner(isOwner: _isListingOwner(listing)),
+              const SizedBox(height: 12),
+            ],
+            buildPriceSection(listing),
+            const SizedBox(height: 20),
+            buildInfoTable(listing),
+            const SizedBox(height: 20),
+            const Text(
+              "Description",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(listing.description ?? "Aucune description."),
+            const SizedBox(height: 20),
 
-          // ⭐️ Boutons d’action avant le vendeur
-          _buildPrimaryActionButton(listing),
+            // ⭐️ Boutons d’action avant le vendeur
+            _buildPrimaryActionButton(listing),
 
-          if (_isListingOwner(listing) && !listing.isDeleted) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isDeleting ? null : () => _deleteListing(listing),
-                icon: _isDeleting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.delete_forever, color: Colors.white),
-                label: Text(
-                  _isDeleting ? 'Suppression...' : 'Supprimer',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+            if (_isListingOwner(listing) && !listing.isDeleted) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isDeleting ? null : () => _deleteListing(listing),
+                  icon: _isDeleting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.delete_forever, color: Colors.white),
+                  label: Text(
+                    _isDeleting ? 'Suppression...' : 'Supprimer',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
+
+            const SizedBox(height: 24),
+
+            // ⭐️ Et maintenant : la carte vendeur
+            buildSellerCard(listing),
           ],
-
-          const SizedBox(height: 24),
-
-          // ⭐️ Et maintenant : la carte vendeur
-          buildSellerCard(listing),
-        ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   /// 🔵 Zone de gauche (mode Web) : images + miniatures
   Widget _buildImageZone(Listing listing) {
@@ -1208,6 +1285,12 @@ Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     buildImageGallery(listing.imageUrls, listing),
+                    if (listing.isDeleted) ...[
+                      const SizedBox(height: 12),
+                      _buildDeletedBanner(
+                        isOwner: _isListingOwner(listing),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     buildPriceSection(listing),
                     const SizedBox(height: 20),
