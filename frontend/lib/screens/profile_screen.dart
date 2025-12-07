@@ -128,7 +128,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _openAccountSettings() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const AccountSettingsScreen()),
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const AccountSettingsScreen(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
     );
   }
 

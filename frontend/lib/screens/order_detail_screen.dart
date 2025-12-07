@@ -495,8 +495,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               subtitle: _order.sellerName,
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (_) => ProfileScreen(userId: _order.sellerId!),
+                PageRouteBuilder(
+                  pageBuilder: (_, __, ___) =>
+                      ProfileScreen(userId: _order.sellerId!),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
                 ),
               ),
             ),
@@ -507,8 +510,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               subtitle: _order.buyerName,
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (_) => ProfileScreen(userId: _order.buyerId!),
+                PageRouteBuilder(
+                  pageBuilder: (_, __, ___) =>
+                      ProfileScreen(userId: _order.buyerId!),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
                 ),
               ),
             ),
