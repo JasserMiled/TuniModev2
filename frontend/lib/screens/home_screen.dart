@@ -4,9 +4,9 @@ import '../models/listing.dart';
 import '../services/api_service.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/listing_card.dart';
+import '../widgets/tunimode_app_bar.dart';
 import 'listing_detail_screen.dart';
 import 'search_results_screen.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -127,13 +127,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: _lightBackground,
-    appBar: _buildAppBar(),
-    floatingActionButton: ApiService.currentUser?.role == 'pro'
-        ? FloatingActionButton.extended(
-            onPressed: _openDashboard,
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _lightBackground,
+      appBar: TuniModeAppBar(
+        showSearchBar: true,
+        searchController: _searchController,
+        onSearch: _performSearch,
+        onQuickFilters: _openQuickFilters,
+        actions: [
+          AccountMenuButton(
+            onAuthChanged: () => setState(() {}),
+          ),
+        ],
+      ),
+      floatingActionButton: ApiService.currentUser?.role == 'pro'
+          ? FloatingActionButton.extended(
+              onPressed: _openDashboard,
             icon: const Icon(Icons.store),
             label: const Text('Espace Pro'),
           )
@@ -155,7 +165,7 @@ Widget build(BuildContext context) {
             children: [
               _buildActiveFilters(),
               _buildHeroBanner(),
-			  const SizedBox(height: 24),  // 🔥 ajout d’espace sous le banner
+                          const SizedBox(height: 24),  // 🔥 ajout d’espace sous le banner
 
               _buildListingsSection(),
             ],
@@ -165,40 +175,6 @@ Widget build(BuildContext context) {
     ),
   );
 }
-
-
-
-PreferredSizeWidget _buildAppBar() {
-  return AppBar(
-    backgroundColor: _lightBackground,
-    elevation: 0.3,
-    shadowColor: Colors.black12,
-    toolbarHeight: 80, // <-- augmente la barre pour laisser la place au logo
-    automaticallyImplyLeading: false,
-
-    // LOGO LARGE À GAUCHE 👇
-    leadingWidth: 120, // <-- SUPER IMPORTANT !! largeur personnalisée
-    leading: Padding(
-      padding: const EdgeInsets.only(left: 16),
-      child: SizedBox(
-        height: 80,
-        child: SvgPicture.asset(
-          'assets/images/tunimode_logo.svg',
-          fit: BoxFit.contain,
-        ),
-      ),
-    ),
-
-    // BOUTON À DROITE 👇
-    actions: [
-      AccountMenuButton(
-        onAuthChanged: () => setState(() {}),
-      ),
-      const SizedBox(width: 16),
-    ],
-  );
-}
-
 Widget _buildHeroBanner() {
   return Container(
     height: 500,                          // 🔥 hauteur fixe partout
@@ -287,7 +263,7 @@ Widget _buildHeroBanner() {
           Row(
             children: [
               ElevatedButton.icon(
-                onPressed: _performSearch,
+                onPressed: () => _performSearch(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _primaryBlue,
                   foregroundColor: Colors.white,
@@ -411,71 +387,11 @@ Widget _buildListingsSection() {
 }
 
   Widget _buildSearchBar() {
-    return Material(
-      elevation: 2,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.blue.shade50),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        child: Row(
-          children: [
-            const Icon(Icons.search, color: _primaryBlue),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Rechercher une marque, une tendance ou une taille...',
-                ),
-                textInputAction: TextInputAction.search,
-                onSubmitted: (_) => _performSearch(),
-              ),
-            ),
-            InkWell(
-              onTap: _openQuickFilters,
-              borderRadius: BorderRadius.circular(10),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: _lavender,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                child: Row(
-                  children: const [
-                    Icon(Icons.filter_alt_outlined, color: _primaryBlue, size: 18),
-                    SizedBox(width: 6),
-                    Text(
-                      'Filtres rapides',
-                      style: TextStyle(
-                        color: Color(0xFF0F172A),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            TextButton(
-              onPressed: _performSearch,
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: _primaryBlue,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text('Chercher'),
-            ),
-          ],
-        ),
-      ),
+    return TuniModeSearchBar(
+      controller: _searchController,
+      onSearch: _performSearch,
+      onQuickFilters: _openQuickFilters,
+      hintText: 'Rechercher une marque, une tendance ou une taille...',
     );
   }
 
@@ -591,8 +507,8 @@ Widget _buildListingsSection() {
     }
   }
 
-  void _performSearch() {
-    final query = _searchController.text.trim();
+  void _performSearch([String? rawQuery]) {
+    final query = (rawQuery ?? _searchController.text).trim();
     _searchController.text = query;
     _refreshListings(scrollToResults: true);
     _openSearchResults(query: query);
