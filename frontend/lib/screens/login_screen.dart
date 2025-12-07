@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/search_navigation_service.dart';
+import 'home_screen.dart';
 import 'register_screen.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
@@ -44,8 +45,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (ok) {
       if (!mounted) return;
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil('/', (route) => false);
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const HomeScreen(),
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+        ),
+      );
     } else {
       setState(() {
         _error = 'Identifiants invalides';
@@ -55,7 +61,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _openRegister() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const RegisterScreen(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
     );
   }
 

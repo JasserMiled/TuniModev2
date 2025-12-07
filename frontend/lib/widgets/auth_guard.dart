@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
+import '../screens/dashboard_screen.dart';
+import '../screens/home_screen.dart';
 
 class AuthGuard extends StatefulWidget {
   const AuthGuard({super.key, required this.builder, this.redirectRoute = '/'});
@@ -24,8 +26,17 @@ class _AuthGuardState extends State<AuthGuard> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      Navigator.of(context)
-          .pushNamedAndRemoveUntil(widget.redirectRoute, (route) => false);
+      final target = widget.redirectRoute == '/dashboard'
+          ? const DashboardScreen()
+          : const HomeScreen();
+
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => target,
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+        ),
+      );
     });
   }
 

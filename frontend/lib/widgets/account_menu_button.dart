@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../screens/account_settings_screen.dart';
 import '../screens/favorites_screen.dart';
+import '../screens/home_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/my_listings_screen.dart';
 import '../screens/order_requests_screen.dart';
@@ -108,7 +109,11 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
 
   Future<void> _openLogin() async {
     await Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const LoginScreen(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
     );
     if (!mounted) return;
     setState(() {});
@@ -128,8 +133,10 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
 
   void _openOrders({bool buyerOnly = false}) {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => OrderRequestsScreen(buyerOnly: buyerOnly),
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => OrderRequestsScreen(buyerOnly: buyerOnly),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
       ),
     );
   }
@@ -146,13 +153,21 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
 
   void _openAccountSettings() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const AccountSettingsScreen()),
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const AccountSettingsScreen(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
     );
   }
 
   void _openMyListings() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MyListingsScreen()),
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const MyListingsScreen(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
     );
   }
 
@@ -160,7 +175,13 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
     ApiService.logout();
     setState(() {});
     widget.onAuthChanged?.call();
-    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const HomeScreen(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
   }
 }
 
