@@ -2,13 +2,23 @@ const sizeService = require("../services/sizeService");
 
 const getSizes = async (req, res) => {
   try {
-    const { category } = req.query;
+    const { category, category_id: categoryId } = req.query;
+    const parsedCategoryId = categoryId !== undefined ? Number(categoryId) : null;
 
-    if (!category) {
-      return res.status(400).json({ message: "Paramètre category obligatoire" });
+    if (!category && !categoryId) {
+      return res
+        .status(400)
+        .json({ message: "Paramètre category ou category_id obligatoire" });
     }
 
-    const sizes = await sizeService.getSizesForCategoryName(category);
+    if (categoryId !== undefined && (!Number.isInteger(parsedCategoryId) || parsedCategoryId <= 0)) {
+      return res.status(400).json({ message: "category_id invalide" });
+    }
+
+    const sizes = await sizeService.getSizesForCategory({
+      categoryId: parsedCategoryId,
+      categoryName: category,
+    });
     return res.json(sizes);
   } catch (err) {
     console.error("Erreur lors de la récupération des tailles", err);

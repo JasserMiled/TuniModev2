@@ -14,6 +14,19 @@ const findByCategoryName = async (categoryName) => {
   return rows;
 };
 
+const findByCategoryId = async (categoryId) => {
+  const { rows } = await db.query(
+    `SELECT s.id, s.label
+     FROM sizes s
+     INNER JOIN category_sizes cs ON cs.size_id = s.id
+     WHERE cs.category_id = $1
+     ORDER BY s.label`,
+    [categoryId]
+  );
+
+  return rows;
+};
+
 const isSizeLinkedToCategory = async (categoryId, sizeId) => {
   const { rowCount } = await db.query(
     `SELECT 1
@@ -27,5 +40,6 @@ const isSizeLinkedToCategory = async (categoryId, sizeId) => {
 
 module.exports = {
   findByCategoryName,
+  findByCategoryId,
   isSizeLinkedToCategory,
 };
