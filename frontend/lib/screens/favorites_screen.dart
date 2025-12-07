@@ -7,6 +7,7 @@ import '../models/review.dart';
 import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/account_menu_button.dart';
+import '../widgets/tunimode_app_bar.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'listing_detail_screen.dart';
 import 'profile_screen.dart';
@@ -334,9 +335,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Widget build(BuildContext context) {
     if (ApiService.authToken == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Mes favoris'),
-          actions: const [
+        appBar: const TuniModeAppBar(
+          showBackButton: true,
+          customTitle: Text('Mes favoris'),
+          actions: [
             AccountMenuButton(),
             SizedBox(width: 16),
           ],
@@ -350,13 +352,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Mes favoris'),
-          actions: const [
+        appBar: const TuniModeAppBar(
+          showBackButton: true,
+          customTitle: Text('Mes favoris'),
+          actions: [
             AccountMenuButton(),
             SizedBox(width: 16),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
               Tab(text: 'Annonces'),
               Tab(text: 'Vendeurs'),

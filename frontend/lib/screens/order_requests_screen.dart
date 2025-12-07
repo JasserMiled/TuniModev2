@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../widgets/review_dialog.dart';
 import 'order_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
+import '../widgets/tunimode_app_bar.dart';
 
 class OrderRequestsScreen extends StatefulWidget {
   const OrderRequestsScreen({super.key, this.buyerOnly = false});
@@ -979,9 +980,10 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
 
     if (!hasSellerTab) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Mes commandes'),
-          actions: const [
+        appBar: const TuniModeAppBar(
+          showBackButton: true,
+          customTitle: Text('Mes commandes'),
+          actions: [
             AccountMenuButton(),
             SizedBox(width: 16),
           ],
@@ -993,14 +995,15 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Mes commandes'),
-          actions: const [
+        appBar: const TuniModeAppBar(
+          showBackButton: true,
+          customTitle: Text('Mes commandes'),
+          actions: [
             AccountMenuButton(),
             SizedBox(width: 16),
           ],
           bottom: TabBar(
-            tabs: const [
+            tabs: [
               Tab(text: 'Vente'),
               Tab(text: 'Achat'),
             ],

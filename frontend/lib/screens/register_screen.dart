@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../widgets/account_menu_button.dart';
+import '../widgets/tunimode_app_bar.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -55,8 +56,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Créer un compte"),
+      appBar: TuniModeAppBar(
+        showBackButton: true,
+        customTitle: const Text("Créer un compte"),
         actions: const [
           AccountMenuButton(),
           SizedBox(width: 16),

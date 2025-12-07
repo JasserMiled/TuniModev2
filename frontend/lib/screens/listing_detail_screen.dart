@@ -9,6 +9,7 @@ import '../widgets/order_form.dart';
 import 'profile_screen.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/listing_card.dart';
+import '../widgets/tunimode_app_bar.dart';
 
 class ListingDetailScreen extends StatefulWidget {
   final int listingId;
@@ -1099,8 +1100,9 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
 
         return Scaffold(
           backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            title: const Text("Détail annonce"),
+          appBar: TuniModeAppBar(
+            showBackButton: true,
+            customTitle: const Text("Détail annonce"),
             actions: [
               IconButton(
                 onPressed: _isTogglingListing

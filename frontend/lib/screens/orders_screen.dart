@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../widgets/review_dialog.dart';
 import 'order_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
+import '../widgets/tunimode_app_bar.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -462,9 +463,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mes commandes'),
-        actions: const [
+      appBar: const TuniModeAppBar(
+        showBackButton: true,
+        customTitle: Text('Mes commandes'),
+        actions: [
           AccountMenuButton(),
           SizedBox(width: 16),
         ],

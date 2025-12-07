@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
 import '../widgets/account_menu_button.dart';
+import '../widgets/tunimode_app_bar.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -434,9 +435,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Paramètres de compte'),
-        actions: const [
+      appBar: const TuniModeAppBar(
+        showBackButton: true,
+        customTitle: Text('Paramètres de compte'),
+        actions: [
           AccountMenuButton(),
           SizedBox(width: 16),
         ],

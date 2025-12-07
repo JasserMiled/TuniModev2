@@ -7,6 +7,7 @@ import '../models/user.dart';
 import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/account_menu_button.dart';
+import '../widgets/tunimode_app_bar.dart';
 import 'listing_detail_screen.dart';
 import 'account_settings_screen.dart';
 
@@ -371,8 +372,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isCurrentUser = widget.userId == null || widget.userId == ApiService.currentUser?.id;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isCurrentUser ? 'Mon profil' : 'Profil utilisateur'),
+      appBar: TuniModeAppBar(
+        showBackButton: true,
+        customTitle: Text(isCurrentUser ? 'Mon profil' : 'Profil utilisateur'),
         actions: const [
           AccountMenuButton(),
           SizedBox(width: 16),
