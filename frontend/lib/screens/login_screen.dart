@@ -44,7 +44,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (ok) {
       if (!mounted) return;
-      Navigator.of(context).pop();
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil('/', (route) => false);
     } else {
       setState(() {
         _error = 'Identifiants invalides';
