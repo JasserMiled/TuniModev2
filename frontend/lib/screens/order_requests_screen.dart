@@ -7,7 +7,9 @@ import 'order_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
 
 class OrderRequestsScreen extends StatefulWidget {
-  const OrderRequestsScreen({super.key});
+  const OrderRequestsScreen({super.key, this.buyerOnly = false});
+
+  final bool buyerOnly;
 
   @override
   State<OrderRequestsScreen> createState() => _OrderRequestsScreenState();
@@ -973,27 +975,37 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final hasSellerTab = !widget.buyerOnly;
+
     return DefaultTabController(
-      length: 2,
+      length: hasSellerTab ? 2 : 1,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Mes commandes'),
+          title: Text(hasSellerTab ? 'Mes commandes' : 'Mes achats'),
           actions: const [
             AccountMenuButton(),
             SizedBox(width: 16),
           ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Vente'),
-              Tab(text: 'Achat'),
-            ],
+          bottom: TabBar(
+            tabs: hasSellerTab
+                ? const [
+                    Tab(text: 'Vente'),
+                    Tab(text: 'Achat'),
+                  ]
+                : const [
+                    Tab(text: 'Mes achats'),
+                  ],
           ),
         ),
         body: TabBarView(
-          children: [
-            _buildSellerBody(),
-            _buildBuyerBody(),
-          ],
+          children: hasSellerTab
+              ? [
+                  _buildSellerBody(),
+                  _buildBuyerBody(),
+                ]
+              : [
+                  _buildBuyerBody(),
+                ],
         ),
       ),
     );

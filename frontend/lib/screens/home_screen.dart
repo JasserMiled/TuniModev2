@@ -131,11 +131,13 @@ Widget build(BuildContext context) {
   return Scaffold(
     backgroundColor: _lightBackground,
     appBar: _buildAppBar(),
-    floatingActionButton: FloatingActionButton.extended(
-      onPressed: _openDashboard,
-      icon: const Icon(Icons.store),
-      label: const Text('Espace Pro'),
-    ),
+    floatingActionButton: ApiService.currentUser?.role == 'pro'
+        ? FloatingActionButton.extended(
+            onPressed: _openDashboard,
+            icon: const Icon(Icons.store),
+            label: const Text('Espace Pro'),
+          )
+        : null,
 
     body: SafeArea(
       child: Padding(

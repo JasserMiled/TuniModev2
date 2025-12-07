@@ -48,7 +48,7 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
     final isPro = ApiService.currentUser?.role == 'pro';
     final isAdmin = ApiService.currentUser?.role == 'admin';
     final canSeeListings = isPro || isAdmin;
-    const ordersLabel = 'Mes commandes';
+    final ordersLabel = canSeeListings ? 'Mes commandes' : 'Mes achats';
 
     return PopupMenuButton<String>(
       tooltip: 'Menu du compte',
@@ -62,7 +62,7 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
             _openMyListings();
             break;
           case 'orders':
-            _openOrders();
+            _openOrders(buyerOnly: !canSeeListings);
             break;
           case 'favorites':
             _openFavorites();
@@ -122,9 +122,11 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
     );
   }
 
-  void _openOrders() {
+  void _openOrders({bool buyerOnly = false}) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const OrderRequestsScreen()),
+      MaterialPageRoute(
+        builder: (_) => OrderRequestsScreen(buyerOnly: buyerOnly),
+      ),
     );
   }
 
