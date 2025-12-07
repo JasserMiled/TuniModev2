@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/order.dart';
 import '../services/api_service.dart';
 import '../widgets/review_dialog.dart';
+import '../services/search_navigation_service.dart';
 import 'order_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
@@ -20,6 +21,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   int? _cancellingOrderId;
   int? _reviewingOrderId;
   final Set<int> _reviewedOrders = {};
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -106,6 +108,19 @@ class _OrdersScreenState extends State<OrdersScreen> {
         });
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _handleSearch(String query) {
+    SearchNavigationService.openSearchResults(
+      context: context,
+      query: query,
+    );
   }
 
   Future<void> _confirmReception(Order order) async {
@@ -463,10 +478,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const TuniModeAppBar(
-        showBackButton: true,
-        customTitle: Text('Mes commandes'),
-        actions: [
+      appBar: TuniModeAppBar(
+        showSearchBar: true,
+        searchController: _searchController,
+        onSearch: _handleSearch,
+        actions: const [
           AccountMenuButton(),
           SizedBox(width: 16),
         ],

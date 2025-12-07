@@ -5,6 +5,7 @@ import '../models/listing.dart';
 import '../models/user.dart';
 import '../models/review.dart';
 import '../services/api_service.dart';
+import '../services/search_navigation_service.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
@@ -22,6 +23,7 @@ class FavoritesScreen extends StatefulWidget {
 class _FavoritesScreenState extends State<FavoritesScreen> {
   late Future<FavoriteCollections> _futureFavorites;
   final Map<int, Future<List<Review>>> _sellerReviewsCache = {};
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -31,6 +33,19 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   Future<FavoriteCollections> _loadFavorites() {
     return ApiService.fetchFavorites();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _handleSearch(String query) {
+    SearchNavigationService.openSearchResults(
+      context: context,
+      query: query,
+    );
   }
 
   Future<void> _refresh() async {
@@ -335,10 +350,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   Widget build(BuildContext context) {
     if (ApiService.authToken == null) {
       return Scaffold(
-        appBar: const TuniModeAppBar(
-          showBackButton: true,
-          customTitle: Text('Mes favoris'),
-          actions: [
+        appBar: TuniModeAppBar(
+          showSearchBar: true,
+          searchController: _searchController,
+          onSearch: _handleSearch,
+          actions: const [
             AccountMenuButton(),
             SizedBox(width: 16),
           ],
@@ -352,14 +368,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: const TuniModeAppBar(
-          showBackButton: true,
-          customTitle: Text('Mes favoris'),
-          actions: [
+        appBar: TuniModeAppBar(
+          showSearchBar: true,
+          searchController: _searchController,
+          onSearch: _handleSearch,
+          actions: const [
             AccountMenuButton(),
             SizedBox(width: 16),
           ],
-          bottom: TabBar(
+          bottom: const TabBar(
             tabs: [
               Tab(text: 'Annonces'),
               Tab(text: 'Vendeurs'),

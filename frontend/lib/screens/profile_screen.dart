@@ -5,6 +5,7 @@ import '../models/listing.dart';
 import '../models/review.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
+import '../services/search_navigation_service.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
@@ -25,6 +26,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late final Future<User?> _userFuture;
   late final Future<List<Review>> _reviewsFuture;
   late final Future<List<Listing>> _listingsFuture;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -40,6 +42,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _reviewsFuture = Future.value([]);
       _listingsFuture = Future.value([]);
     }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _handleSearch(String query) {
+    SearchNavigationService.openSearchResults(
+      context: context,
+      query: query,
+    );
   }
 
   double? _averageRating(List<Review> reviews) {
@@ -373,8 +388,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: TuniModeAppBar(
-        showBackButton: true,
-        customTitle: Text(isCurrentUser ? 'Mon profil' : 'Profil utilisateur'),
+        showSearchBar: true,
+        searchController: _searchController,
+        onSearch: _handleSearch,
         actions: const [
           AccountMenuButton(),
           SizedBox(width: 16),

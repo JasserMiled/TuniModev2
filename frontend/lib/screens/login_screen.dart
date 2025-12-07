@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../services/search_navigation_service.dart';
 import 'register_screen.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
@@ -13,10 +14,17 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _searchController = TextEditingController();
   String _email = '';
   String _password = '';
   bool _loading = false;
   String? _error;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -49,12 +57,20 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _handleSearch(String query) {
+    SearchNavigationService.openSearchResults(
+      context: context,
+      query: query,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: TuniModeAppBar(
-        showBackButton: true,
-        customTitle: const Text('Connexion'),
+        showSearchBar: true,
+        searchController: _searchController,
+        onSearch: _handleSearch,
         actions: const [
           AccountMenuButton(),
           SizedBox(width: 16),

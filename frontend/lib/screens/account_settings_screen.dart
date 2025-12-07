@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../models/user.dart';
 import '../services/api_service.dart';
+import '../services/search_navigation_service.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
 
@@ -25,6 +26,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   final _phoneController = TextEditingController();
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
+  final _searchController = TextEditingController();
 
   User? _user;
   bool _loading = true;
@@ -51,7 +53,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     _phoneController.dispose();
     _currentPasswordController.dispose();
     _newPasswordController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _handleSearch(String query) {
+    SearchNavigationService.openSearchResults(
+      context: context,
+      query: query,
+    );
   }
 
   Future<void> _loadUser() async {
@@ -435,10 +445,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const TuniModeAppBar(
-        showBackButton: true,
-        customTitle: Text('Paramètres de compte'),
-        actions: [
+      appBar: TuniModeAppBar(
+        showSearchBar: true,
+        searchController: _searchController,
+        onSearch: _handleSearch,
+        actions: const [
           AccountMenuButton(),
           SizedBox(width: 16),
         ],

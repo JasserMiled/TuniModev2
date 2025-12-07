@@ -5,6 +5,7 @@ import '../models/listing.dart';
 import '../models/user.dart';
 import '../models/review.dart';
 import '../services/api_service.dart';
+import '../services/search_navigation_service.dart';
 import '../widgets/order_form.dart';
 import 'profile_screen.dart';
 import '../widgets/account_menu_button.dart';
@@ -34,11 +35,25 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   Future<User>? _sellerFuture;
   Future<List<Listing>>? _otherListingsFuture;
   Future<List<Review>>? _sellerReviewsFuture;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _futureListing = ApiService.fetchListingDetail(widget.listingId);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _handleSearch(String query) {
+    SearchNavigationService.openSearchResults(
+      context: context,
+      query: query,
+    );
   }
 
   bool get _isAuthenticated => ApiService.currentUser != null;
@@ -1101,8 +1116,9 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         return Scaffold(
           backgroundColor: Colors.transparent,
           appBar: TuniModeAppBar(
-            showBackButton: true,
-            customTitle: const Text("Détail annonce"),
+            showSearchBar: true,
+            searchController: _searchController,
+            onSearch: _handleSearch,
             actions: [
               IconButton(
                 onPressed: _isTogglingListing
