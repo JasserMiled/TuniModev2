@@ -89,7 +89,7 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
             value: 'my_listings',
             child: Text('Mes annonces'),
           ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'orders',
           child: Text(ordersLabel),
         ),
