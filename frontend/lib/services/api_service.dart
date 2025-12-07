@@ -388,6 +388,21 @@ class ApiService {
         .toList();
   }
 
+  static Future<List<String>> fetchSizesForCategory(int categoryId) async {
+    final uri = Uri.parse('$baseUrl/api/sizes?category_id=$categoryId');
+    final res = await http.get(uri, headers: _headers());
+
+    if (res.statusCode != 200) {
+      throw Exception('Impossible de charger les tailles');
+    }
+
+    final data = jsonDecode(res.body) as List<dynamic>;
+    return data
+        .map((e) => (e as Map<String, dynamic>)['label']?.toString() ?? '')
+        .where((label) => label.isNotEmpty)
+        .toList();
+  }
+
   static Future<String?> uploadImage({
     required Uint8List bytes,
     required String filename,

@@ -77,26 +77,6 @@ const List<String> _conditionOptions = [
   'Satisfaisant',
 ];
 
-const List<String> _sizeOptions = [
-  'XXXS / 30 / 2',
-  'XXS / 32 / 4',
-  'XS / 34 / 6',
-  'S / 36 / 8',
-  'M / 38 / 10',
-  'L / 40 / 12',
-  'XL / 42 / 14',
-  'XXL / 44 / 16',
-  'XXXL / 46 / 18',
-  '4XL / 48 / 20',
-  '5XL / 50 / 22',
-  '6XL / 52 / 24',
-  '7XL / 54 / 26',
-  '8XL / 56 / 28',
-  '9XL / 58 / 30',
-  'Taille unique',
-  'Autre',
-];
-
 class _PickedImage {
   final String name;
   final Uint8List bytes;
@@ -119,6 +99,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _price = '';
   final List<String> _selectedSizes = [];
   final List<String> _selectedColors = [];
+  List<String> _sizeOptions = [];
   String _city = '';
   String? _condition;
   List<_PickedImage> _images = [];
@@ -130,9 +111,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   bool _loading = false;
   bool _categoriesLoading = true;
+  bool _sizesLoading = false;
   bool _uploadingImages = false;
   String? _message;
   String? _categoryError;
+  String? _sizeError;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -173,6 +156,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() {
         _categoryError = 'Impossible de charger les catégories';
         _categoriesLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadSizesForCategory(Category category) async {
+    setState(() {
+      _sizesLoading = true;
+      _sizeError = null;
+      _sizeOptions = [];
+      _selectedSizes.clear();
+    });
+
+    try {
+      final sizes = await ApiService.fetchSizesForCategory(category.id);
+      setState(() {
+        _sizeOptions = sizes;
+        _sizesLoading = false;
+      });
+    } catch (_) {
+      setState(() {
+        _sizeError = 'Impossible de charger les tailles';
+        _sizesLoading = false;
       });
     }
   }
@@ -286,6 +291,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _selectedCategory = null;
         _categoryPath = [];
         _currentCategories = _categoryTree;
+        _sizeOptions = [];
+        _sizeError = null;
+        _sizesLoading = false;
       });
     }
   }
@@ -294,6 +302,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       _selectedCategory = category;
     });
+
+    _loadSizesForCategory(category);
   }
 
   void _openCategory(Category category) {
@@ -306,6 +316,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _categoryPath = [..._categoryPath, category];
       _currentCategories = category.children;
       _selectedCategory = null;
+      _sizeOptions = [];
+      _selectedSizes.clear();
+      _sizeError = null;
+      _sizesLoading = false;
     });
   }
 
@@ -315,6 +329,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _categoryPath = [];
         _currentCategories = _categoryTree;
         _selectedCategory = null;
+        _sizeOptions = [];
+        _selectedSizes.clear();
+        _sizeError = null;
+        _sizesLoading = false;
       });
       return;
     }
@@ -323,6 +341,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _categoryPath = _categoryPath.sublist(0, index + 1);
       _currentCategories = _categoryPath.last.children;
       _selectedCategory = null;
+      _sizeOptions = [];
+      _selectedSizes.clear();
+      _sizeError = null;
+      _sizesLoading = false;
     });
   }
 
@@ -354,6 +376,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildSizeSelector() {
+    Widget sizeContent;
+
+    if (_selectedCategory == null) {
+      sizeContent = const Text('Sélectionnez une catégorie pour afficher les tailles.');
+    } else if (_sizesLoading) {
+      sizeContent = const Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+          SizedBox(width: 8),
+          Text('Chargement des tailles...'),
+        ],
+      );
+    } else if (_sizeError != null) {
+      sizeContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _sizeError!,
+            style: const TextStyle(color: Colors.red),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed:
+                _selectedCategory == null ? null : () => _loadSizesForCategory(_selectedCategory!),
+            icon: const Icon(Icons.refresh),
+            label: const Text('Réessayer'),
+          ),
+        ],
+      );
+    } else if (_sizeOptions.isEmpty) {
+      sizeContent = const Text('Aucune taille disponible pour cette catégorie.');
+    } else {
+      sizeContent = Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: _sizeOptions
+            .map(
+              (size) => FilterChip(
+                label: Text(size),
+                selected: _selectedSizes.contains(size),
+                onSelected: (_) => _toggleSize(size),
+              ),
+            )
+            .toList(),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -369,23 +439,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Sélectionnez une ou plusieurs tailles dans la liste.',
+          _selectedCategory == null
+              ? 'Sélectionnez une catégorie pour afficher les tailles disponibles.'
+              : 'Sélectionnez une ou plusieurs tailles dans la liste.',
           style: TextStyle(color: Colors.grey.shade700),
         ),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _sizeOptions
-              .map(
-                (size) => FilterChip(
-                  label: Text(size),
-                  selected: _selectedSizes.contains(size),
-                  onSelected: (_) => _toggleSize(size),
-                ),
-              )
-              .toList(),
-        ),
+        sizeContent,
       ],
     );
   }

@@ -1,11 +1,15 @@
 const sizeModel = require("../models/sizeModel");
 
-const getSizesForCategoryName = async (categoryName) => {
-  if (!categoryName) {
-    return [];
+const getSizesForCategory = async ({ categoryId, categoryName }) => {
+  if (categoryId) {
+    return sizeModel.findByCategoryId(categoryId);
   }
 
-  return sizeModel.findByCategoryName(categoryName);
+  if (categoryName) {
+    return sizeModel.findByCategoryName(categoryName);
+  }
+
+  return [];
 };
 
 const validateSizeForCategory = async (categoryId, sizeId) => {
@@ -17,6 +21,6 @@ const validateSizeForCategory = async (categoryId, sizeId) => {
 };
 
 module.exports = {
-  getSizesForCategoryName,
+  getSizesForCategory,
   validateSizeForCategory,
 };
