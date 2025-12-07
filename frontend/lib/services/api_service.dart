@@ -271,7 +271,10 @@ class ApiService {
 
   static Future<Listing> fetchListingDetail(int id) async {
     final uri = Uri.parse('$baseUrl/api/listings/$id');
-    final res = await http.get(uri, headers: _headers());
+    final res = await http.get(
+      uri,
+      headers: _headers(withAuth: authToken != null),
+    );
 
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body) as Map<String, dynamic>;
