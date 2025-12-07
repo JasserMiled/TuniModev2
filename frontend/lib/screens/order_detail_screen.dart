@@ -494,7 +494,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               title: 'Profil du vendeur',
               subtitle: _order.sellerName,
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.of(context).push(
+              onTap: () => Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (_) => ProfileScreen(userId: _order.sellerId!),
                 ),
@@ -506,7 +506,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               title: 'Profil de l\'acheteur',
               subtitle: _order.buyerName,
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.of(context).push(
+              onTap: () => Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (_) => ProfileScreen(userId: _order.buyerId!),
                 ),

@@ -679,7 +679,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   }
 
   void _openSellerProfile(Listing listing) {
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) => ProfileScreen(userId: listing.userId),

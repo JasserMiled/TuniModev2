@@ -35,7 +35,7 @@ class TuniModeAppBar extends StatelessWidget
       Size.fromHeight(70 + (bottom?.preferredSize.height ?? 0));
 
   void _goHome(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    Navigator.of(context).pushReplacementNamed('/');
   }
 
   @override
