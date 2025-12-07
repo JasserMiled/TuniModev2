@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../screens/home_screen.dart';
+
 class TuniModeDrawer extends StatelessWidget {
   const TuniModeDrawer({super.key});
 
   void _goHome(BuildContext context) {
-    Navigator.of(context).pushReplacementNamed('/');
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const HomeScreen(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
   }
 
   void _showComingSoon(BuildContext context, String title) {
