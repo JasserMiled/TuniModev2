@@ -48,7 +48,7 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
     final isPro = ApiService.currentUser?.role == 'pro';
     final isAdmin = ApiService.currentUser?.role == 'admin';
     final canSeeListings = isPro || isAdmin;
-    final ordersLabel = canSeeListings ? 'Mes commandes' : 'Mes achats';
+    const ordersLabel = 'Mes commandes';
 
     return PopupMenuButton<String>(
       tooltip: 'Menu du compte',

@@ -977,35 +977,40 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
   Widget build(BuildContext context) {
     final hasSellerTab = !widget.buyerOnly;
 
+    if (!hasSellerTab) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Mes commandes'),
+          actions: const [
+            AccountMenuButton(),
+            SizedBox(width: 16),
+          ],
+        ),
+        body: _buildBuyerBody(),
+      );
+    }
+
     return DefaultTabController(
-      length: hasSellerTab ? 2 : 1,
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(hasSellerTab ? 'Mes commandes' : 'Mes achats'),
+          title: const Text('Mes commandes'),
           actions: const [
             AccountMenuButton(),
             SizedBox(width: 16),
           ],
           bottom: TabBar(
-            tabs: hasSellerTab
-                ? const [
-                    Tab(text: 'Vente'),
-                    Tab(text: 'Achat'),
-                  ]
-                : const [
-                    Tab(text: 'Mes achats'),
-                  ],
+            tabs: const [
+              Tab(text: 'Vente'),
+              Tab(text: 'Achat'),
+            ],
           ),
         ),
         body: TabBarView(
-          children: hasSellerTab
-              ? [
-                  _buildSellerBody(),
-                  _buildBuyerBody(),
-                ]
-              : [
-                  _buildBuyerBody(),
-                ],
+          children: [
+            _buildSellerBody(),
+            _buildBuyerBody(),
+          ],
         ),
       ),
     );
