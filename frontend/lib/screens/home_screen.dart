@@ -192,17 +192,6 @@ Widget _buildHeroBanner() {
 
           _buildHeroGradient(),           // dégradé noir léger
 
-          Positioned(
-            bottom: 40,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: FractionallySizedBox(
-                widthFactor: 0.75,        // search bar centrée à 75%
-                child: _buildSearchBar(),
-              ),
-            ),
-          ),
         ],
       ),
     ),
@@ -386,14 +375,103 @@ Widget _buildListingsSection() {
   );
 }
 
-  Widget _buildSearchBar() {
-    return TuniModeSearchBar(
-      controller: _searchController,
-      onSearch: _performSearch,
-      onQuickFilters: _openQuickFilters,
-      hintText: 'Rechercher une marque, une tendance ou une taille...',
-    );
-  }
+Widget _buildSearchBar({bool compact = false}) {
+  return Material(
+    elevation: compact ? 0 : 2,
+    borderRadius: BorderRadius.circular(18),
+    child: Container(
+      height: 70, // ✅ LA HAUTEUR RÉELLE QUI VA ENFIN MARCHER
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.blue.shade50),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center, // ✅ centrage vertical parfait
+        children: [
+          const Icon(Icons.search, color: _primaryBlue, size: 22),
+          const SizedBox(width: 12),
+
+          // ✅ TEXTFIELD PLUS HAUT
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              style: const TextStyle(fontSize: 16),
+              decoration: const InputDecoration(
+                isCollapsed: true,
+                border: InputBorder.none,
+                hintText: 'Rechercher...',
+                contentPadding:
+                    EdgeInsets.symmetric(vertical: 14), // ✅ hauteur interne
+              ),
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => _performSearch(),
+            ),
+          ),
+
+          if (!compact) ...[
+            const SizedBox(width: 12),
+
+            // ✅ FILTRES RAPIDES
+            InkWell(
+              onTap: _openQuickFilters,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                height: 40,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: _lavender,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.filter_alt_outlined,
+                        color: _primaryBlue, size: 18),
+                    SizedBox(width: 6),
+                    Text(
+                      'Filtres rapides',
+                      style: TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // ✅ BOUTON CHERCHER
+            SizedBox(
+              height: 40,
+              child: TextButton(
+                onPressed: _performSearch,
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: _primaryBlue,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Chercher',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+}
+
 
   Widget _buildActiveFilters() {
     final chips = <Widget>[];
