@@ -117,6 +117,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     }
   }
 
+  void _handleUnavailableListing() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Cette annonce a été supprimée par le vendeur.')),
+    );
+  }
+
   void _openListing(Listing listing) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -136,66 +142,70 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildListingTab(List<Listing> listings) {
-  if (listings.isEmpty) {
-    return const Center(
-      child: Text('Aucune annonce dans vos favoris pour le moment.'),
-    );
-  }
+    if (listings.isEmpty) {
+      return const Center(
+        child: Text('Aucune annonce dans vos favoris pour le moment.'),
+      );
+    }
 
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      return Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: 1100, // comme HomeScreen
-          ),
-          child: GridView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-
-            // 🟢 IMPORTANT : on laisse le GridView SCROLLER
-            shrinkWrap: false,
-            physics: const AlwaysScrollableScrollPhysics(),
-
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 5,
-              crossAxisSpacing: 24,
-              mainAxisSpacing: 32,
-              childAspectRatio: 0.70,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 1100, // comme HomeScreen
             ),
+            child: GridView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
 
-            itemCount: listings.length,
-            itemBuilder: (context, index) {
-              final listing = listings[index];
-              return Stack(
-                children: [
-                  ListingCard(
-                    listing: listing,
-                    onTap: () => _openListing(listing),
-                  ),
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Material(
-                      color: Colors.white,
-                      shape: const CircleBorder(),
-                      elevation: 2,
-                      child: IconButton(
-                        tooltip: 'Retirer des favoris',
-                        icon: const Icon(Icons.favorite, color: Colors.red),
-                        onPressed: () => _removeListing(listing.id),
+              // 🟢 IMPORTANT : on laisse le GridView SCROLLER
+              shrinkWrap: false,
+              physics: const AlwaysScrollableScrollPhysics(),
+
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 5,
+                crossAxisSpacing: 24,
+                mainAxisSpacing: 32,
+                childAspectRatio: 0.70,
+              ),
+
+              itemCount: listings.length,
+              itemBuilder: (context, index) {
+                final listing = listings[index];
+                return Stack(
+                  children: [
+                    ListingCard(
+                      listing: listing,
+                      isDisabled: listing.isDeleted,
+                      disabledLabel: listing.isDeleted ? 'Annonce supprimée' : null,
+                      onTap: listing.isDeleted
+                          ? _handleUnavailableListing
+                          : () => _openListing(listing),
+                    ),
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Material(
+                        color: Colors.white,
+                        shape: const CircleBorder(),
+                        elevation: 2,
+                        child: IconButton(
+                          tooltip: 'Retirer des favoris',
+                          icon: const Icon(Icons.favorite, color: Colors.red),
+                          onPressed: () => _removeListing(listing.id),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              );
-            },
+                  ],
+                );
+              },
+            ),
           ),
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
 
 
   Widget _buildSellerInfo(User seller) {

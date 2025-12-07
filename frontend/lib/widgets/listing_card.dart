@@ -6,12 +6,16 @@ class ListingCard extends StatelessWidget {
   final Listing listing;
   final VoidCallback? onTap;
   final ValueChanged<String>? onGenderTap;
+  final bool isDisabled;
+  final String? disabledLabel;
 
   const ListingCard({
     super.key,
     required this.listing,
     this.onTap,
     this.onGenderTap,
+    this.isDisabled = false,
+    this.disabledLabel,
   });
 
   @override
@@ -19,81 +23,106 @@ class ListingCard extends StatelessWidget {
     final imageUrl =
         listing.imageUrls.isNotEmpty ? _resolveImageUrl(listing.imageUrls.first) : null;
 
-return SizedBox(
-  height: 310, // hauteur EXACTE comme Vinted desktop
-  child: Card(
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    elevation: 1,
-    clipBehavior: Clip.hardEdge,
-    child: InkWell(
-      onTap: onTap,
-      child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return SizedBox(
+      height: 310, // hauteur EXACTE comme Vinted desktop
+      child: Stack(
+        children: [
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            elevation: 1,
+            clipBehavior: Clip.hardEdge,
+            child: InkWell(
+              onTap: isDisabled ? null : onTap,
+              child: Opacity(
+                opacity: isDisabled ? 0.55 : 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // IMAGE CARRÉE VINTED
+                    AspectRatio(
+                      aspectRatio: 1,
+                      child: imageUrl != null
+                          ? Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                            )
+                          : const _PlaceholderImage(),
+                    ),
 
-            // IMAGE CARRÉE VINTED
-            AspectRatio(
-              aspectRatio: 1,
-              child: imageUrl != null
-                  ? Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // TITRE
+                          Text(
+                            listing.title,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+
+                          // DETAILS
+                          if (_buildDetails().isNotEmpty)
+                            Text(
+                              _buildDetails(),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF475569),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+
+                          const SizedBox(height: 6),
+
+                          // PRIX ALIGNÉ À DROITE
+                          Row(
+                            children: [
+                              const Spacer(),
+                              Text(
+                                '${listing.price.toStringAsFixed(0)} TND',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                  color: Color(0xFF0B6EFE),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     )
-                  : const _PlaceholderImage(),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-
-                  // TITRE
-                  Text(
-                    listing.title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  // DETAILS
-                  if (_buildDetails().isNotEmpty)
-                    Text(
-                      _buildDetails(),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF475569),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                  const SizedBox(height: 6),
-
-                  // PRIX ALIGNÉ À DROITE
-                  Row(
-                    children: [
-                      const Spacer(),
-                      Text(
-                        '${listing.price.toStringAsFixed(0)} TND',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                          color: Color(0xFF0B6EFE),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
-            )
-          ],
-        ),
+            ),
+          ),
+          if (isDisabled)
+            Positioned(
+              left: 10,
+              top: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.65),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  disabledLabel ?? 'Indisponible',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
-	  ),
     );
   }
 
