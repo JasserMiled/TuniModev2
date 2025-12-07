@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-
 import '../models/listing.dart';
 import '../services/api_service.dart';
 import '../services/search_navigation_service.dart';
@@ -61,86 +59,137 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
     });
   }
 
+  Widget _buildListingsGrid(List<Listing> listings) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 1100, // 👈 identique à SearchResultsScreen
+            ),
+            child: GridView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              physics: const AlwaysScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 5, // 👈 même grille fixée
+                crossAxisSpacing: 24,
+                mainAxisSpacing: 32,
+                childAspectRatio: 0.70, // 👈 même ratio que Search
+              ),
+              itemCount: listings.length,
+              itemBuilder: (context, index) {
+                final listing = listings[index];
+                return ListingCard(
+                  listing: listing,
+                  onTap: () => _openListing(listing),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildBody() {
-  return FutureBuilder<List<Listing>>(
-    future: _listingsFuture,
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
+    return FutureBuilder<List<Listing>>(
+      future: _listingsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-      if (snapshot.hasError) {
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Une erreur est survenue lors du chargement de vos annonces.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: _refresh,
-                  child: const Text('Réessayer'),
-                )
-              ],
-            ),
-          ),
-        );
-      }
-
-      final listings = snapshot.data ?? [];
-      if (listings.isEmpty) {
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Text(
-              "Vous n'avez pas encore publié d'annonce. Vos annonces apparaîtront ici.",
-              textAlign: TextAlign.center,
-            ),
-          ),
-        );
-      }
-
-      return RefreshIndicator(
-        onRefresh: _refresh,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Align(
-              alignment: Alignment.topCenter,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: 1100, // 👈 identique à SearchResultsScreen
-                ),
-                child: GridView.builder(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 5,        // 👈 même grille fixée
-                    crossAxisSpacing: 24,
-                    mainAxisSpacing: 32,
-                    childAspectRatio: 0.70,   // 👈 même ratio que Search
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Une erreur est survenue lors du chargement de vos annonces.',
+                    textAlign: TextAlign.center,
                   ),
-                  itemCount: listings.length,
-                  itemBuilder: (context, index) {
-                    final listing = listings[index];
-                    return ListingCard(
-                      listing: listing,
-                      onTap: () => _openListing(listing),
-                    );
-                  },
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _refresh,
+                    child: const Text('Réessayer'),
+                  )
+                ],
+              ),
+            ),
+          );
+        }
+
+        final listings = snapshot.data ?? [];
+        if (listings.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                "Vous n'avez pas encore publié d'annonce. Vos annonces apparaîtront ici.",
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        final onlineListings =
+            listings.where((listing) => !listing.isDeleted).toList();
+        final deletedListings =
+            listings.where((listing) => listing.isDeleted).toList();
+
+        return DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              const TabBar(
+                tabs: [
+                  Tab(text: 'En ligne'),
+                  Tab(text: 'Supprimée'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: onlineListings.isEmpty
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(24),
+                                child: Text(
+                                  'Aucune annonce en ligne pour le moment.',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            )
+                          : _buildListingsGrid(onlineListings),
+                    ),
+                    RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: deletedListings.isEmpty
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(24),
+                                child: Text(
+                                  'Aucune annonce supprimée.',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            )
+                          : _buildListingsGrid(deletedListings),
+                    ),
+                  ],
                 ),
               ),
-            );
-          },
-        ),
-      );
-    },
-  );
-}
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

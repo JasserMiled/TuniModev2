@@ -16,6 +16,8 @@ class Listing {
   final String? sellerName;
   final List<String> imageUrls;
   final int stock;
+  final String? status;
+  final bool isDeleted;
 
   Listing({
     required this.id,
@@ -33,6 +35,8 @@ class Listing {
     this.sellerName,
     this.imageUrls = const [],
     this.stock = 1,
+    this.status,
+    this.isDeleted = false,
   });
 
   factory Listing.fromJson(Map<String, dynamic> json) {
@@ -137,6 +141,30 @@ class Listing {
       return false;
     }
 
+    final rawStatus = (json["status"] ?? json["state"])?.toString();
+    final deletedAt = json["deleted_at"] ?? json["deletedAt"];
+
+    bool parseDeletedFlag(dynamic value) {
+      if (value == null) return false;
+      if (value is bool) return value;
+      if (value is num) return value != 0;
+      if (value is String) {
+        final lower = value.toLowerCase();
+        return lower == 'true' || lower == '1' || lower == 'deleted';
+      }
+      return false;
+    }
+
+    final parsedStatus = rawStatus != null && rawStatus.trim().isNotEmpty
+        ? rawStatus.trim()
+        : null;
+
+    final isDeleted = deletedAt != null ||
+        parseDeletedFlag(json["deleted"]) ||
+        parseDeletedFlag(json["is_deleted"]) ||
+        parseDeletedFlag(json["isDeleted"]) ||
+        (parsedStatus != null && parsedStatus.toLowerCase() == 'deleted');
+
     return Listing(
       id: json["id"] as int,
       userId: int.tryParse(json["user_id"]?.toString() ?? "") ??
@@ -155,6 +183,8 @@ class Listing {
       imageUrls: parseImages(json["images"] ?? json["imageUrls"]),
       stock: int.tryParse(json["stock"]?.toString() ?? "") ??
           (json["stock"] is int ? json["stock"] as int : 1),
+      status: parsedStatus,
+      isDeleted: isDeleted,
     );
   }
 }
