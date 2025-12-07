@@ -9,7 +9,7 @@ class SearchNavigationService {
   }) {
     final trimmedQuery = query.trim();
 
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => SearchResultsScreen(initialQuery: trimmedQuery),
       ),

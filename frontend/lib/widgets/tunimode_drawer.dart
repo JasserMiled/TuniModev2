@@ -4,7 +4,7 @@ class TuniModeDrawer extends StatelessWidget {
   const TuniModeDrawer({super.key});
 
   void _goHome(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    Navigator.of(context).pushReplacementNamed('/');
   }
 
   void _showComingSoon(BuildContext context, String title) {

@@ -1129,7 +1129,7 @@ Widget _presetBudgetChip(
   void _openSearchResults({String? query}) {
     final searchQuery = query?.trim() ?? _searchController.text.trim();
 
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => SearchResultsScreen(
           initialQuery: searchQuery,
@@ -1147,7 +1147,7 @@ Widget _presetBudgetChip(
   }
 
   void _openDashboard() {
-    Navigator.of(context).pushNamed('/dashboard');
+    Navigator.of(context).pushReplacementNamed('/dashboard');
   }
 
   void _openListingDetail(int listingId) {
