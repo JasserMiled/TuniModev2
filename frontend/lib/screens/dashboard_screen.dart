@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/category.dart';
 import '../services/api_service.dart';
 import '../widgets/account_menu_button.dart';
+import '../widgets/tunimode_app_bar.dart';
 
 class _ColorOption {
   final String name;
@@ -528,9 +529,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Espace Pro - TuniMode'),
-        actions: const [
+      appBar: const TuniModeAppBar(
+        showBackButton: true,
+        customTitle: Text('Espace Pro - TuniMode'),
+        actions: [
           AccountMenuButton(),
           SizedBox(width: 16),
         ],

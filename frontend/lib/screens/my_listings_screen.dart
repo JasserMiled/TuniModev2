@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import '../widgets/listing_card.dart';
 import 'listing_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
+import '../widgets/tunimode_app_bar.dart';
 
 class MyListingsScreen extends StatefulWidget {
   const MyListingsScreen({super.key});
@@ -127,9 +128,10 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mes annonces'),
-        actions: const [
+      appBar: const TuniModeAppBar(
+        showBackButton: true,
+        customTitle: Text('Mes annonces'),
+        actions: [
           AccountMenuButton(),
           SizedBox(width: 16),
         ],
