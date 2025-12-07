@@ -126,8 +126,11 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
+    final bool isProfessionalAccount =
+        ApiService.authToken != null && ApiService.currentUser?.role == 'pro';
+
     return Scaffold(
       backgroundColor: _lightBackground,
       appBar: TuniModeAppBar(
@@ -141,13 +144,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: ApiService.currentUser?.role == 'pro'
+      floatingActionButton: isProfessionalAccount
           ? FloatingActionButton.extended(
               onPressed: _openDashboard,
-            icon: const Icon(Icons.store),
-            label: const Text('Espace Pro'),
-          )
-        : null,
+              icon: const Icon(Icons.store),
+              label: const Text('Espace Pro'),
+            )
+          : null,
 
     body: SafeArea(
       child: Padding(
