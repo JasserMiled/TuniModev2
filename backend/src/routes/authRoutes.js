@@ -27,16 +27,20 @@ function verifyToken(req, res, next) {
 }
 
 // POST /api/auth/register
-// Inscription d'un utilisateur avec hash du mot de passe
+// Inscription d'un utilisateur avec hash du mot de passe, réponse compatible Flutter Web
 router.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password } = req.body || {};
 
   if (!name || !email || !password) {
     return res.status(400).json({ message: "Nom, email et mot de passe requis" });
   }
 
   try {
-    const existingUser = await db.query("SELECT 1 FROM users WHERE email = $1", [email]);
+    const normalizedEmail = String(email).toLowerCase();
+
+    const existingUser = await db.query("SELECT 1 FROM users WHERE email = $1", [
+      normalizedEmail,
+    ]);
     if (existingUser.rows.length) {
       return res.status(409).json({ message: "Email déjà utilisé" });
     }
@@ -44,10 +48,10 @@ router.post("/register", async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
 
     const insertResult = await db.query(
-      `INSERT INTO users (name, email, password_hash, role)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO users (name, email, password_hash)
+       VALUES ($1, $2, $3)
        RETURNING id, name, email`,
-      [name, email, passwordHash, "buyer"]
+      [name, normalizedEmail, passwordHash]
     );
 
     const user = insertResult.rows[0];
