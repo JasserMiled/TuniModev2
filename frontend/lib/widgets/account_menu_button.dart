@@ -107,7 +107,7 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
   }
 
   Future<void> _openLogin() async {
-    await Navigator.of(context).push(
+    await Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
     if (!mounted) return;
@@ -123,7 +123,7 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
   }
 
   void _openOrders({bool buyerOnly = false}) {
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => OrderRequestsScreen(buyerOnly: buyerOnly),
       ),
@@ -137,13 +137,13 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
   }
 
   void _openAccountSettings() {
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const AccountSettingsScreen()),
     );
   }
 
   void _openMyListings() {
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const MyListingsScreen()),
     );
   }
