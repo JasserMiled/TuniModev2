@@ -127,7 +127,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _openAccountSettings() {
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const AccountSettingsScreen()),
     );
   }

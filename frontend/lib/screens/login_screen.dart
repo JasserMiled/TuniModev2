@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _openRegister() {
-    Navigator.of(context).push(
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const RegisterScreen()),
     );
   }
