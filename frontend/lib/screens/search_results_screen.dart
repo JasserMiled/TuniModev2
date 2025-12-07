@@ -8,6 +8,7 @@ import '../widgets/filter_bar.dart';
 import '../widgets/listing_card.dart';
 import 'listing_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
+import '../widgets/tunimode_app_bar.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String initialQuery;
@@ -83,6 +84,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
   late String _searchQuery;
   final TextEditingController _searchController = TextEditingController();
+  final GlobalKey _filterBarKey = GlobalKey();
 
   int? _selectedCategoryId;
   List<String> _selectedSizes = [];
@@ -146,6 +148,28 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           _isLoadingCategories = false;
         });
       }
+    }
+  }
+
+  void _handleSearch(String query) {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return;
+
+    setState(() {
+      _searchQuery = trimmed;
+      _searchController.text = trimmed;
+      _futureResults = _loadResults();
+    });
+  }
+
+  void _scrollToFilters() {
+    final context = _filterBarKey.currentContext;
+    if (context != null) {
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
@@ -458,53 +482,15 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        elevation: 0.4,
-        titleSpacing: 0,
-        title: Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  onSubmitted: (value) {
-                    if (value.trim().isEmpty) return;
-                    setState(() {
-                      _searchQuery = value.trim();
-                      _futureResults = _loadResults();
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Rechercher dans les annonces',
-                    prefixIcon:
-                        const Icon(Icons.search, color: _primaryBlue, size: 20),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.blue.shade100),
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF8FBFF),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-            ],
-          ),
-        ),
+      appBar: TuniModeAppBar(
+        showSearchBar: true,
+        showBackButton: true,
+        searchController: _searchController,
+        onSearch: _handleSearch,
+        onQuickFilters: _scrollToFilters,
+        hintText: 'Rechercher dans les annonces',
         actions: const [
           AccountMenuButton(),
-          SizedBox(width: 16),
         ],
       ),
       body: Padding(
@@ -551,10 +537,13 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            FilterBar(
-              dropdowns: dropdowns,
-              activeFilters: _buildActiveChips(),
-              onClearFilters: _clearFilters,
+            KeyedSubtree(
+              key: _filterBarKey,
+              child: FilterBar(
+                dropdowns: dropdowns,
+                activeFilters: _buildActiveChips(),
+                onClearFilters: _clearFilters,
+              ),
             ),
             const SizedBox(height: 14),
             Expanded(
