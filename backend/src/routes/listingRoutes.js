@@ -233,7 +233,12 @@ router.get("/:id", async (req, res) => {
       [req.params.id]
     );
     const listing = listingRes.rows[0];
+
     if (!listing) return res.status(404).json({ message: "Annonce introuvable" });
+
+    if (listing.status === "deleted") {
+      return res.status(404).json({ message: "Cette annonce a été supprimée" });
+    }
 
     const imgRes = await db.query(
       "SELECT id, url, sort_order FROM listing_images WHERE listing_id = $1 ORDER BY sort_order",
