@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../screens/home_screen.dart';
 import 'tunimode_search_bar.dart';
 
 class TuniModeAppBar extends StatelessWidget
@@ -35,7 +36,13 @@ class TuniModeAppBar extends StatelessWidget
       Size.fromHeight(70 + (bottom?.preferredSize.height ?? 0));
 
   void _goHome(BuildContext context) {
-    Navigator.of(context).pushReplacementNamed('/');
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const HomeScreen(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
   }
 
   @override

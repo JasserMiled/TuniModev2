@@ -6,6 +6,7 @@ import '../widgets/account_menu_button.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/tunimode_drawer.dart';
 import '../widgets/tunimode_app_bar.dart';
+import 'dashboard_screen.dart';
 import 'listing_detail_screen.dart';
 import 'search_results_screen.dart';
 class HomeScreen extends StatefulWidget {
@@ -1130,8 +1131,8 @@ Widget _presetBudgetChip(
     final searchQuery = query?.trim() ?? _searchController.text.trim();
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => SearchResultsScreen(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => SearchResultsScreen(
           initialQuery: searchQuery,
           initialGender: _selectedGender,
           initialCity: _selectedCity,
@@ -1142,12 +1143,20 @@ Widget _presetBudgetChip(
           initialColors: _selectedColors,
           initialDeliveryAvailable: _deliveryAvailable,
         ),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
       ),
     );
   }
 
   void _openDashboard() {
-    Navigator.of(context).pushReplacementNamed('/dashboard');
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const DashboardScreen(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
+    );
   }
 
   void _openListingDetail(int listingId) {

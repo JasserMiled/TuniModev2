@@ -127,8 +127,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   void _openSellerProfile(User seller) {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => ProfileScreen(userId: seller.id),
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => ProfileScreen(userId: seller.id),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
       ),
     );
   }

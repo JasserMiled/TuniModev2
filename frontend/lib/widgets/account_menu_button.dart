@@ -118,7 +118,11 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
   void _openProfile() {
     final userId = ApiService.currentUser?.id;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => ProfileScreen(userId: userId)),
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => ProfileScreen(userId: userId),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
     );
   }
 
@@ -132,7 +136,11 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
 
   void _openFavorites() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+      PageRouteBuilder(
+        pageBuilder: (_, __, ___) => const FavoritesScreen(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
     );
   }
 
