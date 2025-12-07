@@ -7,6 +7,7 @@ import '../services/search_navigation_service.dart';
 import 'order_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/auth_guard.dart';
 
 class OrderRequestsScreen extends StatefulWidget {
   const OrderRequestsScreen({super.key, this.buyerOnly = false});
@@ -993,46 +994,50 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
   Widget build(BuildContext context) {
     final hasSellerTab = !widget.buyerOnly;
 
-    if (!hasSellerTab) {
-      return Scaffold(
-        appBar: TuniModeAppBar(
-          showSearchBar: true,
-          searchController: _searchController,
-          onSearch: _handleSearch,
-          actions: const [
-            AccountMenuButton(),
-            SizedBox(width: 16),
-          ],
-        ),
-        body: _buildBuyerBody(),
-      );
-    }
+    return AuthGuard(
+      builder: (context) {
+        if (!hasSellerTab) {
+          return Scaffold(
+            appBar: TuniModeAppBar(
+              showSearchBar: true,
+              searchController: _searchController,
+              onSearch: _handleSearch,
+              actions: const [
+                AccountMenuButton(),
+                SizedBox(width: 16),
+              ],
+            ),
+            body: _buildBuyerBody(),
+          );
+        }
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: TuniModeAppBar(
-          showSearchBar: true,
-          searchController: _searchController,
-          onSearch: _handleSearch,
-          actions: const [
-            AccountMenuButton(),
-            SizedBox(width: 16),
-          ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Vente'),
-              Tab(text: 'Achat'),
-            ],
+        return DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            appBar: TuniModeAppBar(
+              showSearchBar: true,
+              searchController: _searchController,
+              onSearch: _handleSearch,
+              actions: const [
+                AccountMenuButton(),
+                SizedBox(width: 16),
+              ],
+              bottom: const TabBar(
+                tabs: [
+                  Tab(text: 'Vente'),
+                  Tab(text: 'Achat'),
+                ],
+              ),
+            ),
+            body: TabBarView(
+              children: [
+                _buildSellerBody(),
+                _buildBuyerBody(),
+              ],
+            ),
           ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildSellerBody(),
-            _buildBuyerBody(),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 }

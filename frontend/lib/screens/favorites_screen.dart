@@ -9,6 +9,7 @@ import '../services/search_navigation_service.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/auth_guard.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'listing_detail_screen.dart';
 import 'profile_screen.dart';
@@ -348,62 +349,47 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (ApiService.authToken == null) {
-      return Scaffold(
-        appBar: TuniModeAppBar(
-          showSearchBar: true,
-          searchController: _searchController,
-          onSearch: _handleSearch,
-          actions: const [
-            AccountMenuButton(),
-            SizedBox(width: 16),
-          ],
-        ),
-        body: const Center(
-          child: Text('Connectez-vous pour enregistrer et consulter vos favoris.'),
-        ),
-      );
-    }
-
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: TuniModeAppBar(
-          showSearchBar: true,
-          searchController: _searchController,
-          onSearch: _handleSearch,
-          actions: const [
-            AccountMenuButton(),
-            SizedBox(width: 16),
-          ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Annonces'),
-              Tab(text: 'Vendeurs'),
+    return AuthGuard(
+      builder: (context) => DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: TuniModeAppBar(
+            showSearchBar: true,
+            searchController: _searchController,
+            onSearch: _handleSearch,
+            actions: const [
+              AccountMenuButton(),
+              SizedBox(width: 16),
             ],
-          ),
-        ),
-        body: FutureBuilder<FavoriteCollections>(
-          future: _futureFavorites,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError || !snapshot.hasData) {
-              return Center(
-                child: Text('Erreur lors du chargement : ${snapshot.error}'),
-              );
-            }
-
-            final favorites = snapshot.data!;
-            return TabBarView(
-              children: [
-                _buildListingTab(favorites.listings),
-                _buildSellerTab(favorites.sellers),
+            bottom: const TabBar(
+              tabs: [
+                Tab(text: 'Annonces'),
+                Tab(text: 'Vendeurs'),
               ],
-            );
-          },
+            ),
+          ),
+          body: FutureBuilder<FavoriteCollections>(
+            future: _futureFavorites,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError || !snapshot.hasData) {
+                return Center(
+                  child: Text('Erreur lors du chargement : ${snapshot.error}'),
+                );
+              }
+
+              final favorites = snapshot.data!;
+              return TabBarView(
+                children: [
+                  _buildListingTab(favorites.listings),
+                  _buildSellerTab(favorites.sellers),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

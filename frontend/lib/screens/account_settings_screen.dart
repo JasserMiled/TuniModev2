@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../services/search_navigation_service.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/auth_guard.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -444,68 +445,70 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: TuniModeAppBar(
-        showSearchBar: true,
-        searchController: _searchController,
-        onSearch: _handleSearch,
-        actions: const [
-          AccountMenuButton(),
-          SizedBox(width: 16),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _error != null
-                ? Center(child: Text(_error!))
-                : SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (_message != null)
-                          Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.green[50],
-                              borderRadius: BorderRadius.circular(8),
+    return AuthGuard(
+      builder: (context) => Scaffold(
+        appBar: TuniModeAppBar(
+          showSearchBar: true,
+          searchController: _searchController,
+          onSearch: _handleSearch,
+          actions: const [
+            AccountMenuButton(),
+            SizedBox(width: 16),
+          ],
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+                  ? Center(child: Text(_error!))
+                  : SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_message != null)
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.check_circle, color: Colors.green),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: Text(_message!)),
+                                ],
+                              ),
                             ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.check_circle, color: Colors.green),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(_message!)),
-                              ],
+                          if (_error != null)
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.red[50],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.error, color: Colors.red),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: Text(_error!)),
+                                ],
+                              ),
                             ),
-                          ),
-                        if (_error != null)
-                          Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.red[50],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.error, color: Colors.red),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(_error!)),
-                              ],
-                            ),
-                          ),
-                        _buildAvatarSection(),
-                        const SizedBox(height: 12),
-                        _buildGeneralSection(),
-                        const SizedBox(height: 12),
-                        _buildSecuritySection(),
-                      ],
+                          _buildAvatarSection(),
+                          const SizedBox(height: 12),
+                          _buildGeneralSection(),
+                          const SizedBox(height: 12),
+                          _buildSecuritySection(),
+                        ],
+                      ),
                     ),
-                  ),
+        ),
       ),
     );
   }
