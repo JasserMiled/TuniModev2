@@ -9,6 +9,7 @@ import '../services/search_navigation_service.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/tunimode_drawer.dart';
 import '../widgets/auth_guard.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'listing_detail_screen.dart';
@@ -353,6 +354,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       builder: (context) => DefaultTabController(
         length: 2,
         child: Scaffold(
+          drawer: const TuniModeDrawer(),
           appBar: TuniModeAppBar(
             showSearchBar: true,
             searchController: _searchController,

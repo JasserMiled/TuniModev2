@@ -7,6 +7,7 @@ import '../services/search_navigation_service.dart';
 import 'order_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/tunimode_drawer.dart';
 import '../widgets/auth_guard.dart';
 
 class OrderRequestsScreen extends StatefulWidget {
@@ -998,6 +999,7 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
       builder: (context) {
         if (!hasSellerTab) {
           return Scaffold(
+            drawer: const TuniModeDrawer(),
             appBar: TuniModeAppBar(
               showSearchBar: true,
               searchController: _searchController,
@@ -1014,6 +1016,7 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
         return DefaultTabController(
           length: 2,
           child: Scaffold(
+            drawer: const TuniModeDrawer(),
             appBar: TuniModeAppBar(
               showSearchBar: true,
               searchController: _searchController,

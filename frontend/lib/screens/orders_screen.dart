@@ -7,6 +7,7 @@ import '../services/search_navigation_service.dart';
 import 'order_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/tunimode_drawer.dart';
 import '../widgets/auth_guard.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -480,6 +481,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
   Widget build(BuildContext context) {
     return AuthGuard(
       builder: (context) => Scaffold(
+        drawer: const TuniModeDrawer(),
         appBar: TuniModeAppBar(
           showSearchBar: true,
           searchController: _searchController,

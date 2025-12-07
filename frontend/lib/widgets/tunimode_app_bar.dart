@@ -83,6 +83,20 @@ class TuniModeAppBar extends StatelessWidget
               left: 12,
               child: Row(
                 children: [
+                  Builder(
+                    builder: (context) {
+                      final scaffoldState = Scaffold.maybeOf(context);
+                      final hasDrawer = scaffoldState?.hasDrawer ?? false;
+
+                      return IconButton(
+                        icon: const Icon(Icons.menu),
+                        onPressed:
+                            hasDrawer ? () => scaffoldState!.openDrawer() : null,
+                        tooltip: 'Menu',
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 4),
                   if (showBackButton)
                     IconButton(
                       icon: const Icon(Icons.arrow_back, size: 20),

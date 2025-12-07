@@ -7,6 +7,7 @@ import '../services/search_navigation_service.dart';
 import 'listing_detail_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/tunimode_drawer.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   const OrderDetailScreen({super.key, required this.order});
@@ -415,6 +416,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const TuniModeDrawer(),
       appBar: TuniModeAppBar(
         showSearchBar: true,
         searchController: _searchController,

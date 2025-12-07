@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../services/search_navigation_service.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/tunimode_drawer.dart';
 import '../widgets/auth_guard.dart';
 
 class _ColorOption {
@@ -546,6 +547,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return AuthGuard(
       builder: (context) => Scaffold(
+        drawer: const TuniModeDrawer(),
         appBar: TuniModeAppBar(
           showSearchBar: true,
           searchController: _searchController,

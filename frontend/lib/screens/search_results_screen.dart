@@ -9,6 +9,7 @@ import '../widgets/listing_card.dart';
 import 'listing_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/tunimode_drawer.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String initialQuery;
@@ -482,6 +483,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
+      drawer: const TuniModeDrawer(),
       appBar: TuniModeAppBar(
         showSearchBar: true,
         searchController: _searchController,

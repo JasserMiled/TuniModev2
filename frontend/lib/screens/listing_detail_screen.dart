@@ -11,6 +11,7 @@ import 'profile_screen.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/tunimode_drawer.dart';
 
 class ListingDetailScreen extends StatefulWidget {
   final int listingId;
@@ -1115,6 +1116,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
 
         return Scaffold(
           backgroundColor: Colors.transparent,
+          drawer: const TuniModeDrawer(),
           appBar: TuniModeAppBar(
             showSearchBar: true,
             searchController: _searchController,
