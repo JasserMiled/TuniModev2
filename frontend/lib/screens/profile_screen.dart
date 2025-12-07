@@ -11,6 +11,7 @@ import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
 import 'listing_detail_screen.dart';
 import 'account_settings_screen.dart';
+import '../widgets/auth_guard.dart';
 
 class ProfileScreen extends StatefulWidget {
   final int? userId;
@@ -385,8 +386,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isCurrentUser = widget.userId == null || widget.userId == ApiService.currentUser?.id;
+    final requiresAuth = isCurrentUser;
 
-    return Scaffold(
+    final scaffold = Scaffold(
       appBar: TuniModeAppBar(
         showSearchBar: true,
         searchController: _searchController,
@@ -401,5 +403,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: _buildContent(),
       ),
     );
+
+    if (!requiresAuth) return scaffold;
+
+    return AuthGuard(builder: (_) => scaffold);
   }
 }

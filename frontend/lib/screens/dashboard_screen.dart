@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../services/search_navigation_service.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/auth_guard.dart';
 
 class _ColorOption {
   final String name;
@@ -543,16 +544,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: TuniModeAppBar(
-        showSearchBar: true,
-        searchController: _searchController,
-        onSearch: _handleSearch,
-        actions: const [
-          AccountMenuButton(),
-          SizedBox(width: 16),
-        ],
-      ),
+    return AuthGuard(
+      builder: (context) => Scaffold(
+        appBar: TuniModeAppBar(
+          showSearchBar: true,
+          searchController: _searchController,
+          onSearch: _handleSearch,
+          actions: const [
+            AccountMenuButton(),
+            SizedBox(width: 16),
+          ],
+        ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500),
@@ -745,6 +747,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }

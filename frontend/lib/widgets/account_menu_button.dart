@@ -152,6 +152,7 @@ class _AccountMenuButtonState extends State<AccountMenuButton> {
     ApiService.logout();
     setState(() {});
     widget.onAuthChanged?.call();
+    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
   }
 }
 
