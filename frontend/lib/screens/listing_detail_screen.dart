@@ -465,9 +465,17 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   /// 🔵 Bouton principal "Acheter" ou "Modifier"
   Widget _buildPrimaryActionButton(Listing listing) {
     final isOwner = _isListingOwner(listing);
-    final buttonLabel = isOwner ? 'Modifier' : 'Acheter';
-    final onPressed =
-        isOwner ? () => _openEditListing(listing) : () => _openOrderSheet(listing);
+    final isRepublish = isOwner && listing.isDeleted;
+    final buttonLabel = isRepublish
+        ? 'Re publier'
+        : isOwner
+            ? 'Modifier'
+            : 'Acheter';
+    final onPressed = isRepublish
+        ? () => _openEditListing(listing, isRepublish: true)
+        : isOwner
+            ? () => _openEditListing(listing)
+            : () => _openOrderSheet(listing);
 
     return SizedBox(
       width: double.infinity,
@@ -520,7 +528,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
           // ⭐️ Boutons d’action avant le vendeur
           _buildPrimaryActionButton(listing),
 
-          if (_isListingOwner(listing)) ...[
+          if (_isListingOwner(listing) && !listing.isDeleted) ...[
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
@@ -692,7 +700,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
     return user != null && user.id == listing.userId;
   }
 
-  void _openEditListing(Listing listing) {
+  void _openEditListing(Listing listing, {bool isRepublish = false}) {
     if (!_isListingOwner(listing)) return;
 
     final formKey = GlobalKey<FormState>();
@@ -778,6 +786,7 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                       : cityController.text.trim(),
                   deliveryAvailable: deliveryAvailable,
                   stock: parsedStock ?? listing.stock,
+                  status: isRepublish ? 'active' : null,
                 );
 
                 if (!mounted) return;
@@ -792,8 +801,12 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   });
                   Navigator.of(sheetContext).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Annonce mise à jour avec succès.'),
+                    SnackBar(
+                      content: Text(
+                        isRepublish
+                            ? 'Annonce republiée avec succès.'
+                            : 'Annonce mise à jour avec succès.',
+                      ),
                     ),
                   );
                 } else {
@@ -941,7 +954,9 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                           label: Text(
                             submitting
                                 ? 'Enregistrement...'
-                                : 'Enregistrer',
+                                : isRepublish
+                                    ? 'Re publier'
+                                    : 'Enregistrer',
                           ),
                         ),
                       ),
@@ -1211,7 +1226,7 @@ Row(
                     buildSellerCard(listing),
                     const SizedBox(height: 20),
                     _buildPrimaryActionButton(listing),
-                    if (_isListingOwner(listing)) ...[
+                    if (_isListingOwner(listing) && !listing.isDeleted) ...[
                       const SizedBox(height: 12),
                       SizedBox(
                         width: double.infinity,
