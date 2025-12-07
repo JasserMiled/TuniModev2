@@ -492,7 +492,13 @@ router.delete("/:id", authRequired, requireRole("buyer", "pro", "admin"), async 
       return res.status(403).json({ message: "Vous ne pouvez pas supprimer cette annonce" });
     }
 
-    await db.query("DELETE FROM listings WHERE id = $1", [listingId]);
+    // Rather than deleting the row, mark it as deleted so it still appears in
+    // the user's history (e.g. in the "Supprimée" tab of their listings).
+    await db.query(
+      "UPDATE listings SET status = 'deleted', updated_at = NOW() WHERE id = $1",
+      [listingId]
+    );
+
     res.json({ message: "Annonce supprimée" });
   } catch (err) {
     console.error(err);
