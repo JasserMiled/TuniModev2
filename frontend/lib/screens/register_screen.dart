@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import '../services/search_navigation_service.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/tunimode_drawer.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -64,6 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const TuniModeDrawer(),
       appBar: TuniModeAppBar(
         showSearchBar: true,
         searchController: _searchController,

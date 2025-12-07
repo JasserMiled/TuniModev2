@@ -4,6 +4,7 @@ import '../models/listing.dart';
 import '../services/api_service.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/listing_card.dart';
+import '../widgets/tunimode_drawer.dart';
 import '../widgets/tunimode_app_bar.dart';
 import 'listing_detail_screen.dart';
 import 'search_results_screen.dart';
@@ -133,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: _lightBackground,
+      drawer: const TuniModeDrawer(),
       appBar: TuniModeAppBar(
         showSearchBar: true,
         searchController: _searchController,

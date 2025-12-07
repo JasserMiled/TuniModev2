@@ -8,6 +8,7 @@ import '../widgets/listing_card.dart';
 import 'listing_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/tunimode_drawer.dart';
 import '../widgets/auth_guard.dart';
 
 class MyListingsScreen extends StatefulWidget {
@@ -145,6 +146,7 @@ class _MyListingsScreenState extends State<MyListingsScreen> {
   Widget build(BuildContext context) {
     return AuthGuard(
       builder: (context) => Scaffold(
+        drawer: const TuniModeDrawer(),
         appBar: TuniModeAppBar(
           showSearchBar: true,
           searchController: _searchController,

@@ -9,6 +9,7 @@ import '../services/search_navigation_service.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/tunimode_drawer.dart';
 import 'listing_detail_screen.dart';
 import 'account_settings_screen.dart';
 import '../widgets/auth_guard.dart';
@@ -389,6 +390,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final requiresAuth = isCurrentUser;
 
     final scaffold = Scaffold(
+      drawer: const TuniModeDrawer(),
       appBar: TuniModeAppBar(
         showSearchBar: true,
         searchController: _searchController,
