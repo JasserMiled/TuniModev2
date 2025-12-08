@@ -650,9 +650,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         )
         .toList();
 
-    final currentLevelLabel =
-        _categoryPath.isEmpty ? 'Catégories' : _categoryPath.last.name;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -683,36 +680,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: _categoryPath.isEmpty ? null : () => _goToLevel(_categoryPath.length - 2),
-                      icon: const Icon(Icons.arrow_back),
-                    ),
-                    Expanded(
-                      child: Text(
-                        currentLevelLabel,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
-              ),
-              if (_selectedCategory != null)
+              if (_selectedCategory != null) ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Row(
@@ -732,7 +700,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
-              const Divider(height: 1),
+                const Divider(height: 1),
+              ],
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 320),
                 child: visibleCategories.isEmpty
