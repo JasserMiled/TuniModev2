@@ -8,6 +8,7 @@ import '../widgets/filter_bar.dart';
 import '../widgets/listing_card.dart';
 import 'listing_detail_screen.dart';
 import '../widgets/account_menu_button.dart';
+import '../widgets/category_picker.dart';
 import '../widgets/tunimode_app_bar.dart';
 import '../widgets/tunimode_drawer.dart';
 
@@ -386,26 +387,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   Widget build(BuildContext context) {
     final dropdowns = [
       FilterDropdownConfig(
-        label: 'Catégorie',
-        icon: Icons.category_outlined,
-        value: _selectedCategoryId?.toString(),
-        options: _flatCategories
-            .map(
-              (c) => FilterDropdownOption(
-                value: c.id.toString(),
-                label: c.label,
-              ),
-            )
-            .toList(),
-        onChanged: (value) {
-          final selectedId = int.tryParse(value ?? '');
-          setState(() {
-            _selectedCategoryId = selectedId;
-            _refreshResults();
-          });
-        },
-      ),
-      FilterDropdownConfig(
         label: 'Taille',
         icon: Icons.straighten,
         value: _selectedSizes.isEmpty ? null : _selectedSizes.first,
@@ -541,6 +522,24 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             KeyedSubtree(
               key: _filterBarKey,
               child: FilterBar(
+                customDropdowns: [
+                  SizedBox(
+                    width: 200,
+                    child: CategoryPickerField(
+                      categories: _categoryTree,
+                      selectedCategoryId: _selectedCategoryId,
+                      onSelected: (category) {
+                        setState(() {
+                          _selectedCategoryId = category?.id;
+                          _refreshResults();
+                        });
+                      },
+                      isLoading: _isLoadingCategories,
+                      hintText: 'Catégorie',
+                      showLabel: false,
+                    ),
+                  ),
+                ],
                 dropdowns: dropdowns,
                 activeFilters: _buildActiveChips(),
                 onClearFilters: _clearFilters,
