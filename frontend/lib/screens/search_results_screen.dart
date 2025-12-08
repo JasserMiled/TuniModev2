@@ -11,6 +11,7 @@ import '../widgets/account_menu_button.dart';
 import '../widgets/category_picker.dart';
 import '../widgets/tunimode_app_bar.dart';
 import '../widgets/tunimode_drawer.dart';
+import '../widgets/quick_filters_launcher.dart';
 
 class SearchResultsScreen extends StatefulWidget {
   final String initialQuery;
@@ -475,7 +476,18 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         showSearchBar: true,
         searchController: _searchController,
         onSearch: _handleSearch,
-        onQuickFilters: _scrollToFilters,
+        onQuickFilters: () => openQuickFiltersAndNavigate(
+          context: context,
+          searchQuery: _searchController.text,
+          initialCity: _cityFilter,
+          initialMinPrice: _minPrice,
+          initialMaxPrice: _maxPrice,
+          initialCategoryId: _selectedCategoryId,
+          initialSizes: _selectedSizes,
+          initialColors: _selectedColors,
+          initialDeliveryAvailable: _deliveryAvailable,
+          primaryColor: _primaryBlue,
+        ),
         hintText: 'Rechercher dans les annonces',
         actions: const [
           AccountMenuButton(),
