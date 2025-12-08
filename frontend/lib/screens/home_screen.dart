@@ -7,6 +7,7 @@ import '../widgets/category_picker.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/tunimode_drawer.dart';
 import '../widgets/tunimode_app_bar.dart';
+import '../widgets/quick_filters_dialog.dart';
 import 'dashboard_screen.dart';
 import 'listing_detail_screen.dart';
 import 'search_results_screen.dart';
@@ -21,79 +22,6 @@ class _HomeScreenState extends State<HomeScreen> {
   static const Color _primaryBlue = Color(0xFF0B6EFE);
   static const Color _lightBackground = Color(0xFFF7F9FC);
   static const Color _lavender = Color(0xFFF1EDFD);
-
-  static const List<String> _sizeOptions = [
-    'XXXS / 30 / 2',
-    'XXS / 32 / 4',
-    'XS / 34 / 6',
-    'S / 36 / 8',
-    'M / 38 / 10',
-    'L / 40 / 12',
-    'XL / 42 / 14',
-    'XXL / 44 / 16',
-    'XXXL / 46 / 18',
-    '4XL / 48 / 20',
-    '5XL / 50 / 22',
-    '6XL / 52 / 24',
-    '7XL / 54 / 26',
-    '8XL / 56 / 28',
-    '9XL / 58 / 30',
-    'Taille unique',
-    'Autre',
-  ];
-
-  static const List<_ColorOption> _colorOptions = [
-    _ColorOption('Noir', Color(0xFF000000)),
-    _ColorOption('Blanc', Color(0xFFFFFFFF)),
-    _ColorOption('Gris', Color(0xFF808080)),
-    _ColorOption('Gris clair', Color(0xFFD3D3D3)),
-    _ColorOption('Gris foncé', Color(0xFF404040)),
-    _ColorOption('Rouge', Color(0xFFFF0000)),
-    _ColorOption('Rouge foncé', Color(0xFF8B0000)),
-    _ColorOption('Rouge clair', Color(0xFFFF6666)),
-    _ColorOption('Bordeaux', Color(0xFF800020)),
-    _ColorOption('Rose', Color(0xFFFFC0CB)),
-    _ColorOption('Rose fuchsia', Color(0xFFFF00FF)),
-    _ColorOption('Framboise', Color(0xFFE30B5D)),
-    _ColorOption('Orange', Color(0xFFFFA500)),
-    _ColorOption('Orange foncé', Color(0xFFFF8C00)),
-    _ColorOption('Saumon', Color(0xFFFA8072)),
-    _ColorOption('Corail', Color(0xFFFF7F50)),
-    _ColorOption('Jaune', Color(0xFFFFFF00)),
-    _ColorOption('Or', Color(0xFFFFD700)),
-    _ColorOption('Beige', Color(0xFFF5F5DC)),
-    _ColorOption('Crème', Color(0xFFFFFDD0)),
-    _ColorOption('Vert', Color(0xFF008000)),
-    _ColorOption('Vert clair', Color(0xFF90EE90)),
-    _ColorOption('Vert foncé', Color(0xFF006400)),
-    _ColorOption('Vert menthe', Color(0xFF98FF98)),
-    _ColorOption('Vert olive', Color(0xFF808000)),
-    _ColorOption('Vert émeraude', Color(0xFF50C878)),
-    _ColorOption('Turquoise', Color(0xFF40E0D0)),
-    _ColorOption('Cyan', Color(0xFF00FFFF)),
-    _ColorOption('Bleu', Color(0xFF0000FF)),
-    _ColorOption('Bleu clair', Color(0xFFADD8E6)),
-    _ColorOption('Bleu foncé', Color(0xFF00008B)),
-    _ColorOption('Bleu ciel', Color(0xFF87CEEB)),
-    _ColorOption('Bleu turquoise', Color(0xFF30D5C8)),
-    _ColorOption('Bleu marine', Color(0xFF000080)),
-    _ColorOption('Indigo', Color(0xFF4B0082)),
-    _ColorOption('Violet', Color(0xFF800080)),
-    _ColorOption('Violet foncé', Color(0xFF2E0854)),
-    _ColorOption('Lavande', Color(0xFFE6E6FA)),
-    _ColorOption('Pourpre', Color(0xFF722F37)),
-    _ColorOption('Marron', Color(0xFF8B4513)),
-    _ColorOption('Chocolat', Color(0xFF7B3F00)),
-    _ColorOption('Brun clair', Color(0xFFA0522D)),
-    _ColorOption('Sable', Color(0xFFC2B280)),
-    _ColorOption('Kaki', Color(0xFFF0E68C)),
-    _ColorOption('Cuivre', Color(0xFFB87333)),
-    _ColorOption('Argent', Color(0xFFC0C0C0)),
-    _ColorOption('Platine', Color(0xFFE5E4E2)),
-    _ColorOption('Bronze', Color(0xFFCD7F32)),
-    _ColorOption('Pêche', Color(0xFFFFDAB9)),
-    _ColorOption('Champagne', Color(0xFFF7E7CE)),
-  ];
 
   static const double _pagePadding = 16;
   static const double _gridSpacing = 12;
@@ -707,416 +635,47 @@ Widget _buildSearchBar({bool compact = false}) {
       }
     });
   }
-void _openQuickFilters() {
-  final cityController = TextEditingController(text: _selectedCity ?? "");
-
-  double? tempMin = _minPrice;
-  double? tempMax = _maxPrice;
-  int? tempCategoryId = _selectedCategoryId;
-  bool? tempDelivery = _deliveryAvailable;
-
-  List<String> tempSizes = List.from(_selectedSizes);
-  List<String> tempColors = List.from(_selectedColors);
-
-  showDialog(
-    context: context,
-    barrierDismissible: true,
-    builder: (ctx) {
-      return StatefulBuilder(
-        builder: (context, setModalState) {
-          return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 650,   // largeur max de la popup
-              ),
-              child: Material(
-                borderRadius: BorderRadius.circular(20),
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // CONTENU (header + formulaire)
-                    _buildFiltersContent(
-                      cityController: cityController,
-                      tempMin: tempMin,
-                      tempMax: tempMax,
-                      tempCategoryId: tempCategoryId,
-                      tempDelivery: tempDelivery,
-                      tempSizes: tempSizes,
-                      tempColors: tempColors,
-                      setModalState: setModalState,
-                    ),
-
-                    // FOOTER boutons
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(color: Colors.grey.shade300),
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  _selectedCity = cityController.text.trim().isEmpty
-                                      ? null
-                                      : cityController.text.trim();
-                                  _minPrice = tempMin;
-                                  _maxPrice = tempMax;
-                                  _selectedCategoryId = tempCategoryId;
-                                  _selectedSizes = tempSizes;
-                                  _selectedColors = tempColors;
-                                  _deliveryAvailable = tempDelivery;
-                                });
-                                Navigator.pop(context);
-                                _openSearchResults();
-                              },
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                backgroundColor: _primaryBlue,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: const Text(
-  "Appliquer les filtres",
-  style: TextStyle(color: Colors.white),   // 🔥 texte blanc
-),
-							  
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              onPressed: () {
-                                setState(() {
-                                  _selectedCity = null;
-                                  _minPrice = null;
-                                  _maxPrice = null;
-                                  _selectedCategoryId = null;
-                                  _selectedSizes = [];
-                                  _selectedColors = [];
-                                  _deliveryAvailable = null;
-                                });
-                                Navigator.pop(context);
-                                _openSearchResults();
-                              },
-                              child: const Text("Réinitialiser"),
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
+  void _openQuickFilters() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => QuickFiltersDialog(
+        categoryTree: _categoryTree,
+        isLoadingCategories: _isLoadingCategories,
+        categoryLoadError: _categoryLoadError,
+        initialCity: _selectedCity,
+        initialMinPrice: _minPrice,
+        initialMaxPrice: _maxPrice,
+        initialCategoryId: _selectedCategoryId,
+        initialSizes: _selectedSizes,
+        initialColors: _selectedColors,
+        initialDeliveryAvailable: _deliveryAvailable,
+        primaryColor: _primaryBlue,
+        onApply: (selection) {
+          setState(() {
+            _selectedCity = selection.city;
+            _minPrice = selection.minPrice;
+            _maxPrice = selection.maxPrice;
+            _selectedCategoryId = selection.categoryId;
+            _selectedSizes = selection.sizes;
+            _selectedColors = selection.colors;
+            _deliveryAvailable = selection.deliveryAvailable;
+          });
+          _openSearchResults();
         },
-      );
-    },
-  );
-}
-
-
-Widget _buildFiltersContent({
-  required TextEditingController cityController,
-  required double? tempMin,
-  required double? tempMax,
-  required int? tempCategoryId,
-  required bool? tempDelivery,
-  required List<String> tempSizes,
-  required List<String> tempColors,
-  required void Function(void Function()) setModalState,
-}) {
-  return Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      // HEADER
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            Text(
-              "Filtres rapides",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-          ],
-        ),
+        onReset: () {
+          setState(() {
+            _selectedCity = null;
+            _minPrice = null;
+            _maxPrice = null;
+            _selectedCategoryId = null;
+            _selectedSizes = [];
+            _selectedColors = [];
+            _deliveryAvailable = null;
+          });
+          _openSearchResults();
+        },
       ),
-
-      // CONTENU
-      Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Ville
-            _filterSection(
-              title: "Ville",
-              child: TextField(
-                controller: cityController,
-                decoration: const InputDecoration(
-                  hintText: "Ex : Tunis, Sousse, Bizerte...",
-                  prefixIcon: Icon(Icons.location_on_outlined),
-                ),
-              ),
-            ),
-
-            // Catégorie
-            _filterSection(
-              title: "Catégorie",
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CategoryPickerField(
-                    categories: _categoryTree,
-                    selectedCategoryId: tempCategoryId,
-                    onSelected: (category) =>
-                        setModalState(() => tempCategoryId = category?.id),
-                    isLoading: _isLoadingCategories,
-                    showLabel: false,
-                  ),
-                  if (_categoryLoadError != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      _categoryLoadError!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ]
-                ],
-              ),
-            ),
-
-            // Tailles / Couleurs / Livraison
-            Row(
-              children: [
-                // Tailles
-                Expanded(
-                  child: _filterSection(
-                    title: "Tailles",
-                    child: DropdownButtonFormField<String?>(
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        hintText: "Ajouter",
-                        prefixIcon: Icon(Icons.straighten),
-                      ),
-                      items: [
-                        const DropdownMenuItem(
-                          value: null,
-                          child: Text("Ajouter"),
-                        ),
-                        ..._sizeOptions.map(
-                          (s) => DropdownMenuItem(
-                            value: s,
-                            child: Row(
-                              children: [
-                                Expanded(child: Text(s)),
-                                if (tempSizes.contains(s))
-                                  const Icon(Icons.check,
-                                      color: Colors.green, size: 18),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                      onChanged: (v) {
-                        if (v != null && !tempSizes.contains(v)) {
-                          setModalState(() => tempSizes.add(v));
-                        }
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Couleurs
-                Expanded(
-                  child: _filterSection(
-                    title: "Couleurs",
-                    child: DropdownButtonFormField<String?>(
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        hintText: "Ajouter",
-                        prefixIcon: Icon(Icons.palette_outlined),
-                      ),
-                      items: [
-                        const DropdownMenuItem(
-                            value: null, child: Text("Ajouter")),
-                        ..._colorOptions.map(
-                          (c) => DropdownMenuItem(
-                            value: c.name,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 14,
-                                  height: 14,
-                                  decoration: BoxDecoration(
-                                    color: c.color,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.grey.shade300,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(c.name)),
-                                if (tempColors.contains(c.name))
-                                  const Icon(Icons.check,
-                                      color: Colors.green, size: 18),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                      onChanged: (v) {
-                        if (v != null && !tempColors.contains(v)) {
-                          setModalState(() => tempColors.add(v));
-                        }
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-
-                // Livraison
-                Expanded(
-                  child: _filterSection(
-                    title: "Livraison",
-                    child: DropdownButtonFormField<bool?>(
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        hintText: "Tous",
-                        prefixIcon: Icon(Icons.local_shipping_outlined),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: null, child: Text("Tous")),
-                        DropdownMenuItem(value: true, child: Text("Livraison")),
-                        DropdownMenuItem(value: false, child: Text("Retrait")),
-                      ],
-                      onChanged: (v) => setModalState(() => tempDelivery = v),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            // Budget
-            _filterSection(
-              title: "Budget",
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Champs Min / Max
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: tempMin?.toStringAsFixed(0) ?? '',
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: "Min"),
-                          onChanged: (v) {
-                            final value = double.tryParse(v.trim());
-                            tempMin = v.trim().isEmpty ? null : value;
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextFormField(
-                          initialValue: tempMax?.toStringAsFixed(0) ?? '',
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: "Max"),
-                          onChanged: (v) {
-                            final value = double.tryParse(v.trim());
-                            tempMax = v.trim().isEmpty ? null : value;
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-
-          ],
-        ),
-      ),
-    ],
-  );
-}
-
-
-
-Widget _filterSection({
-  required String title,
-  Widget? child,
-  Widget? trailing,
-  double bottomPadding = 18,
-}) {
-  return Padding(
-    padding: EdgeInsets.only(bottom: bottomPadding),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-            if (trailing != null) trailing,
-          ],
-        ),
-        const SizedBox(height: 8),
-        if (child != null) child,
-      ],
-    ),
-  );
-}
-
-Widget _presetBudgetChip(
-  String label,
-  double min,
-  double max,
-  double currentMin,
-  double currentMax,
-  Function(double, double) onSelect,
-) {
-  final isSelected = currentMin == min && currentMax == max;
-
-  return ChoiceChip(
-    selected: isSelected,
-    label: Text(label),
-    onSelected: (_) => onSelect(min, max),
-  );
-}
-
-
-  Widget _buildPresetChip(
-    String label,
-    VoidCallback onTap,
-    double currentMin,
-    double currentMax,
-    double presetMin,
-    double presetMax,
-  ) {
-    final isSelected = currentMin == presetMin && currentMax == presetMax;
-    return ChoiceChip(
-      selected: isSelected,
-      label: Text(label),
-      onSelected: (_) => onTap(),
     );
   }
 
@@ -1168,13 +727,13 @@ Widget _presetBudgetChip(
     return 1;
   }
 
-double _childAspectRatioForColumns(int c) {
-  if (c == 5) return 0.66;   // Vinted desktop EXACT
-  if (c == 4) return 0.70;   // desktop un peu plus large
-  if (c == 3) return 0.78;   // tablette paysage
-  if (c == 2) return 0.95;   // tablette portrait
-  return 1.15;               // mobile
-}
+  double _childAspectRatioForColumns(int c) {
+    if (c == 5) return 0.66;   // Vinted desktop EXACT
+    if (c == 4) return 0.70;   // desktop un peu plus large
+    if (c == 3) return 0.78;   // tablette paysage
+    if (c == 2) return 0.95;   // tablette portrait
+    return 1.15;               // mobile
+  }
 
   String _formatPriceRange() {
     final min = _minPrice?.toStringAsFixed(0);
@@ -1227,11 +786,4 @@ class _CategoryOption {
     required this.id,
     required this.label,
   });
-}
-
-class _ColorOption {
-  final String name;
-  final Color color;
-
-  const _ColorOption(this.name, this.color);
 }
