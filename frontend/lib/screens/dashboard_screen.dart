@@ -650,6 +650,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         )
         .toList();
 
+    final pathSegments = _categoryPath.map((category) => category.name).toList();
+    if (_selectedCategory != null &&
+        !_categoryPath.any((category) => category.id == _selectedCategory!.id)) {
+      pathSegments.add(_selectedCategory!.name);
+    }
+
+    final pathLabel =
+        pathSegments.isEmpty ? 'Catégories' : pathSegments.join(' › ');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -672,10 +681,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     const Icon(Icons.arrow_back),
                     const SizedBox(width: 12),
-                    const Text(
-                      'Catégories',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    Text(
+                      pathLabel,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
