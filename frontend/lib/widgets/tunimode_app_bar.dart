@@ -66,16 +66,63 @@ class TuniModeAppBar extends StatelessWidget
       automaticallyImplyLeading: false,
       bottom: bottom,
       // ✅ ON NE UTILISE PLUS titleSpacing
-      title: SizedBox(
-        height: 70,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // ✅ BARRE DE RECHERCHE VRAIMENT CENTRÉE
-            if (showSearchBar)
-              Center(
-                child: SizedBox(
-                  width: searchWidth,
+title: LayoutBuilder(
+  builder: (context, constraints) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // ✅ GAUCHE : MENU + BACK
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Builder(
+                builder: (context) {
+                  final scaffoldState = Scaffold.maybeOf(context);
+                  final hasDrawer = scaffoldState?.hasDrawer ?? false;
+
+                  return IconButton(
+                    icon: const Icon(Icons.menu),
+                    onPressed:
+                        hasDrawer ? () => scaffoldState!.openDrawer() : null,
+                  );
+                },
+              ),
+
+              if (showBackButton)
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, size: 20),
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
+            ],
+          ),
+        ),
+
+        // ✅ CENTRE : LOGO + SEARCH BAR
+        if (showSearchBar)
+          Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ✅ LOGO JUSTE AVANT LE CHAMP
+                GestureDetector(
+                  onTap: () => _goHome(context),
+                  child: SizedBox(
+                    width: 110,
+                    height: 25,
+                    child: SvgPicture.asset(
+                      'assets/images/tunimode_logo.svg',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // ✅ SEARCH BAR (LARGEUR LIMITÉE)
+                SizedBox(
+                  width: 1200, // ✅ largeur contrôlée au centre
                   child: TuniModeSearchBar(
                     controller: searchController!,
                     onSearch: onSearch!,
@@ -83,57 +130,23 @@ class TuniModeAppBar extends StatelessWidget
                     hintText: hintText,
                   ),
                 ),
-              ),
-
-            // ✅ LOGO À GAUCHE
-            Positioned(
-              left: 12,
-              child: Row(
-                children: [
-                  Builder(
-                    builder: (context) {
-                      final scaffoldState = Scaffold.maybeOf(context);
-                      final hasDrawer = scaffoldState?.hasDrawer ?? false;
-
-                      return IconButton(
-                        icon: const Icon(Icons.menu),
-                        onPressed:
-                            hasDrawer ? () => scaffoldState!.openDrawer() : null,
-                        tooltip: 'Menu',
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 4),
-                  if (showBackButton)
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, size: 20),
-                      onPressed: () => Navigator.of(context).maybePop(),
-                    ),
-                  GestureDetector(
-                    onTap: () => _goHome(context),
-                    child: SizedBox(
-                      width: 120,
-                      height: 40,
-                      child: SvgPicture.asset(
-                        'assets/images/tunimode_logo.svg',
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
+          ),
 
-            // ✅ ACTIONS À DROITE
-            Positioned(
-              right: 12,
-              child: Row(
-                children: actions,
-              ),
-            ),
-          ],
+        // ✅ DROITE : ACTIONS
+        Align(
+          alignment: Alignment.centerRight,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: actions,
+          ),
         ),
-      ),
+      ],
+    );
+  },
+),
+
     );
   }
 }

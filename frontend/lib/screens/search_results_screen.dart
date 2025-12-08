@@ -60,15 +60,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     'Bon état',
     'Satisfaisant',
   ];
-  static const _brandOptions = [
-    'Nike',
-    'Adidas',
-    'Zara',
-    'H&M',
-    'Bershka',
-    'Mango',
-    'Autre',
-  ];
   static const _colorOptions = [
     'Noir',
     'Blanc',
@@ -279,17 +270,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       );
     }
 
-    if (_selectedBrand != null) {
-      chips.add(
-        InputChip(
-          avatar: const Icon(Icons.store_mall_directory_outlined, size: 18),
-          label: Text('Marque : $_selectedBrand'),
-          onDeleted: () => setState(() {
-            _selectedBrand = null;
-          }),
-        ),
-      );
-    }
 
     if (_selectedCondition != null) {
       chips.add(
@@ -402,24 +382,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           setState(() {
             _selectedSizes = value == null ? [] : [value];
             _refreshResults();
-          });
-        },
-      ),
-      FilterDropdownConfig(
-        label: 'Marque',
-        icon: Icons.store_mall_directory_outlined,
-        value: _selectedBrand,
-        options: _brandOptions
-            .map(
-              (brand) => FilterDropdownOption(
-                value: brand,
-                label: brand,
-              ),
-            )
-            .toList(),
-        onChanged: (value) {
-          setState(() {
-            _selectedBrand = value;
           });
         },
       ),
