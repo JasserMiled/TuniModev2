@@ -36,13 +36,14 @@ class ApiService {
   }
 
   static Future<bool> register({
-    required String name,
-    required String email,
-    required String password,
-    required String role,
-    String? phone,
-    String? address,
-  }) async {
+  required String name,
+  required String email,
+  required String password,
+  required String role,
+  String? phone,
+  String? address,
+}) async {
+  try {
     final uri = Uri.parse('$baseUrl/api/auth/register');
     final res = await http.post(
       uri,
@@ -57,14 +58,24 @@ class ApiService {
       }),
     );
 
-    if (res.statusCode == 201) {
-      final data = jsonDecode(res.body);
-      currentUser = User.fromJson(data['user']);
-      authToken = data['token'];
+    print("✅ STATUS: ${res.statusCode}");
+    print("✅ BODY: ${res.body}");
+
+    // ✅ ✅ ✅ LA SEULE CONDITION QUI COMPTE
+    if (res.statusCode == 201 || res.statusCode == 200) {
+      // Même si le backend ne renvoie rien → SUCCÈS
       return true;
     }
+
+    // ❌ Tous les autres codes = échec
+    return false;
+  } catch (e) {
+    print("❌ ERREUR API REGISTER: $e");
     return false;
   }
+}
+
+
 
   static Future<bool> login({
     required String email,

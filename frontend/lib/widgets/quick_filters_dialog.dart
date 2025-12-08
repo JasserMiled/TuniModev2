@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/category.dart';
 import '../services/api_service.dart';
 import 'category_picker.dart';
+import '../widgets/app_buttons.dart';
 
 class QuickFiltersSelection {
   final String? city;
@@ -158,7 +159,7 @@ bool _isHoveringApply = false;
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 650),
         child: Material(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(5),
           clipBehavior: Clip.antiAlias,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -360,99 +361,39 @@ bool _isHoveringApply = false;
       ],
     );
   }
-
-  Widget _buildFooter(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Colors.grey.shade300),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-MouseRegion(
-  onEnter: (_) => setState(() => _isHoveringApply = true),
-  onExit: (_) => setState(() => _isHoveringApply = false),
-  child: AnimatedContainer(
-    duration: const Duration(milliseconds: 180),
-    width: double.infinity,
-    height: 32,
+Widget _buildFooter(BuildContext context) {
+  return Container(
+    padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(30),
-      gradient: LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: _isHoveringApply
-            ? [
-                const Color(0xFF0A5AD1), // plus foncé
-                const Color(0xFF084DB8),
-              ]
-            : [
-                const Color(0xFF1A7CFF), // normal
-                const Color(0xFF0B5ED7),
-              ],
+      border: Border(
+        top: BorderSide(color: Colors.grey.shade300),
       ),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x552B7CFF),
-          blurRadius: 12,
-          offset: Offset(0, 6),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ✅ BOUTON PRINCIPAL STANDARD
+        PrimaryButton(
+          label: "Appliquer les filtres",
+          onPressed: _apply,
+          height: 32,
         ),
+
+        const SizedBox(height: 8),
+
+        // ✅ BOUTON RÉINITIALISER STANDARD
+        OutlinedActionButton(
+          label: "Réinitialiser",
+          onPressed: _reset,
+          height: 32,
+        ),
+
+        const SizedBox(height: 4),
       ],
     ),
-    child: ElevatedButton(
-      onPressed: _apply,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.transparent,
-        shadowColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
-      ),
-      child: const Text(
-        "Appliquer les filtres",
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-        ),
-      ),
-    ),
-  ),
-),
+  );
+}
 
-          const SizedBox(height: 8),
-SizedBox(
-  width: double.infinity,
-  height: 32,
-  child: OutlinedButton(
-    onPressed: _reset,
-    style: OutlinedButton.styleFrom(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(40),
-      ),
-      side: const BorderSide(
-        color: Color(0xFFFF8A00), // ✅ Orange contour
-        width: 1.5,
-      ),
-      backgroundColor: const Color(0xFFF2F4F7), // ✅ Fond gris clair
-    ),
-    child: const Text(
-      "Réinitialiser",
-      style: TextStyle(
-        color: Color(0xFFFF8A00), // ✅ Texte orange
-        fontSize: 15,
-      ),
-    ),
-  ),
-),
-
-          const SizedBox(height: 4),
-        ],
-      ),
-    );
-  }
 
   Widget _filterSection({
     required String title,

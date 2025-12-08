@@ -5,18 +5,19 @@ import '../models/listing.dart';
 import '../models/user.dart';
 import '../models/review.dart';
 import '../services/api_service.dart';
-import '../services/search_navigation_service.dart';
 import '../widgets/listing_card.dart';
-import '../widgets/account_menu_button.dart';
-import '../widgets/tunimode_app_bar.dart';
 import '../widgets/tunimode_drawer.dart';
+import '../services/search_navigation_service.dart';
+import '../widgets/tunimode_app_bar.dart';
 import '../widgets/auth_guard.dart';
 import '../widgets/quick_filters_launcher.dart';
+import '../widgets/account_menu_button.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'listing_detail_screen.dart';
 import 'profile_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
+
   const FavoritesScreen({super.key});
 
   @override
@@ -28,6 +29,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   final Map<int, Future<List<Review>>> _sellerReviewsCache = {};
   final TextEditingController _searchController = TextEditingController();
 
+
   @override
   void initState() {
     super.initState();
@@ -36,19 +38,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   Future<FavoriteCollections> _loadFavorites() {
     return ApiService.fetchFavorites();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _handleSearch(String query) {
-    SearchNavigationService.openSearchResults(
-      context: context,
-      query: query,
-    );
   }
 
   Future<void> _refresh() async {
@@ -118,12 +107,6 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     }
   }
 
-  void _handleUnavailableListing() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Cette annonce a été supprimée par le vendeur.')),
-    );
-  }
-
   void _openListing(Listing listing) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -133,91 +116,74 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   void _openSellerProfile(User seller) {
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => ProfileScreen(userId: seller.id),
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(userId: seller.id),
       ),
     );
   }
 
   Widget _buildListingTab(List<Listing> listings) {
-    if (listings.isEmpty) {
-      return const Center(
-        child: Text('Aucune annonce dans vos favoris pour le moment.'),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 1100, // comme HomeScreen
-            ),
-            child: GridView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-
-              // 🟢 IMPORTANT : on laisse le GridView SCROLLER
-              shrinkWrap: false,
-              physics: const AlwaysScrollableScrollPhysics(),
-
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 5,
-                crossAxisSpacing: 24,
-                mainAxisSpacing: 32,
-                childAspectRatio: 0.70,
-              ),
-
-              itemCount: listings.length,
-              itemBuilder: (context, index) {
-                final listing = listings[index];
-                return Stack(
-                  children: [
-                    ListingCard(
-                      listing: listing,
-                      isDisabled: listing.isDeleted,
-                      disabledLabel: listing.isDeleted ? 'Annonce supprimée' : null,
-                      onTap: listing.isDeleted
-                          ? _handleUnavailableListing
-                          : () => _openListing(listing),
-                    ),
-                    if (listing.isDeleted)
-                      Positioned.fill(
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: _handleUnavailableListing,
-                            splashColor: Colors.transparent,
-                            highlightColor: Colors.black12,
-                          ),
-                        ),
-                      ),
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Material(
-                        color: Colors.white,
-                        shape: const CircleBorder(),
-                        elevation: 2,
-                        child: IconButton(
-                          tooltip: 'Retirer des favoris',
-                          icon: const Icon(Icons.favorite, color: Colors.red),
-                          onPressed: () => _removeListing(listing.id),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        );
-      },
+  if (listings.isEmpty) {
+    return const Center(
+      child: Text('Aucune annonce dans vos favoris pour le moment.'),
     );
   }
+
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      return Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 1100, // comme HomeScreen
+          ),
+          child: GridView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+
+            // 🟢 IMPORTANT : on laisse le GridView SCROLLER
+            shrinkWrap: false,
+            physics: const AlwaysScrollableScrollPhysics(),
+
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 5,
+              crossAxisSpacing: 24,
+              mainAxisSpacing: 32,
+              childAspectRatio: 0.70,
+            ),
+
+            itemCount: listings.length,
+            itemBuilder: (context, index) {
+              final listing = listings[index];
+              return Stack(
+                children: [
+                  ListingCard(
+                    listing: listing,
+                    onTap: () => _openListing(listing),
+                  ),
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Material(
+                      color: Colors.white,
+                      shape: const CircleBorder(),
+                      elevation: 2,
+                      child: IconButton(
+                        tooltip: 'Retirer des favoris',
+                        icon: const Icon(Icons.favorite, color: Colors.red),
+                        onPressed: () => _removeListing(listing.id),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      );
+    },
+  );
+}
 
 
   Widget _buildSellerInfo(User seller) {
@@ -371,53 +337,92 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       ),
     );
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return AuthGuard(
-      builder: (context) => DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          drawer: const TuniModeDrawer(),
-          appBar: TuniModeAppBar(
-            showSearchBar: true,
-            searchController: _searchController,
-            onSearch: _handleSearch,
-            onQuickFilters: () => openQuickFiltersAndNavigate(
-              context: context,
-              searchQuery: _searchController.text,
-              primaryColor: const Color(0xFF0B6EFE),
-            ),
-            actions: const [
-              AccountMenuButton(),
-              SizedBox(width: 8),
-            ],
-          ),
-
-          body: FutureBuilder<FavoriteCollections>(
-            future: _futureFavorites,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (snapshot.hasError || !snapshot.hasData) {
-                return Center(
-                  child: Text('Erreur lors du chargement : ${snapshot.error}'),
-                );
-              }
-
-              final favorites = snapshot.data!;
-              return TabBarView(
-                children: [
-                  _buildListingTab(favorites.listings),
-                  _buildSellerTab(favorites.sellers),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
+  void _handleSearch(String query) {
+    SearchNavigationService.openSearchResults(
+      context: context,
+      query: query,
     );
   }
+  
+    @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+@override
+Widget build(BuildContext context) {
+  return AuthGuard(
+    builder: (context) => Scaffold(
+      drawer: const TuniModeDrawer(),
+
+      // ✅ APPBAR SANS TABBAR (COMME TON ÉCRAN QUI MARCHE)
+      appBar: TuniModeAppBar(
+        showSearchBar: true,
+        searchController: _searchController,
+        onSearch: _handleSearch,
+          onQuickFilters: () => openQuickFiltersAndNavigate(
+            context: context,
+            searchQuery: _searchController.text,
+            primaryColor: const Color(0xFF0B6EFE),
+          ),
+        actions: const [
+          AccountMenuButton(),
+          SizedBox(width: 8),
+        ],
+      ),
+
+      // ✅ TABS DANS LE BODY EXACTEMENT COMME TON EXEMPLE
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: FutureBuilder<FavoriteCollections>(
+          future: _futureFavorites,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasError || !snapshot.hasData) {
+              return Center(
+                child: Text('Erreur lors du chargement : ${snapshot.error}'),
+              );
+            }
+
+            final favorites = snapshot.data!;
+
+            return DefaultTabController(
+              length: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ✅ TABBAR COMME TON ÉCRAN QUI MARCHE
+                  const TabBar(
+                    tabs: [
+                      Tab(text: 'Annonces'),
+                      Tab(text: 'Vendeurs'),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // ✅ TABBARVIEW COMME TON ÉCRAN QUI MARCHE
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        _buildListingTab(favorites.listings),
+                        _buildSellerTab(favorites.sellers),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    ),
+  );
+}
+
+
+
 }

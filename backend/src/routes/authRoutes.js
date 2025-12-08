@@ -28,30 +28,50 @@ function verifyToken(req, res, next) {
 
 // POST /api/auth/register
 // Inscription d'un utilisateur avec hash du mot de passe, réponse compatible Flutter Web
+// POST /api/auth/register
 router.post("/register", async (req, res) => {
-  const { name, email, password } = req.body || {};
+  const { name, email, password, role, phone, address } = req.body || {};
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: "Nom, email et mot de passe requis" });
+  // ✅ Vérifications obligatoires
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({
+      message: "Nom, email, mot de passe et rôle sont requis",
+    });
+  }
+
+  // ✅ Sécurité sur les rôles autorisés
+  const allowedRoles = ["buyer", "pro"];
+  if (!allowedRoles.includes(role)) {
+    return res.status(400).json({ message: "Rôle invalide" });
   }
 
   try {
     const normalizedEmail = String(email).toLowerCase();
 
-    const existingUser = await db.query("SELECT 1 FROM users WHERE email = $1", [
-      normalizedEmail,
-    ]);
+    const existingUser = await db.query(
+      "SELECT 1 FROM users WHERE email = $1",
+      [normalizedEmail]
+    );
+
     if (existingUser.rows.length) {
       return res.status(409).json({ message: "Email déjà utilisé" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    // ✅ INSERT COMPLET AVEC ROLE
     const insertResult = await db.query(
-      `INSERT INTO users (name, email, password_hash)
-       VALUES ($1, $2, $3)
-       RETURNING id, name, email`,
-      [name, normalizedEmail, passwordHash]
+      `INSERT INTO users (name, email, password_hash, role, phone, address)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, name, email, role, phone, address`,
+      [
+        name,
+        normalizedEmail,
+        passwordHash,
+        role,                 // ✅ IMPORTANT
+        phone || null,
+        address || null,
+      ]
     );
 
     const user = insertResult.rows[0];
@@ -61,6 +81,7 @@ router.post("/register", async (req, res) => {
     return res.status(500).json({ message: "Erreur serveur" });
   }
 });
+
 
 // POST /api/auth/login
 // Authentifie l'utilisateur et génère un token JWT valable 1h

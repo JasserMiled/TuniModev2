@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-
+import 'login_screen.dart';
 enum RegistrationType { particulier, professionnel }
 
 class RegisterScreen extends StatefulWidget {
@@ -110,34 +110,49 @@ class _RegisterScreenState extends State<RegisterScreen>
     }
   }
 
-  Future<void> _submit() async {
-    final isIndividual = _tabController.index == 0;
-    final formKey = isIndividual ? _individualFormKey : _professionalFormKey;
-    if (!formKey.currentState!.validate()) return;
-    formKey.currentState!.save();
 
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+Future<void> _submit() async {
+  final isIndividual = _tabController.index == 0;
+  final formKey = isIndividual ? _individualFormKey : _professionalFormKey;
 
-    final ok = isIndividual ? await _registerIndividual() : await _registerProfessional();
+  if (!formKey.currentState!.validate()) return;
+  formKey.currentState!.save();
 
-    setState(() {
-      _loading = false;
-    });
+  setState(() {
+    _loading = true;
+    _error = null;
+  });
 
-    if (ok) {
-      if (!mounted) return;
-      Navigator.of(context).pop();
+  bool ok = false;
+
+  try {
+    if (isIndividual) {
+      ok = await _registerIndividual()
+          .timeout(const Duration(seconds: 15));
     } else {
-      if (mounted) {
-        setState(() {
-          _error = "Inscription échouée (email déjà utilisé ?)";
-        });
-      }
+      ok = await _registerProfessional()
+          .timeout(const Duration(seconds: 15));
     }
+  } catch (e) {
+    print("❌ ERREUR SUBMIT REGISTER: $e");
+    ok = false;
   }
+
+  if (!mounted) return;
+
+  setState(() => _loading = false);
+
+  if (ok) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => LoginScreen()), // ✅ ICI
+    );
+  } else {
+    setState(() {
+      _error = "Inscription échouée (serveur indisponible)";
+    });
+  }
+}
+
 
   Future<bool> _registerIndividual() async {
     final ok = await ApiService.register(
@@ -192,32 +207,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                     style: TextStyle(color: Colors.black54),
                   ),
                   const SizedBox(height: 16),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TabBar(
-                      controller: _tabController,
-                      indicator: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
-                          )
-                        ],
-                      ),
-                      labelColor: const Color(0xFF1E5B96),
-                      unselectedLabelColor: Colors.black87,
-                      tabs: const [
-                        Tab(text: 'Particulier'),
-                        Tab(text: 'Professionnel'),
-                      ],
-                    ),
-                  ),
+                  
                   const SizedBox(height: 16),
                   if (_error != null)
                     Padding(
@@ -233,6 +223,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                         height: 520,
                         child: TabBarView(
                           controller: _tabController,
+						  physics: const NeverScrollableScrollPhysics(), // ✅ empêche le swipe
                           children: [
                             _buildIndividualForm(),
                             _buildProfessionalForm(),
