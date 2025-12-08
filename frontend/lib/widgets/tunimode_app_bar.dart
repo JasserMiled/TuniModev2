@@ -106,17 +106,20 @@ title: LayoutBuilder(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // ✅ LOGO JUSTE AVANT LE CHAMP
-                GestureDetector(
-                  onTap: () => _goHome(context),
-                  child: SizedBox(
-                    width: 110,
-                    height: 25,
-                    child: SvgPicture.asset(
-                      'assets/images/tunimode_logo.svg',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
+MouseRegion(
+  cursor: SystemMouseCursors.click, // ✅ curseur main
+  child: GestureDetector(
+    onTap: () => _goHome(context),
+    child: SizedBox(
+      width: 110,
+      height: 25,
+      child: SvgPicture.asset(
+        'assets/images/tunimode_logo.svg',
+        fit: BoxFit.contain,
+      ),
+    ),
+  ),
+),
 
                 const SizedBox(width: 12),
 

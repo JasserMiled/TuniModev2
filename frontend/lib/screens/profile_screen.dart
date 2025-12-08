@@ -13,7 +13,7 @@ import '../widgets/tunimode_drawer.dart';
 import 'listing_detail_screen.dart';
 import 'account_settings_screen.dart';
 import '../widgets/auth_guard.dart';
-
+import '../widgets/quick_filters_dialog.dart';
 class ProfileScreen extends StatefulWidget {
   final int? userId;
 
@@ -395,15 +395,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final scaffold = Scaffold(
       drawer: const TuniModeDrawer(),
-      appBar: TuniModeAppBar(
-        showSearchBar: true,
-        searchController: _searchController,
-        onSearch: _handleSearch,
-        actions: const [
-          AccountMenuButton(),
-          SizedBox(width: 16),
-        ],
+appBar: TuniModeAppBar(
+  showSearchBar: true,
+  searchController: _searchController,
+  onSearch: _handleSearch,
+  onQuickFilters: () {
+    showDialog(
+      context: context,
+      builder: (_) => QuickFiltersDialog(
+        categoryTree: const [],
+        isLoadingCategories: false,
+        categoryLoadError: null,
+        initialCity: null,
+        initialMinPrice: null,
+        initialMaxPrice: null,
+        initialCategoryId: null,
+        initialSizes: const [],
+        initialColors: const [],
+        initialDeliveryAvailable: null,
+        primaryColor: const Color(0xFF0B6EFE),
+        onApply: (_) {},
+        onReset: () {},
       ),
+    );
+  },
+  actions: const [
+    AccountMenuButton(),
+    SizedBox(width: 8),
+  ],
+),
+
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: _buildContent(),

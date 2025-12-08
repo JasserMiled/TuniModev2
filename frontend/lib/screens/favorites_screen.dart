@@ -11,6 +11,7 @@ import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
 import '../widgets/tunimode_drawer.dart';
 import '../widgets/auth_guard.dart';
+import '../widgets/quick_filters_dialog.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'listing_detail_screen.dart';
 import 'profile_screen.dart';
@@ -378,21 +379,36 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         length: 2,
         child: Scaffold(
           drawer: const TuniModeDrawer(),
-          appBar: TuniModeAppBar(
-            showSearchBar: true,
-            searchController: _searchController,
-            onSearch: _handleSearch,
-            actions: const [
-              AccountMenuButton(),
-              SizedBox(width: 16),
-            ],
-            bottom: const TabBar(
-              tabs: [
-                Tab(text: 'Annonces'),
-                Tab(text: 'Vendeurs'),
-              ],
-            ),
-          ),
+appBar: TuniModeAppBar(
+  showSearchBar: true,
+  searchController: _searchController,
+  onSearch: _handleSearch,
+  onQuickFilters: () {
+    showDialog(
+      context: context,
+      builder: (_) => QuickFiltersDialog(
+        categoryTree: const [],
+        isLoadingCategories: false,
+        categoryLoadError: null,
+        initialCity: null,
+        initialMinPrice: null,
+        initialMaxPrice: null,
+        initialCategoryId: null,
+        initialSizes: const [],
+        initialColors: const [],
+        initialDeliveryAvailable: null,
+        primaryColor: const Color(0xFF0B6EFE),
+        onApply: (_) {},
+        onReset: () {},
+      ),
+    );
+  },
+  actions: const [
+    AccountMenuButton(),
+    SizedBox(width: 8),
+  ],
+),
+
           body: FutureBuilder<FavoriteCollections>(
             future: _futureFavorites,
             builder: (context, snapshot) {

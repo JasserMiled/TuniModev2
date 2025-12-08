@@ -9,7 +9,7 @@ import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
 import '../widgets/tunimode_drawer.dart';
 import '../widgets/auth_guard.dart';
-
+import '../widgets/quick_filters_dialog.dart';
 class OrderRequestsScreen extends StatefulWidget {
   const OrderRequestsScreen({super.key, this.buyerOnly = false});
 
@@ -1000,15 +1000,36 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
         if (!hasSellerTab) {
           return Scaffold(
             drawer: const TuniModeDrawer(),
-            appBar: TuniModeAppBar(
-              showSearchBar: true,
-              searchController: _searchController,
-              onSearch: _handleSearch,
-              actions: const [
-                AccountMenuButton(),
-                SizedBox(width: 16),
-              ],
-            ),
+appBar: TuniModeAppBar(
+  showSearchBar: true,
+  searchController: _searchController,
+  onSearch: _handleSearch,
+  onQuickFilters: () {
+    showDialog(
+      context: context,
+      builder: (_) => QuickFiltersDialog(
+        categoryTree: const [],
+        isLoadingCategories: false,
+        categoryLoadError: null,
+        initialCity: null,
+        initialMinPrice: null,
+        initialMaxPrice: null,
+        initialCategoryId: null,
+        initialSizes: const [],
+        initialColors: const [],
+        initialDeliveryAvailable: null,
+        primaryColor: const Color(0xFF0B6EFE),
+        onApply: (_) {},
+        onReset: () {},
+      ),
+    );
+  },
+  actions: const [
+    AccountMenuButton(),
+    SizedBox(width: 8),
+  ],
+),
+
             body: _buildBuyerBody(),
           );
         }
@@ -1017,21 +1038,36 @@ class _OrderRequestsScreenState extends State<OrderRequestsScreen> {
           length: 2,
           child: Scaffold(
             drawer: const TuniModeDrawer(),
-            appBar: TuniModeAppBar(
-              showSearchBar: true,
-              searchController: _searchController,
-              onSearch: _handleSearch,
-              actions: const [
-                AccountMenuButton(),
-                SizedBox(width: 16),
-              ],
-              bottom: const TabBar(
-                tabs: [
-                  Tab(text: 'Vente'),
-                  Tab(text: 'Achat'),
-                ],
-              ),
-            ),
+appBar: TuniModeAppBar(
+  showSearchBar: true,
+  searchController: _searchController,
+  onSearch: _handleSearch,
+  onQuickFilters: () {
+    showDialog(
+      context: context,
+      builder: (_) => QuickFiltersDialog(
+        categoryTree: const [],
+        isLoadingCategories: false,
+        categoryLoadError: null,
+        initialCity: null,
+        initialMinPrice: null,
+        initialMaxPrice: null,
+        initialCategoryId: null,
+        initialSizes: const [],
+        initialColors: const [],
+        initialDeliveryAvailable: null,
+        primaryColor: const Color(0xFF0B6EFE),
+        onApply: (_) {},
+        onReset: () {},
+      ),
+    );
+  },
+  actions: const [
+    AccountMenuButton(),
+    SizedBox(width: 8),
+  ],
+),
+
             body: TabBarView(
               children: [
                 _buildSellerBody(),

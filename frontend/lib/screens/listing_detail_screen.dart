@@ -12,7 +12,7 @@ import '../widgets/account_menu_button.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/tunimode_app_bar.dart';
 import '../widgets/tunimode_drawer.dart';
-
+import '../widgets/quick_filters_dialog.dart';
 class ListingDetailScreen extends StatefulWidget {
   final int listingId;
 
@@ -1209,26 +1209,37 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         return Scaffold(
           backgroundColor: Colors.transparent,
           drawer: const TuniModeDrawer(),
-          appBar: TuniModeAppBar(
-            showSearchBar: true,
-            searchController: _searchController,
-            onSearch: _handleSearch,
-            actions: [
-              IconButton(
-                onPressed: _isTogglingListing
-                    ? null
-                    : () => _toggleListingFavorite(listing),
-                icon: Icon(
-                  _isListingFavorite
-                      ? Icons.favorite
-                      : Icons.favorite_border,
-                  color: _isListingFavorite ? Colors.red : Colors.white,
-                ),
-              ),
-              const AccountMenuButton(),
-              const SizedBox(width: 8),
-            ],
-          ),
+appBar: TuniModeAppBar(
+  showSearchBar: true,
+  searchController: _searchController,
+  onSearch: _handleSearch,
+  onQuickFilters: () {
+    showDialog(
+      context: context,
+      builder: (_) => QuickFiltersDialog(
+        categoryTree: const [],
+        isLoadingCategories: false,
+        categoryLoadError: null,
+        initialCity: null,
+        initialMinPrice: null,
+        initialMaxPrice: null,
+        initialCategoryId: null,
+        initialSizes: const [],
+        initialColors: const [],
+        initialDeliveryAvailable: null,
+        primaryColor: const Color(0xFF0B6EFE),
+        onApply: (_) {},
+        onReset: () {},
+      ),
+    );
+  },
+  actions: const [
+    AccountMenuButton(),
+    SizedBox(width: 8),
+  ],
+),
+
+
           body: LayoutBuilder(
             builder: (context, constraints) {
               final isWide = constraints.maxWidth > 800;
