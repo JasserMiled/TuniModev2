@@ -428,6 +428,7 @@ class _QuickFiltersDialogState extends State<QuickFiltersDialog> {
   }
 
   void _apply() {
+    Navigator.of(context).pop();
     widget.onApply(
       QuickFiltersSelection(
         city: _cityController.text.trim().isEmpty
@@ -441,12 +442,11 @@ class _QuickFiltersDialogState extends State<QuickFiltersDialog> {
         deliveryAvailable: _tempDelivery,
       ),
     );
-    Navigator.of(context).pop();
   }
 
   void _reset() {
-    widget.onReset();
     Navigator.of(context).pop();
+    widget.onReset();
   }
 
   Future<void> _loadSizesForCategory(int categoryId,
