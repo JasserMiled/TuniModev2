@@ -310,7 +310,7 @@ class CategoryPickerField extends StatelessWidget {
                           : Icons.keyboard_arrow_down_rounded,
                       color: selectedCategoryId != null ? Colors.green : null,
                     ),
-           
+              
             ),
             isEmpty: selectedCategoryId == null,
             child: Padding(
