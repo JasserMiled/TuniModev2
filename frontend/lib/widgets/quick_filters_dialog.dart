@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/category.dart';
+import '../services/api_service.dart';
 import 'category_picker.dart';
 
 class QuickFiltersSelection {
@@ -70,26 +71,9 @@ class _QuickFiltersDialogState extends State<QuickFiltersDialog> {
   bool? _tempDelivery;
   late List<String> _tempSizes;
   late List<String> _tempColors;
-
-  static const List<String> _sizeOptions = [
-    'XXXS / 30 / 2',
-    'XXS / 32 / 4',
-    'XS / 34 / 6',
-    'S / 36 / 8',
-    'M / 38 / 10',
-    'L / 40 / 12',
-    'XL / 42 / 14',
-    'XXL / 44 / 16',
-    'XXXL / 46 / 18',
-    '4XL / 48 / 20',
-    '5XL / 50 / 22',
-    '6XL / 52 / 24',
-    '7XL / 54 / 26',
-    '8XL / 56 / 28',
-    '9XL / 58 / 30',
-    'Taille unique',
-    'Autre',
-  ];
+  List<String> _sizeOptions = [];
+  bool _sizesLoading = false;
+  String? _sizeError;
 
   static const List<_ColorOption> _colorOptions = [
     _ColorOption('Noir', Color(0xFF000000)),
@@ -155,6 +139,10 @@ class _QuickFiltersDialogState extends State<QuickFiltersDialog> {
     _tempDelivery = widget.initialDeliveryAvailable;
     _tempSizes = List.from(widget.initialSizes);
     _tempColors = List.from(widget.initialColors);
+
+    if (_tempCategoryId != null) {
+      _loadSizesForCategory(_tempCategoryId!, resetSelection: false);
+    }
   }
 
   @override
@@ -225,8 +213,21 @@ class _QuickFiltersDialogState extends State<QuickFiltersDialog> {
                     CategoryPickerField(
                       categories: widget.categoryTree,
                       selectedCategoryId: _tempCategoryId,
-                      onSelected: (category) =>
-                          setState(() => _tempCategoryId = category?.id),
+                      onSelected: (category) {
+                        setState(() {
+                          _tempCategoryId = category?.id;
+                          _sizeOptions = [];
+                          _sizeError = null;
+                          _sizesLoading = false;
+                          if (category == null) {
+                            _tempSizes = [];
+                          }
+                        });
+
+                        if (category != null) {
+                          _loadSizesForCategory(category.id);
+                        }
+                      },
                       isLoading: widget.isLoadingCategories,
                       showLabel: false,
                     ),
@@ -245,37 +246,7 @@ class _QuickFiltersDialogState extends State<QuickFiltersDialog> {
                   Expanded(
                     child: _filterSection(
                       title: "Tailles",
-                      child: DropdownButtonFormField<String?>(
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          hintText: "Ajouter",
-                          prefixIcon: Icon(Icons.straighten),
-                        ),
-                        items: [
-                          const DropdownMenuItem(
-                            value: null,
-                            child: Text("Ajouter"),
-                          ),
-                          ..._sizeOptions.map(
-                            (s) => DropdownMenuItem(
-                              value: s,
-                              child: Row(
-                                children: [
-                                  Expanded(child: Text(s)),
-                                  if (_tempSizes.contains(s))
-                                    const Icon(Icons.check,
-                                        color: Colors.green, size: 18),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                        onChanged: (v) {
-                          if (v != null && !_tempSizes.contains(v)) {
-                            setState(() => _tempSizes.add(v));
-                          }
-                        },
-                      ),
+                      child: _buildSizeSelector(),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -476,6 +447,138 @@ class _QuickFiltersDialogState extends State<QuickFiltersDialog> {
   void _reset() {
     widget.onReset();
     Navigator.of(context).pop();
+  }
+
+  Future<void> _loadSizesForCategory(int categoryId,
+      {bool resetSelection = true}) async {
+    setState(() {
+      _sizesLoading = true;
+      _sizeError = null;
+      _sizeOptions = [];
+      if (resetSelection) {
+        _tempSizes = [];
+      }
+    });
+
+    try {
+      final sizes = await ApiService.fetchSizesForCategory(categoryId);
+      if (!mounted) return;
+      setState(() {
+        _sizeOptions = sizes;
+        _sizesLoading = false;
+        _tempSizes = _tempSizes.where((size) => sizes.contains(size)).toList();
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _sizesLoading = false;
+        _sizeError = 'Impossible de charger les tailles';
+      });
+    }
+  }
+
+  Widget _buildSizeSelector() {
+    if (_tempCategoryId == null) {
+      return Text(
+        'Sélectionnez une catégorie pour afficher les tailles disponibles.',
+        style: TextStyle(color: Colors.grey.shade700),
+      );
+    }
+
+    if (_sizesLoading) {
+      return Row(
+        children: const [
+          SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 8),
+          Text('Chargement des tailles...'),
+        ],
+      );
+    }
+
+    if (_sizeError != null) {
+      return Row(
+        children: [
+          const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _sizeError!,
+              style: const TextStyle(color: Colors.redAccent),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () => _loadSizesForCategory(_tempCategoryId!,
+                resetSelection: false),
+            icon: const Icon(Icons.refresh),
+            label: const Text('Réessayer'),
+          ),
+        ],
+      );
+    }
+
+    if (_sizeOptions.isEmpty) {
+      return Text(
+        'Aucune taille disponible pour cette catégorie.',
+        style: TextStyle(color: Colors.grey.shade700),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<String?>(
+          isExpanded: true,
+          decoration: const InputDecoration(
+            hintText: "Ajouter",
+            prefixIcon: Icon(Icons.straighten),
+          ),
+          value: null,
+          items: [
+            const DropdownMenuItem(
+              value: null,
+              child: Text("Ajouter"),
+            ),
+            ..._sizeOptions.map(
+              (s) => DropdownMenuItem(
+                value: s,
+                child: Row(
+                  children: [
+                    Expanded(child: Text(s)),
+                    if (_tempSizes.contains(s))
+                      const Icon(Icons.check, color: Colors.green, size: 18),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          onChanged: (v) {
+            if (v != null && !_tempSizes.contains(v)) {
+              setState(() => _tempSizes.add(v));
+            }
+          },
+        ),
+        if (_tempSizes.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _tempSizes
+                .map(
+                  (size) => InputChip(
+                    label: Text(size),
+                    onDeleted: () =>
+                        setState(() => _tempSizes.remove(size)),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ],
+    );
   }
 }
 
