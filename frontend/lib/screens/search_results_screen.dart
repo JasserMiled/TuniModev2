@@ -42,17 +42,6 @@ class SearchResultsScreen extends StatefulWidget {
 
 class _SearchResultsScreenState extends State<SearchResultsScreen> {
   static const _primaryBlue = Color(0xFF0B6EFE);
-  static const _sizeOptions = [
-    'XXS / 32 / 4',
-    'XS / 34 / 6',
-    'S / 36 / 8',
-    'M / 38 / 10',
-    'L / 40 / 12',
-    'XL / 42 / 14',
-    'XXL / 44 / 16',
-    'XXXL / 46 / 18',
-    'Taille unique',
-  ];
   static const _conditionOptions = [
     'Neuf avec étiquette',
     'Neuf sans étiquette',
@@ -94,6 +83,9 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   List<Category> _categoryTree = [];
   bool _isLoadingCategories = false;
   String? _categoryError;
+  List<String> _sizeOptions = [];
+  bool _sizesLoading = false;
+  String? _sizeError;
 
   @override
   void initState() {
@@ -110,6 +102,12 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     _deliveryAvailable = widget.initialDeliveryAvailable;
     _futureResults = _loadResults();
     _loadCategories();
+    if (_selectedCategoryId != null) {
+      _loadSizesForCategory(
+        _selectedCategoryId!,
+        resetSelection: false,
+      );
+    }
   }
 
   @override
@@ -141,6 +139,37 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           _isLoadingCategories = false;
         });
       }
+    }
+  }
+
+  Future<void> _loadSizesForCategory(
+    int categoryId, {
+    bool resetSelection = true,
+  }) async {
+    setState(() {
+      _sizesLoading = true;
+      _sizeError = null;
+      _sizeOptions = [];
+      if (resetSelection) {
+        _selectedSizes = [];
+      }
+    });
+
+    try {
+      final sizes = await ApiService.fetchSizesForCategory(categoryId);
+      if (!mounted) return;
+      setState(() {
+        _sizeOptions = sizes;
+        _sizesLoading = false;
+        _selectedSizes =
+            _selectedSizes.where((size) => sizes.contains(size)).toList();
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _sizesLoading = false;
+        _sizeError = 'Impossible de charger les tailles';
+      });
     }
   }
 
@@ -198,6 +227,9 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
       _minPrice = null;
       _maxPrice = null;
       _deliveryAvailable = null;
+      _sizeOptions = [];
+      _sizesLoading = false;
+      _sizeError = null;
       _futureResults = _loadResults();
     });
   }
@@ -365,20 +397,32 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dropdowns = [
-      FilterDropdownConfig(
-        label: 'Taille',
-        icon: Icons.straighten,
-        value: _selectedSizes.isEmpty ? null : _selectedSizes.first,
-        options: _sizeOptions
+    final sizeDropdownOptions = _sizesLoading
+        ? [
+            const FilterDropdownOption(
+              value: '_loading',
+              label: 'Chargement...',
+            ),
+          ]
+        : _sizeOptions
             .map(
               (size) => FilterDropdownOption(
                 value: size,
                 label: size,
               ),
             )
-            .toList(),
+            .toList();
+
+    final dropdowns = [
+      FilterDropdownConfig(
+        label: 'Taille',
+        icon: Icons.straighten,
+        value: _selectedSizes.isEmpty ? null : _selectedSizes.first,
+        options: sizeDropdownOptions,
         onChanged: (value) {
+          if (_sizesLoading || value == '_loading' || _sizeOptions.isEmpty) {
+            return;
+          }
           setState(() {
             _selectedSizes = value == null ? [] : [value];
             _refreshResults();
@@ -493,6 +537,14 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                       onSelected: (category) {
                         setState(() {
                           _selectedCategoryId = category?.id;
+                          if (category != null) {
+                            _loadSizesForCategory(category.id);
+                          } else {
+                            _sizeOptions = [];
+                            _selectedSizes = [];
+                            _sizesLoading = false;
+                            _sizeError = null;
+                          }
                           _refreshResults();
                         });
                       },
@@ -507,6 +559,49 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 onClearFilters: _clearFilters,
               ),
             ),
+            if (_sizeError != null && _selectedCategoryId != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: Colors.redAccent, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _sizeError!,
+                        style: const TextStyle(color: Colors.redAccent),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: _selectedCategoryId == null
+                          ? null
+                          : () => _loadSizesForCategory(_selectedCategoryId!),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Réessayer'),
+                    ),
+                  ],
+                ),
+              )
+            else if (_selectedCategoryId != null &&
+                !_sizesLoading &&
+                _sizeOptions.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        color: Colors.grey, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Aucune taille disponible pour cette catégorie.',
+                        style: TextStyle(color: Colors.grey.shade700),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 14),
             Expanded(
               child: FutureBuilder<List<Listing>>(
