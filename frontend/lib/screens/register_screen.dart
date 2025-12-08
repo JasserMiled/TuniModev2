@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import '../services/search_navigation_service.dart';
-import '../widgets/account_menu_button.dart';
-import '../widgets/tunimode_app_bar.dart';
-import '../widgets/tunimode_drawer.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,7 +10,6 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _searchController = TextEditingController();
   String _name = '';
   String _email = '';
   String _password = '';
@@ -23,12 +18,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _role = 'buyer';
   bool _loading = false;
   String? _error;
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -65,19 +54,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const TuniModeDrawer(),
-      appBar: TuniModeAppBar(
-        showSearchBar: true,
-        searchController: _searchController,
-        onSearch: (query) => SearchNavigationService.openSearchResults(
-          context: context,
-          query: query,
-        ),
-        actions: const [
-          AccountMenuButton(),
-          SizedBox(width: 16),
-        ],
-      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
