@@ -560,14 +560,6 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             SizedBox(width: 8),
           ],
         ),
-    );
-  },
-  actions: const [
-    AccountMenuButton(),
-    SizedBox(width: 8),
-  ],
-),
-
         body: Padding(
           padding: const EdgeInsets.all(16),
           child: _loading
