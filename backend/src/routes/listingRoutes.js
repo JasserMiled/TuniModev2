@@ -3,6 +3,8 @@ const express = require("express");
 const db = require("../db");
 const { authRequired, requireRole } = require("../middleware/auth");
 const { getCategoryWithChildren } = require("../services/categoryService");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 const router = express.Router();
 
@@ -236,7 +238,22 @@ router.get("/:id", async (req, res) => {
 
     if (!listing) return res.status(404).json({ message: "Annonce introuvable" });
 
-    if (listing.status === "deleted") {
+    let isOwner = false;
+    const authHeader = req.headers.authorization;
+
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const token = authHeader.substring(7);
+        const payload = jwt.verify(token, process.env.JWT_SECRET);
+        isOwner = payload?.id === listing.user_id;
+      } catch (err) {
+        // En cas de token invalide ou expiré, on ignore simplement et on
+        // applique la logique par défaut pour les visiteurs.
+        isOwner = false;
+      }
+    }
+
+    if (listing.status === "deleted" && !isOwner) {
       return res.status(404).json({ message: "Cette annonce a été supprimée" });
     }
 
