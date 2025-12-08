@@ -108,6 +108,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Category> _categoryTree = [];
   List<Category> _categoryPath = [];
   List<Category> _currentCategories = [];
+  final TextEditingController _categorySearchController = TextEditingController();
+  String _categorySearchTerm = '';
   Category? _selectedCategory;
   bool _deliveryAvailable = false;
 
@@ -128,6 +130,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   void dispose() {
+    _categorySearchController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -152,6 +155,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _currentCategories = tree;
         _categoryPath = [];
         _selectedCategory = null;
+        _categorySearchTerm = '';
+        _categorySearchController.clear();
         _selectedSizeOption = null;
         _selectedColorOption = null;
         _categoriesLoading = false;
@@ -324,6 +329,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _categoryPath = [..._categoryPath, category];
       _currentCategories = category.children;
       _selectedCategory = null;
+      _categorySearchTerm = '';
+      _categorySearchController.clear();
       _sizeOptions = [];
       _selectedSizeOption = null;
       _selectedSizes.clear();
@@ -338,6 +345,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _categoryPath = [];
         _currentCategories = _categoryTree;
         _selectedCategory = null;
+        _categorySearchTerm = '';
+        _categorySearchController.clear();
         _sizeOptions = [];
         _selectedSizeOption = null;
         _selectedSizes.clear();
@@ -351,6 +360,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _categoryPath = _categoryPath.sublist(0, index + 1);
       _currentCategories = _categoryPath.last.children;
       _selectedCategory = null;
+      _categorySearchTerm = '';
+      _categorySearchController.clear();
       _sizeOptions = [];
       _selectedSizeOption = null;
       _selectedSizes.clear();
@@ -364,6 +375,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (hex.length == 6 || hex.length == 7) buffer.write('ff');
     buffer.write(hex.replaceFirst('#', ''));
     return Color(int.parse(buffer.toString(), radix: 16));
+  }
+
+  IconData _iconForCategoryName(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('femme') || lower.contains('robe')) {
+      return Icons.checkroom_outlined;
+    }
+    if (lower.contains('homme')) {
+      return Icons.person_outline;
+    }
+    if (lower.contains('chauss')) {
+      return Icons.hiking_outlined;
+    }
+    if (lower.contains('sac') || lower.contains('bag')) {
+      return Icons.shopping_bag_outlined;
+    }
+    if (lower.contains('access')) {
+      return Icons.watch_outlined;
+    }
+    if (lower.contains('enfant')) {
+      return Icons.child_friendly;
+    }
+    return Icons.category_outlined;
   }
 
   void _toggleColor(String colorName) {
@@ -608,76 +642,133 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
+    final visibleCategories = _currentCategories
+        .where(
+          (category) => category.name
+              .toLowerCase()
+              .contains(_categorySearchTerm.toLowerCase()),
+        )
+        .toList();
+
+    final currentLevelLabel =
+        _categoryPath.isEmpty ? 'Catégories' : _categoryPath.last.name;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            FilterChip(
-              label: const Text('Racine'),
-              selected: _categoryPath.isEmpty,
-              onSelected: (_) => _goToLevel(-1),
+        TextField(
+          controller: _categorySearchController,
+          decoration: InputDecoration(
+            hintText: 'Trouver une catégorie',
+            prefixIcon: const Icon(Icons.search),
+            filled: true,
+            fillColor: Colors.grey.shade200,
+            contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(12),
             ),
-            ..._categoryPath.asMap().entries.map(
-                  (entry) => FilterChip(
-                    label: Text(entry.value.name),
-                    selected: entry.key == _categoryPath.length - 1,
-                    onSelected: (_) => _goToLevel(entry.key),
-                  ),
-                ),
-          ],
-        ),
-        if (_selectedCategory != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
-            child: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.green),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Catégorie sélectionnée : ${_selectedCategory!.name}',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => _goToLevel(-1),
-                  child: const Text('Changer'),
-                ),
-              ],
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: Theme.of(context).primaryColor),
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 320),
-          child: ListView.separated(
-            shrinkWrap: true,
-            itemCount: _currentCategories.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final category = _currentCategories[index];
-              return ListTile(
-                leading: Radio<int>(
-                  value: category.id,
-                  groupValue: _selectedCategory?.id,
-                  onChanged: (_) => _selectCategory(category),
+          onChanged: (value) => setState(() => _categorySearchTerm = value.trim()),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
                 ),
-                title: Text(category.name),
-                subtitle: category.children.isNotEmpty
-                    ? Text('${category.children.length} sous-catégories')
-                    : null,
-                trailing: category.children.isNotEmpty
-                    ? IconButton(
-                        onPressed: () => _openCategory(category),
-                        icon: const Icon(Icons.chevron_right),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: _categoryPath.isEmpty ? null : () => _goToLevel(_categoryPath.length - 2),
+                      icon: const Icon(Icons.arrow_back),
+                    ),
+                    Expanded(
+                      child: Text(
+                        currentLevelLabel,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+              ),
+              if (_selectedCategory != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.green),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Sélectionné : ${_selectedCategory!.name}',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => _goToLevel(-1),
+                        child: const Text('Changer'),
+                      ),
+                    ],
+                  ),
+                ),
+              const Divider(height: 1),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 320),
+                child: visibleCategories.isEmpty
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Center(child: Text('Aucune catégorie trouvée')), 
                       )
-                    : null,
-                onTap: category.children.isNotEmpty
-                    ? () => _openCategory(category)
-                    : () => _selectCategory(category),
-              );
-            },
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: visibleCategories.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final category = visibleCategories[index];
+                          final hasChildren = category.children.isNotEmpty;
+                          final isSelected = _selectedCategory?.id == category.id;
+
+                          return ListTile(
+                            leading: Icon(
+                              _iconForCategoryName(category.name),
+                              color: Colors.teal.shade600,
+                            ),
+                            title: Text(category.name),
+                            trailing: hasChildren
+                                ? const Icon(Icons.chevron_right)
+                                : (isSelected
+                                    ? const Icon(Icons.check, color: Colors.green)
+                                    : null),
+                            onTap: hasChildren
+                                ? () => _openCategory(category)
+                                : () => _selectCategory(category),
+                          );
+                        },
+                      ),
+              ),
+            ],
           ),
         ),
       ],
