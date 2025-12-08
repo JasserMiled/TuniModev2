@@ -100,6 +100,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final List<String> _selectedSizes = [];
   final List<String> _selectedColors = [];
   List<String> _sizeOptions = [];
+  String? _selectedSizeOption;
+  String? _selectedColorOption;
   String _city = '';
   String? _condition;
   List<_PickedImage> _images = [];
@@ -150,6 +152,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _currentCategories = tree;
         _categoryPath = [];
         _selectedCategory = null;
+        _selectedSizeOption = null;
+        _selectedColorOption = null;
         _categoriesLoading = false;
       });
     } catch (_) {
@@ -165,6 +169,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _sizesLoading = true;
       _sizeError = null;
       _sizeOptions = [];
+      _selectedSizeOption = null;
       _selectedSizes.clear();
     });
 
@@ -289,6 +294,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _condition = null;
         _deliveryAvailable = false;
         _selectedCategory = null;
+        _selectedSizeOption = null;
+        _selectedColorOption = null;
         _categoryPath = [];
         _currentCategories = _categoryTree;
         _sizeOptions = [];
@@ -301,6 +308,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _selectCategory(Category category) {
     setState(() {
       _selectedCategory = category;
+      _selectedSizeOption = null;
     });
 
     _loadSizesForCategory(category);
@@ -317,6 +325,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _currentCategories = category.children;
       _selectedCategory = null;
       _sizeOptions = [];
+      _selectedSizeOption = null;
       _selectedSizes.clear();
       _sizeError = null;
       _sizesLoading = false;
@@ -330,6 +339,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _currentCategories = _categoryTree;
         _selectedCategory = null;
         _sizeOptions = [];
+        _selectedSizeOption = null;
         _selectedSizes.clear();
         _sizeError = null;
         _sizesLoading = false;
@@ -342,6 +352,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _currentCategories = _categoryPath.last.children;
       _selectedCategory = null;
       _sizeOptions = [];
+      _selectedSizeOption = null;
       _selectedSizes.clear();
       _sizeError = null;
       _sizesLoading = false;
@@ -409,18 +420,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else if (_sizeOptions.isEmpty) {
       sizeContent = const Text('Aucune taille disponible pour cette catégorie.');
     } else {
-      sizeContent = Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: _sizeOptions
-            .map(
-              (size) => FilterChip(
-                label: Text(size),
-                selected: _selectedSizes.contains(size),
-                onSelected: (_) => _toggleSize(size),
-              ),
-            )
-            .toList(),
+      sizeContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DropdownButtonFormField<String>(
+            value: _selectedSizeOption,
+            decoration: const InputDecoration(
+              labelText: 'Ajouter une taille',
+            ),
+            items: _sizeOptions
+                .map(
+                  (size) => DropdownMenuItem(
+                    value: size,
+                    child: Text(size),
+                  ),
+                )
+                .toList(),
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() {
+                if (!_selectedSizes.contains(value)) {
+                  _selectedSizes.add(value);
+                }
+                _selectedSizeOption = null;
+              });
+            },
+          ),
+          if (_selectedSizes.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _selectedSizes
+                  .map(
+                    (size) => InputChip(
+                      label: Text(size),
+                      onDeleted: () => _toggleSize(size),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ],
       );
     }
 
@@ -470,22 +511,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
           style: TextStyle(color: Colors.grey.shade700),
         ),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _colorOptions
-              .map(
-                (option) => FilterChip(
-                  label: Text(option.name),
-                  avatar: CircleAvatar(
-                    backgroundColor: _colorFromHex(option.hex),
-                    radius: 12,
-                  ),
-                  selected: _selectedColors.contains(option.name),
-                  onSelected: (_) => _toggleColor(option.name),
-                ),
-              )
-              .toList(),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            DropdownButtonFormField<String>(
+              value: _selectedColorOption,
+              decoration: const InputDecoration(
+                labelText: 'Ajouter une couleur',
+              ),
+              items: _colorOptions
+                  .map(
+                    (option) => DropdownMenuItem(
+                      value: option.name,
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: _colorFromHex(option.hex),
+                            radius: 8,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(option.name),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() {
+                  if (!_selectedColors.contains(value)) {
+                    _selectedColors.add(value);
+                  }
+                  _selectedColorOption = null;
+                });
+              },
+            ),
+            if (_selectedColors.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _selectedColors
+                    .map(
+                      (color) => InputChip(
+                        label: Text(color),
+                        avatar: CircleAvatar(
+                          backgroundColor:
+                              _colorFromHex(_colorOptions.firstWhere((c) => c.name == color).hex),
+                          radius: 10,
+                        ),
+                        onDeleted: () => _toggleColor(color),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ],
         ),
       ],
     );
