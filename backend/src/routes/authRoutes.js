@@ -203,5 +203,17 @@ router.get("/user/:id", async (req, res) => {
   }
 });
 
+// DELETE /api/auth/me
+// Permet à l'utilisateur connecté de supprimer définitivement son compte
+router.delete("/me", verifyToken, async (req, res) => {
+  try {
+    await db.query("DELETE FROM users WHERE id = $1", [req.user.id]);
+    return res.json({ message: "Compte supprimé" });
+  } catch (err) {
+    console.error("Erreur lors de la suppression du compte", err);
+    return res.status(500).json({ message: "Impossible de supprimer le compte" });
+  }
+});
+
 router.verifyToken = verifyToken;
 module.exports = router;

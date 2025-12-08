@@ -154,6 +154,18 @@ class ApiService {
     throw Exception(message);
   }
 
+  static Future<void> deleteAccount() async {
+    final uri = Uri.parse('$baseUrl/api/auth/me');
+    final res = await http.delete(uri, headers: _headers(withAuth: true));
+
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      return;
+    }
+
+    final message = jsonDecode(res.body)['message'] ?? 'Suppression du compte impossible';
+    throw Exception(message);
+  }
+
   static Future<FavoriteCollections> fetchFavorites() async {
     final uri = Uri.parse('$baseUrl/api/favorites/me');
     final res = await http.get(uri, headers: _headers(withAuth: true));

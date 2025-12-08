@@ -34,6 +34,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   bool _loading = true;
   bool _savingGeneral = false;
   bool _savingSecurity = false;
+  bool _deletingAccount = false;
   bool _uploadingAvatar = false;
   String? _message;
   String? _error;
@@ -168,6 +169,57 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       setState(() {
         _savingSecurity = false;
       });
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Supprimer le compte'),
+            content: const Text(
+              'Cette action est irréversible. Êtes-vous sûr de vouloir supprimer votre compte ?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Annuler'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Supprimer'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmed) return;
+
+    setState(() {
+      _deletingAccount = true;
+      _message = null;
+      _error = null;
+    });
+
+    try {
+      await ApiService.deleteAccount();
+      ApiService.logout();
+
+      if (mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _deletingAccount = false;
+        });
+      }
     }
   }
 
@@ -444,6 +496,51 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     );
   }
 
+  Widget _buildDeleteAccountSection() {
+    return Card(
+      color: Colors.red.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Supprimer le compte',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'La suppression de votre compte entraînera la perte définitive de vos données. Cette action ne peut pas être annulée.',
+              style: TextStyle(color: Colors.black87),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: _deletingAccount ? null : _deleteAccount,
+                icon: _deletingAccount
+                    ? const SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.delete_forever),
+                label: const Text('Supprimer mon compte'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AuthGuard(
@@ -464,7 +561,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               ? const Center(child: CircularProgressIndicator())
               : _error != null
                   ? Center(child: Text(_error!))
-                  : SingleChildScrollView(
+                  : DefaultTabController(
+                      length: 2,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -502,11 +600,39 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                 ],
                               ),
                             ),
-                          _buildAvatarSection(),
+                          const TabBar(
+                            tabs: [
+                              Tab(text: 'Informations générales'),
+                              Tab(text: 'Sécurité'),
+                            ],
+                          ),
                           const SizedBox(height: 12),
-                          _buildGeneralSection(),
-                          const SizedBox(height: 12),
-                          _buildSecuritySection(),
+                          Expanded(
+                            child: TabBarView(
+                              children: [
+                                SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildAvatarSection(),
+                                      const SizedBox(height: 12),
+                                      _buildGeneralSection(),
+                                    ],
+                                  ),
+                                ),
+                                SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _buildSecuritySection(),
+                                      const SizedBox(height: 12),
+                                      _buildDeleteAccountSection(),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
