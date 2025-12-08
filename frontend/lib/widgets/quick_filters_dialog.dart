@@ -63,6 +63,7 @@ class QuickFiltersDialog extends StatefulWidget {
 }
 
 class _QuickFiltersDialogState extends State<QuickFiltersDialog> {
+bool _isHoveringApply = false;
   late TextEditingController _cityController;
 
   double? _tempMin;
@@ -371,31 +372,82 @@ class _QuickFiltersDialogState extends State<QuickFiltersDialog> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _apply,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                backgroundColor: widget.primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                "Appliquer les filtres",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
+MouseRegion(
+  onEnter: (_) => setState(() => _isHoveringApply = true),
+  onExit: (_) => setState(() => _isHoveringApply = false),
+  child: AnimatedContainer(
+    duration: const Duration(milliseconds: 180),
+    width: double.infinity,
+    height: 32,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(30),
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: _isHoveringApply
+            ? [
+                const Color(0xFF0A5AD1), // plus foncé
+                const Color(0xFF084DB8),
+              ]
+            : [
+                const Color(0xFF1A7CFF), // normal
+                const Color(0xFF0B5ED7),
+              ],
+      ),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x552B7CFF),
+          blurRadius: 12,
+          offset: Offset(0, 6),
+        ),
+      ],
+    ),
+    child: ElevatedButton(
+      onPressed: _apply,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
+      ),
+      child: const Text(
+        "Appliquer les filtres",
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+        ),
+      ),
+    ),
+  ),
+),
+
           const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: _reset,
-              child: const Text("Réinitialiser"),
-            ),
-          ),
+SizedBox(
+  width: double.infinity,
+  height: 32,
+  child: OutlinedButton(
+    onPressed: _reset,
+    style: OutlinedButton.styleFrom(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(40),
+      ),
+      side: const BorderSide(
+        color: Color(0xFFFF8A00), // ✅ Orange contour
+        width: 1.5,
+      ),
+      backgroundColor: const Color(0xFFF2F4F7), // ✅ Fond gris clair
+    ),
+    child: const Text(
+      "Réinitialiser",
+      style: TextStyle(
+        color: Color(0xFFFF8A00), // ✅ Texte orange
+        fontSize: 15,
+      ),
+    ),
+  ),
+),
+
           const SizedBox(height: 4),
         ],
       ),
