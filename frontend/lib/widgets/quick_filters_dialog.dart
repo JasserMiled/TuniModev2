@@ -480,7 +480,7 @@ class _QuickFiltersDialogState extends State<QuickFiltersDialog> {
   Widget _buildSizeSelector() {
     if (_tempCategoryId == null) {
       return Text(
-        'Sélectionnez une catégorie pour afficher les tailles disponibles.',
+        'Sélectionnez une catégorie pour afficher les tailles.',
         style: TextStyle(color: Colors.grey.shade700),
       );
     }

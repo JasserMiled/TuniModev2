@@ -502,6 +502,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+	  const SizedBox(height: 8),
         Align(
           alignment: Alignment.centerLeft,
           child: Text(
@@ -511,13 +512,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: Colors.grey.shade800,
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          _selectedCategory == null
-              ? 'Sélectionnez une catégorie pour afficher les tailles disponibles.'
-              : 'Sélectionnez une ou plusieurs tailles dans la liste.',
-          style: TextStyle(color: Colors.grey.shade700),
         ),
         const SizedBox(height: 8),
         sizeContent,
@@ -539,19 +533,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          'Sélectionnez une ou plusieurs couleurs dans la liste.',
-          style: TextStyle(color: Colors.grey.shade700),
-        ),
-        const SizedBox(height: 8),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DropdownButtonFormField<String>(
               value: _selectedColorOption,
               decoration: const InputDecoration(
-                labelText: 'Ajouter une couleur',
+                labelText: 'Sélectionnez une ou plusieurs couleurs dans la liste',
+				  labelStyle: TextStyle(
+    fontSize: 14, // 👈 taille du label
+  ),
               ),
               items: _colorOptions
                   .map(
