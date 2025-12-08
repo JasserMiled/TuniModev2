@@ -320,7 +320,6 @@ router.post("/", authRequired, requireRole("buyer", "pro", "admin"), async (req,
       category_id,
       city,
       delivery_available,
-      stock,
       images,
     } = req.body;
 
@@ -345,12 +344,10 @@ router.post("/", authRequired, requireRole("buyer", "pro", "admin"), async (req,
     const parsedSizes = normalizeStringArray(sizes);
     const parsedColors = normalizeStringArray(colors);
 
-    const parsedStock = Number.isFinite(Number(stock)) && Number(stock) > 0 ? Number(stock) : 1;
-
     const listingRes = await db.query(
       `INSERT INTO listings
-       (user_id, title, description, price, sizes, colors, gender, condition, category_id, city, delivery_available, stock)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       (user_id, title, description, price, sizes, colors, gender, condition, category_id, city, delivery_available)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
        RETURNING *`,
       [
         req.user.id,
@@ -364,7 +361,6 @@ router.post("/", authRequired, requireRole("buyer", "pro", "admin"), async (req,
         category_id || null,
         city || null,
         Boolean(delivery_available),
-        parsedStock,
       ]
     );
 
