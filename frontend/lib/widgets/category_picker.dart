@@ -213,20 +213,28 @@ Future<Category?> showCategoryPickerDialog({
                                         ),
                                         title: Text(category.name),
                                         trailing: hasChildren
-                                            ? const Icon(Icons.chevron_right)
+                                            ? Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (isSelected)
+                                                    const Icon(Icons.check, color: Colors.green),
+                                                  IconButton(
+                                                    icon: const Icon(Icons.chevron_right),
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        path.add(category);
+                                                        currentCategories =
+                                                            category.children;
+                                                        controller.clear();
+                                                      });
+                                                    },
+                                                  ),
+                                                ],
+                                              )
                                             : (isSelected
                                                 ? const Icon(Icons.check, color: Colors.green)
                                                 : null),
-                                        onTap: hasChildren
-                                            ? () {
-                                                setState(() {
-                                                  path.add(category);
-                                                  currentCategories = category.children;
-                                                  controller.clear();
-                                                });
-                                              }
-                                            : () =>
-                                                Navigator.of(dialogContext).pop(category),
+                                        onTap: () => Navigator.of(dialogContext).pop(category),
                                       );
                                     },
                                   ),
