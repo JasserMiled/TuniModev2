@@ -656,8 +656,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       pathSegments.add(_selectedCategory!.name);
     }
 
-    final pathLabel =
-        pathSegments.isEmpty ? 'Catégories' : pathSegments.join(' › ');
+    final pathLabel = pathSegments.isEmpty ? 'Catégories' : pathSegments.last;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
