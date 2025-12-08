@@ -3,6 +3,7 @@ import '../models/category.dart';
 import '../models/listing.dart';
 import '../services/api_service.dart';
 import '../widgets/account_menu_button.dart';
+import '../widgets/category_picker.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/tunimode_drawer.dart';
 import '../widgets/tunimode_app_bar.dart';
@@ -876,33 +877,25 @@ Widget _buildFiltersContent({
             // Catégorie
             _filterSection(
               title: "Catégorie",
-              trailing: _isLoadingCategories
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : null,
-              child: DropdownButtonFormField<int?>(
-                value: tempCategoryId,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  hintText: "Toutes les catégories",
-                  prefixIcon: Icon(Icons.category_outlined),
-                ),
-                items: [
-                  const DropdownMenuItem(
-                    value: null,
-                    child: Text("Toutes les catégories"),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CategoryPickerField(
+                    categories: _categoryTree,
+                    selectedCategoryId: tempCategoryId,
+                    onSelected: (category) =>
+                        setModalState(() => tempCategoryId = category?.id),
+                    isLoading: _isLoadingCategories,
+                    showLabel: false,
                   ),
-                  ..._flattenCategories(_categoryTree).map(
-                    (c) => DropdownMenuItem(
-                      value: c.id,
-                      child: Text(c.label),
+                  if (_categoryLoadError != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _categoryLoadError!,
+                      style: const TextStyle(color: Colors.red),
                     ),
-                  ),
+                  ]
                 ],
-                onChanged: (v) => setModalState(() => tempCategoryId = v),
               ),
             ),
 

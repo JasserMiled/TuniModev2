@@ -28,12 +28,14 @@ class FilterDropdownConfig {
 
 class FilterBar extends StatelessWidget {
   final List<FilterDropdownConfig> dropdowns;
+  final List<Widget> customDropdowns;
   final List<Widget> activeFilters;
   final VoidCallback onClearFilters;
 
   const FilterBar({
     super.key,
     required this.dropdowns,
+    this.customDropdowns = const [],
     required this.activeFilters,
     required this.onClearFilters,
   });
@@ -61,11 +63,14 @@ class FilterBar extends StatelessWidget {
           Wrap(
             spacing: 10,
             runSpacing: 10,
-            children: dropdowns
-                .map(
-                  (config) => _FilterDropdown(config: config),
-                )
-                .toList(),
+            children: [
+              ...customDropdowns,
+              ...dropdowns
+                  .map(
+                    (config) => _FilterDropdown(config: config),
+                  )
+                  .toList(),
+            ],
           ),
           const SizedBox(height: 12),
           Row(
