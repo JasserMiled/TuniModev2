@@ -8,7 +8,7 @@ import 'listing_detail_screen.dart';
 import 'profile_screen.dart';
 import '../widgets/tunimode_app_bar.dart';
 import '../widgets/tunimode_drawer.dart';
-import '../widgets/quick_filters_dialog.dart';
+import '../widgets/quick_filters_launcher.dart';
 class OrderDetailScreen extends StatefulWidget {
   const OrderDetailScreen({super.key, required this.order});
 
@@ -421,26 +421,11 @@ appBar: TuniModeAppBar(
   showSearchBar: true,
   searchController: _searchController,
   onSearch: _handleSearch,
-  onQuickFilters: () {
-    showDialog(
-      context: context,
-      builder: (_) => QuickFiltersDialog(
-        categoryTree: const [],
-        isLoadingCategories: false,
-        categoryLoadError: null,
-        initialCity: null,
-        initialMinPrice: null,
-        initialMaxPrice: null,
-        initialCategoryId: null,
-        initialSizes: const [],
-        initialColors: const [],
-        initialDeliveryAvailable: null,
-        primaryColor: const Color(0xFF0B6EFE),
-        onApply: (_) {},
-        onReset: () {},
-      ),
-    );
-  },
+  onQuickFilters: () => openQuickFiltersAndNavigate(
+    context: context,
+    searchQuery: _searchController.text,
+    primaryColor: const Color(0xFF0B6EFE),
+  ),
   actions: const [
     AccountMenuButton(),
     SizedBox(width: 8),

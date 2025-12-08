@@ -10,7 +10,7 @@ import '../widgets/account_menu_button.dart';
 import '../widgets/tunimode_app_bar.dart';
 import '../widgets/tunimode_drawer.dart';
 import '../widgets/auth_guard.dart';
-import '../widgets/quick_filters_dialog.dart';
+import '../widgets/quick_filters_launcher.dart';
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
 
@@ -546,28 +546,20 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     return AuthGuard(
       builder: (context) => Scaffold(
         drawer: const TuniModeDrawer(),
-appBar: TuniModeAppBar(
-  showSearchBar: true,
-  searchController: _searchController,
-  onSearch: _handleSearch,
-  onQuickFilters: () {
-    showDialog(
-      context: context,
-      builder: (_) => QuickFiltersDialog(
-        categoryTree: const [],
-        isLoadingCategories: false,
-        categoryLoadError: null,
-        initialCity: null,
-        initialMinPrice: null,
-        initialMaxPrice: null,
-        initialCategoryId: null,
-        initialSizes: const [],
-        initialColors: const [],
-        initialDeliveryAvailable: null,
-        primaryColor: const Color(0xFF0B6EFE),
-        onApply: (_) {},
-        onReset: () {},
-      ),
+        appBar: TuniModeAppBar(
+          showSearchBar: true,
+          searchController: _searchController,
+          onSearch: _handleSearch,
+          onQuickFilters: () => openQuickFiltersAndNavigate(
+            context: context,
+            searchQuery: _searchController.text,
+            primaryColor: const Color(0xFF0B6EFE),
+          ),
+          actions: const [
+            AccountMenuButton(),
+            SizedBox(width: 8),
+          ],
+        ),
     );
   },
   actions: const [
