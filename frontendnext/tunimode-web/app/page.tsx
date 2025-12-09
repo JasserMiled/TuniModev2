@@ -89,7 +89,7 @@ export default function HomePage() {
             >
               <div className="aspect-[4/3] bg-neutral-100">
                 <img
-                  src={listing.imageUrls?.[0] ?? "/placeholder.jpg"}
+                  src={listing.imageUrls?.[0] ?? "/placeholder-listing.svg"}
                   alt={listing.title}
                   className="w-full h-full object-cover"
                 />
