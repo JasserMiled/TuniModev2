@@ -36,6 +36,50 @@ export default function HomePage() {
 
   return (
     <main className="bg-white min-h-screen">
+      <div className="border-b border-neutral-200 bg-white">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-4">
+          <button
+            aria-label="Ouvrir le menu"
+            className="p-2 border border-neutral-200 rounded-full hover:bg-neutral-50"
+          >
+            <span className="block w-5 h-0.5 bg-neutral-900 mb-1" />
+            <span className="block w-5 h-0.5 bg-neutral-900 mb-1" />
+            <span className="block w-5 h-0.5 bg-neutral-900" />
+          </button>
+
+          <Link href="/" className="text-2xl font-semibold text-blue-600 whitespace-nowrap">
+            Tuni<span className="text-neutral-900">Mode</span>
+          </Link>
+
+          <div className="flex-1">
+            <div className="flex items-center gap-3 bg-neutral-50 border border-neutral-200 rounded-full px-4 py-2 shadow-sm">
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                placeholder="Recherche..."
+                className="flex-1 bg-transparent outline-none text-sm text-neutral-800"
+              />
+            </div>
+          </div>
+
+          <button className="px-4 py-2 rounded-full border border-neutral-200 text-sm font-medium hover:bg-neutral-50 whitespace-nowrap">
+            Thème
+          </button>
+
+          <button
+            onClick={handleSearch}
+            className="px-5 py-2 bg-blue-600 text-white rounded-full text-sm font-semibold shadow-sm hover:bg-blue-700 whitespace-nowrap"
+          >
+            Filtrer
+          </button>
+
+          <div className="text-sm text-blue-600 font-semibold whitespace-nowrap">
+            {listings.length} annonces
+          </div>
+        </div>
+      </div>
+
       <header className="max-w-6xl mx-auto px-4 py-10 flex flex-col md:flex-row md:items-center gap-6">
         <div className="flex-1 space-y-3">
           <p className="text-sm text-blue-600 font-medium">Plateforme n°1 de mode circulaire en Tunisie</p>
