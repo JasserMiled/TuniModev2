@@ -88,11 +88,16 @@ export default function HomePage() {
               onClick={() => router.push(`/listings/${listing.id}`)}
             >
               <div className="aspect-[4/3] bg-neutral-100">
-                <img
-                  src={listing.imageUrls?.[0] ?? "/placeholder-listing.svg"}
-                  alt={listing.title}
-                  className="w-full h-full object-cover"
-                />
+<img
+  src={
+    listing.imageUrls.length > 0
+      ? `${process.env.NEXT_PUBLIC_API_URL}${listing.imageUrls[0]}`
+      : "/placeholder-listing.svg"
+  }
+  alt={listing.title}
+  className="w-full h-full object-cover"
+/>
+
               </div>
               <div className="p-3 space-y-1">
                 <p className="text-sm text-neutral-500">{listing.city || "Tunisie"}</p>
