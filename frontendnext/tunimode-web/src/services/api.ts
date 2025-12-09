@@ -39,9 +39,50 @@ const resolveImageUrl = (url?: string | null) => {
   return `${baseURL}${normalized}`;
 };
 
-const normalizeListing = (listing: Listing): Listing => ({
+type ListingLike = Partial<Listing> & {
+  image_urls?: string[];
+  images?: Array<{ url?: string | null } | string>;
+  delivery_available?: boolean;
+  category_name?: string | null;
+  seller_name?: string | null;
+  user_id?: number;
+  is_deleted?: boolean;
+  status?: string | null;
+};
+
+const extractImageUrls = (listing: ListingLike) => {
+  if (Array.isArray(listing.imageUrls) && listing.imageUrls.length > 0) {
+    return listing.imageUrls;
+  }
+
+  if (Array.isArray(listing.image_urls) && listing.image_urls.length > 0) {
+    return listing.image_urls;
+  }
+
+  if (Array.isArray(listing.images) && listing.images.length > 0) {
+    return listing.images
+      .map((img) => (typeof img === "string" ? img : img?.url ?? null))
+      .filter((url): url is string => Boolean(url));
+  }
+
+  return [] as string[];
+};
+
+const normalizeListing = (listing: ListingLike): Listing => ({
   ...listing,
-  imageUrls: (listing.imageUrls ?? [])
+  userId: listing.userId ?? listing.user_id ?? listing.id ?? 0,
+  title: listing.title ?? "",
+  price: listing.price ?? 0,
+  sizes: listing.sizes ?? [],
+  colors: listing.colors ?? [],
+  deliveryAvailable: listing.deliveryAvailable ?? listing.delivery_available ?? false,
+  categoryName: listing.categoryName ?? listing.category_name ?? null,
+  sellerName: listing.sellerName ?? listing.seller_name ?? null,
+  stock: listing.stock ?? 0,
+  status: listing.status ?? null,
+  isDeleted:
+    listing.isDeleted ?? listing.is_deleted ?? (listing.status ? listing.status === "deleted" : false),
+  imageUrls: extractImageUrls(listing)
     .map(resolveImageUrl)
     .filter((url): url is string => Boolean(url)),
 });
