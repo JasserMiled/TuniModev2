@@ -52,7 +52,11 @@ export default function SearchResultsPage() {
             className="border rounded-xl p-3 shadow-sm hover:shadow cursor-pointer"
           >
             <div className="aspect-[4/3] bg-neutral-100 rounded-lg mb-2 overflow-hidden">
-              <img src={listing.imageUrls?.[0] ?? "/placeholder.jpg"} alt={listing.title} className="w-full h-full object-cover" />
+              <img
+                src={listing.imageUrls?.[0] ?? "/placeholder-listing.svg"}
+                alt={listing.title}
+                className="w-full h-full object-cover"
+              />
             </div>
             <h3 className="font-semibold">{listing.title}</h3>
             <p className="text-blue-600 font-semibold">{listing.price} DT</p>

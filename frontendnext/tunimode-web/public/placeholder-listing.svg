@@ -1,0 +1,17 @@
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="800" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e5e7eb" />
+      <stop offset="1" stop-color="#f3f4f6" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" rx="32" fill="url(#grad)" />
+  <g stroke="#d1d5db" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none" transform="translate(220 150)">
+    <path d="M40 40h280c22 0 40 18 40 40v180c0 22-18 40-40 40H40c-22 0-40-18-40-40V80c0-22 18-40 40-40z" />
+    <circle cx="120" cy="120" r="36" />
+    <path d="M0 244l96-96c6-6 16-6 22 0l82 82 64-64c6-6 16-6 22 0l74 74" />
+  </g>
+  <text x="50%" y="75%" text-anchor="middle" fill="#9ca3af" font-family="'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif" font-size="32" font-weight="600">
+    Image indisponible
+  </text>
+</svg>

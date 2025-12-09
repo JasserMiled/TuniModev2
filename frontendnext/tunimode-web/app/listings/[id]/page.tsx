@@ -27,7 +27,11 @@ export default function ListingDetailPage() {
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-4">
       <div className="grid md:grid-cols-2 gap-4">
         <div className="rounded-xl overflow-hidden bg-neutral-100">
-          <img src={listing.imageUrls?.[0] ?? "/placeholder.jpg"} alt={listing.title} className="w-full h-full object-cover" />
+          <img
+            src={listing.imageUrls?.[0] ?? "/placeholder-listing.svg"}
+            alt={listing.title}
+            className="w-full h-full object-cover"
+          />
         </div>
         <div className="space-y-3">
           <h1 className="text-2xl font-semibold">{listing.title}</h1>
