@@ -32,15 +32,26 @@ const handleResponse = async <T>(res: Response, defaultError: string): Promise<T
   return res.json() as Promise<T>;
 };
 
+const resolveImageUrl = (url?: string | null) => {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  const normalized = url.startsWith("/") ? url : `/${url}`;
+  return `${baseURL}${normalized}`;
+};
+
+const normalizeListing = (listing: Listing): Listing => ({
+  ...listing,
+  imageUrls: (listing.imageUrls ?? [])
+    .map(resolveImageUrl)
+    .filter((url): url is string => Boolean(url)),
+});
+
 export const ApiService = {
   get baseUrl() {
     return baseURL;
   },
   resolveImageUrl(url?: string | null) {
-    if (!url) return null;
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    const normalized = url.startsWith("/") ? url : `/${url}`;
-    return `${baseURL}${normalized}`;
+    return resolveImageUrl(url);
   },
   get token() {
     return authToken;
@@ -217,28 +228,32 @@ export const ApiService = {
       ? `${baseURL}/api/listings?${queryParams.toString()}`
       : `${baseURL}/api/listings`;
     const res = await fetch(url, { headers: jsonHeaders() });
-    return handleResponse<Listing[]>(res, "Erreur lors du chargement des annonces");
+    const data = await handleResponse<Listing[]>(res, "Erreur lors du chargement des annonces");
+    return data.map(normalizeListing);
   },
 
   async fetchMyListings(): Promise<Listing[]> {
     const res = await fetch(`${baseURL}/api/listings/me/mine`, {
       headers: jsonHeaders(true),
     });
-    return handleResponse<Listing[]>(res, "Impossible de charger vos annonces");
+    const data = await handleResponse<Listing[]>(res, "Impossible de charger vos annonces");
+    return data.map(normalizeListing);
   },
 
   async fetchListingDetail(id: number): Promise<Listing> {
     const res = await fetch(`${baseURL}/api/listings/${id}`, {
       headers: jsonHeaders(!!authToken),
     });
-    return handleResponse<Listing>(res, "Annonce introuvable");
+    const data = await handleResponse<Listing>(res, "Annonce introuvable");
+    return normalizeListing(data);
   },
 
   async fetchUserListings(userId: number): Promise<Listing[]> {
     const res = await fetch(`${baseURL}/api/listings/user/${userId}`, {
       headers: jsonHeaders(),
     });
-    return handleResponse<Listing[]>(res, "Impossible de charger les annonces de cet utilisateur");
+    const data = await handleResponse<Listing[]>(res, "Impossible de charger les annonces de cet utilisateur");
+    return data.map(normalizeListing);
   },
 
   async updateListing(payload: {
