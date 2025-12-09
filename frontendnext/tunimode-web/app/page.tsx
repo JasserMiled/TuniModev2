@@ -1,135 +1,105 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { fetchListings } from "@/lib/api";
-
-type Listing = {
-  id: number;
-  title: string;
-  price: number;
-  images: string[];
-};
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { ApiService } from "@/src/services/api";
+import { Listing } from "@/src/models/Listing";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSearch } from "@/src/context/SearchContext";
 
 export default function HomePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { setSearch, lastSearch } = useSearch();
+  const [query, setQuery] = useState(searchParams.get("q") ?? lastSearch.query ?? "");
   const [listings, setListings] = useState<Listing[]>([]);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchListings()
+    setLoading(true);
+    ApiService.fetchListings({ query: query || undefined })
       .then(setListings)
-      .catch(() => setError("Erreur de chargement"))
+      .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 
-  const latestListings = listings.slice(0, 10);
+  const latest = useMemo(() => listings.slice(0, 8), [listings]);
 
   const handleSearch = () => {
-    if (!query.trim()) return;
-    router.push(`/search?q=${query}`);
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    const filters = { ...lastSearch, query: trimmed };
+    setSearch(filters);
+    router.push(`/search/results?query=${encodeURIComponent(trimmed)}`);
   };
 
   return (
-    <main className="bg-white min-h-screen px-4">
-
-      {/* ✅ HERO BANNER (IDENTIQUE À FLUTTER) */}
-      <section className="max-w-7xl mx-auto pt-6">
-        <div className="relative h-[500px] w-full rounded-2xl overflow-hidden">
-          <img
-            src="/banner.jpg"
-            className="w-full h-full object-cover"
-            alt="Hero"
-          />
-
-          {/* ✅ GRADIENT */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-black/50 to-black/10" />
-
-          {/* ✅ TEXTE + BOUTONS */}
-          <div className="absolute bottom-8 left-8 max-w-xl text-white space-y-4">
-            <div className="inline-block px-3 py-1 bg-white/10 border border-white/30 rounded-md text-xs font-bold">
-              Plateforme n°1 de mode circulaire en Tunisie
-            </div>
-
-            <h1 className="text-3xl font-extrabold leading-tight">
-              Découvre les dernières trouvailles sélectionnées pour toi
-            </h1>
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleSearch}
-                className="bg-blue-600 px-5 py-3 rounded-xl font-semibold"
-              >
-                Explorer
-              </button>
-
-              <button className="border border-white/70 px-5 py-3 rounded-xl">
-                Filtres rapides
-              </button>
-            </div>
+    <main className="bg-white min-h-screen">
+      <header className="max-w-6xl mx-auto px-4 py-10 flex flex-col md:flex-row md:items-center gap-6">
+        <div className="flex-1 space-y-3">
+          <p className="text-sm text-blue-600 font-medium">Plateforme n°1 de mode circulaire en Tunisie</p>
+          <h1 className="text-3xl font-semibold text-neutral-900 leading-snug">
+            Découvre les dernières trouvailles sélectionnées pour toi
+          </h1>
+          <p className="text-neutral-600 max-w-2xl">
+            Retrouve les mêmes parcours que dans l'application Flutter : recherche, filtres, et navigation vers les fiches annonces.
+          </p>
+          <div className="flex flex-col md:flex-row gap-3">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher des articles"
+              className="flex-1 border border-neutral-200 rounded-xl px-4 py-3 shadow-sm"
+            />
+            <button
+              onClick={handleSearch}
+              className="bg-blue-600 text-white px-5 py-3 rounded-xl font-semibold"
+            >
+              Chercher
+            </button>
+          </div>
+          <div className="flex gap-3 text-sm text-neutral-600">
+            <Link href="/auth/login" className="underline">Connexion</Link>
+            <Link href="/auth/register" className="underline">Créer un compte</Link>
+            <Link href="/dashboard" className="underline">Tableau de bord</Link>
           </div>
         </div>
-      </section>
-
-      {/* ✅ SEARCH BAR COMME FLUTTER */}
-      <section className="max-w-4xl mx-auto mt-8">
-        <div className="flex items-center bg-white border rounded-2xl p-4 shadow gap-3">
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher..."
-            className="flex-1 outline-none text-lg"
-          />
-          <button
-            onClick={handleSearch}
-            className="bg-blue-600 text-white px-5 py-2 rounded-xl"
-          >
-            Chercher
-          </button>
+        <div className="w-full md:w-80 h-56 bg-gradient-to-r from-blue-600 to-indigo-500 rounded-2xl shadow-lg text-white p-6 flex items-end">
+          <div>
+            <p className="text-lg font-semibold">Commandes sécurisées</p>
+            <p className="text-sm text-white/80">Retrait ou livraison disponibles selon les annonces.</p>
+          </div>
         </div>
-      </section>
+      </header>
 
-      {/* ✅ LISTINGS */}
-      <section className="max-w-7xl mx-auto mt-14 pb-20">
-        <h2 className="text-xl font-extrabold">
-          Derniers articles mis en ligne
-        </h2>
-
-        <p className="text-gray-600 mb-6">
-          Choisis tes prochaines trouvailles parmi des milliers de vêtements et accessoires.
-        </p>
-
-        {loading && <div className="text-center py-10">Chargement...</div>}
-        {error && <div className="text-center text-red-600">{error}</div>}
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          {latestListings.map((listing) => (
-            <div
+      <section className="max-w-6xl mx-auto px-4 pb-12">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Dernières annonces</h2>
+          <Link href="/search/results" className="text-blue-600 underline text-sm">Voir tout</Link>
+        </div>
+        {loading && <div className="py-6 text-neutral-600">Chargement...</div>}
+        {error && <div className="py-6 text-red-600">{error}</div>}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {latest.map((listing) => (
+            <article
               key={listing.id}
-              onClick={() => router.push(`/listing/${listing.id}`)}
-              className="bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer"
+              className="border border-neutral-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer"
+              onClick={() => router.push(`/listings/${listing.id}`)}
             >
-              <img
-                src={
-                  listing.images?.[0]
-                    ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/uploads/${listing.images[0]}`
-                    : "/placeholder.jpg"
-                }
-                className="w-full h-64 object-cover rounded-t-xl"
-                alt={listing.title}
-              />
-
-              <div className="p-3">
-                <p className="font-semibold text-sm line-clamp-2">
-                  {listing.title}
-                </p>
-                <p className="text-blue-600 font-bold">
-                  {listing.price} DT
-                </p>
+              <div className="aspect-[4/3] bg-neutral-100">
+                <img
+                  src={listing.imageUrls?.[0] ?? "/placeholder.jpg"}
+                  alt={listing.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
-            </div>
+              <div className="p-3 space-y-1">
+                <p className="text-sm text-neutral-500">{listing.city || "Tunisie"}</p>
+                <h3 className="font-semibold text-neutral-900 line-clamp-2">{listing.title}</h3>
+                <p className="text-blue-600 font-semibold">{listing.price} DT</p>
+              </div>
+            </article>
           ))}
         </div>
       </section>
