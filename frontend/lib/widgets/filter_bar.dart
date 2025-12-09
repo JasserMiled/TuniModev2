@@ -45,8 +45,8 @@ class FilterBar extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        color: Color(0xFFF7F9FC),
+        borderRadius: BorderRadius.circular(5),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
@@ -61,8 +61,9 @@ class FilterBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
+            spacing: 16,
+            runSpacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.end,
             children: [
               ...customDropdowns,
               ...dropdowns
@@ -72,7 +73,7 @@ class FilterBar extends StatelessWidget {
                   .toList(),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -106,7 +107,6 @@ class FilterBar extends StatelessWidget {
     );
   }
 }
-
 class _FilterDropdown extends StatelessWidget {
   final FilterDropdownConfig config;
 
@@ -116,56 +116,70 @@ class _FilterDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      constraints: const BoxConstraints(minWidth: 160, maxWidth: 200),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          isExpanded: true,
-          value: config.value,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded),
-          hint: Row(
-            children: [
-              Icon(config.icon, size: 18, color: theme.primaryColor),
-              const SizedBox(width: 8),
-              Text(
-                config.label,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+    return SizedBox(
+      width: 180,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              isExpanded: true,
+              value: config.value,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded),
+              hint: Row(
+                children: [
+                  Icon(config.icon, size: 18, color: theme.primaryColor),
+                  const SizedBox(width: 8),
+    Text(
+      config.label,
+      style: Theme.of(context)
+          .textTheme
+          .bodyMedium
+          ?.copyWith(color: const Color(0xFF0F172A)), // ✅ force noir
+    ),
+                ],
               ),
-            ],
-          ),
-          selectedItemBuilder: (context) => config.options
-              .map(
-                (option) => Row(
-                  children: [
-                    Icon(config.icon, size: 18, color: theme.primaryColor),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        option.label,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
+              selectedItemBuilder: (context) => config.options
+                  .map(
+                    (option) => Row(
+                      children: [
+                        Icon(
+                          config.icon,
+                          size: 18,
+                          color: theme.primaryColor,
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+  option.label,
+  overflow: TextOverflow.ellipsis,
+  style: Theme.of(context).textTheme.bodyMedium,
+),
+
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              )
-              .toList(),
-          items: config.options
-              .map(
-                (option) => DropdownMenuItem<String>(
-                  value: option.value,
-                  child: Text(option.label),
-                ),
-              )
-              .toList(),
-          onChanged: config.onChanged,
-        ),
+                  )
+                  .toList(),
+              items: config.options
+                  .map(
+                    (option) => DropdownMenuItem<String>(
+                      value: option.value,
+                      child: Text(option.label),
+                    ),
+                  )
+                  .toList(),
+              onChanged: config.onChanged,
+            ),
+          ),
+
+          const SizedBox(height: 6),
+          Container(
+            height: 1,
+            width: double.infinity,
+            color: const Color(0xFFE5E7EB),
+          ),
+        ],
       ),
     );
   }

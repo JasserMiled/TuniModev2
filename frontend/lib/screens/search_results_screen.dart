@@ -400,7 +400,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   Widget build(BuildContext context) {
     final sizeDropdownOptions = _sizesLoading
         ? [
-            const FilterDropdownOption(
+             FilterDropdownOption(
               value: '_loading',
               label: 'Chargement...',
             ),
@@ -470,7 +470,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
+      backgroundColor: const Color(0xFFFFFFFF),
       drawer: const TuniModeDrawer(),
       appBar: TuniModeAppBar(
         showSearchBar: true,

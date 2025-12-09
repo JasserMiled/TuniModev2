@@ -71,7 +71,7 @@ title: LayoutBuilder(
     return Stack(
       alignment: Alignment.center,
       children: [
-        // ✅ GAUCHE : MENU + BACK
+        // ✅ GAUCHE : MENU + BACK + LOGO (si pas de search)
         Align(
           alignment: Alignment.centerLeft,
           child: Row(
@@ -95,37 +95,55 @@ title: LayoutBuilder(
                   icon: const Icon(Icons.arrow_back, size: 20),
                   onPressed: () => Navigator.of(context).maybePop(),
                 ),
+
+              // ✅ LOGO À GAUCHE QUAND PAS DE SEARCH
+              if (!showSearchBar)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => _goHome(context),
+                      child: SizedBox(
+                        width: 110,
+                        height: 25,
+                        child: SvgPicture.asset(
+                          'assets/images/tunimode_logo.svg',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
 
-        // ✅ CENTRE : LOGO + SEARCH BAR
+        // ✅ CENTRE : LOGO + SEARCH BAR (uniquement si showSearchBar)
         if (showSearchBar)
           Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ✅ LOGO JUSTE AVANT LE CHAMP
-MouseRegion(
-  cursor: SystemMouseCursors.click, // ✅ curseur main
-  child: GestureDetector(
-    onTap: () => _goHome(context),
-    child: SizedBox(
-      width: 110,
-      height: 25,
-      child: SvgPicture.asset(
-        'assets/images/tunimode_logo.svg',
-        fit: BoxFit.contain,
-      ),
-    ),
-  ),
-),
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () => _goHome(context),
+                    child: SizedBox(
+                      width: 110,
+                      height: 25,
+                      child: SvgPicture.asset(
+                        'assets/images/tunimode_logo.svg',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
 
                 const SizedBox(width: 12),
 
-                // ✅ SEARCH BAR (LARGEUR LIMITÉE)
                 SizedBox(
-                  width: 1200, // ✅ largeur contrôlée au centre
+                  width: 1200,
                   child: TuniModeSearchBar(
                     controller: searchController!,
                     onSearch: onSearch!,
@@ -149,6 +167,7 @@ MouseRegion(
     );
   },
 ),
+
 
     );
   }

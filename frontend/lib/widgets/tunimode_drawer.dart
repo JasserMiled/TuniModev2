@@ -28,6 +28,9 @@ class TuniModeDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+	  shape: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.zero, // ✅ aucun arrondi
+  ),
       child: SafeArea(
         child: ListView(
           padding: EdgeInsets.zero,

@@ -219,9 +219,14 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         itemBuilder: (context, index) {
           final seller = sellers[index];
           return Card(
+		  
             margin: const EdgeInsets.symmetric(vertical: 8),
+			  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(4), // ✅ arrondi réduit
+  ),
             child: InkWell(
               onTap: () => _openSellerProfile(seller),
+			  
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(

@@ -13,6 +13,7 @@ import '../widgets/listing_card.dart';
 import '../widgets/tunimode_app_bar.dart';
 import '../widgets/tunimode_drawer.dart';
 import '../widgets/quick_filters_launcher.dart';
+import '../widgets/app_buttons.dart';
 class ListingDetailScreen extends StatefulWidget {
   final int listingId;
 
@@ -492,86 +493,28 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
   }
 
   /// 🔵 Bouton principal "Acheter" ou "Modifier"
-  Widget _buildPrimaryActionButton(Listing listing) {
-    final isOwner = _isListingOwner(listing);
-    final isRepublish = isOwner && listing.isDeleted;
-    if (listing.isDeleted && !isOwner) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildDeletedBanner(isOwner: false),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey,
-                disabledBackgroundColor: Colors.grey.shade400,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text(
-                'Annonce indisponible',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-    final buttonLabel = isRepublish
-        ? 'Re publier'
-        : isOwner
-            ? 'Modifier'
-            : 'Acheter';
-    final onPressed = isRepublish
-        ? () => _openEditListing(listing, isRepublish: true)
-        : isOwner
-            ? () => _openEditListing(listing)
-            : () => _openOrderSheet(listing);
+Widget _buildPrimaryActionButton(Listing listing) {
+  final isOwner = _isListingOwner(listing);
+  final isRepublish = isOwner && listing.isDeleted;
 
-    final button = SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1E5B96),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        child: Text(
-          buttonLabel,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-      ),
-    );
+  final buttonLabel = isRepublish
+      ? 'Re publier'
+      : isOwner
+          ? 'Modifier'
+          : 'Acheter';
 
-    if (listing.isDeleted && isOwner) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildDeletedBanner(isOwner: true),
-          const SizedBox(height: 12),
-          button,
-        ],
-      );
-    }
+  final VoidCallback onPressed = isRepublish
+      ? () => _openEditListing(listing, isRepublish: true)
+      : isOwner
+          ? () => _openEditListing(listing)
+          : () => _openOrderSheet(listing);
 
-    return button;
-  }
+  return PrimaryButton(
+    label: buttonLabel,
+    onPressed: onPressed,
+  );
+}
+
 
   /// 🔵 Zone de droite (mode Web) : infos produit + actions
   Widget _buildInfoZone(Listing listing) {
@@ -606,38 +549,12 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             _buildPrimaryActionButton(listing),
 
             if (_isListingOwner(listing) && !listing.isDeleted) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _isDeleting ? null : () => _deleteListing(listing),
-                  icon: _isDeleting
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.delete_forever, color: Colors.white),
-                  label: Text(
-                    _isDeleting ? 'Suppression...' : 'Supprimer',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+  const SizedBox(height: 12),
+  DangerButton(
+    label: 'Supprimer',
+    onPressed: () => _deleteListing(listing),
+  ),
+],
 
             const SizedBox(height: 24),
 

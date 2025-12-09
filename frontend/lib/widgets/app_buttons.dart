@@ -18,30 +18,46 @@ class PrimaryButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: height,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5),
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF1A7CFF),
-              Color(0xFF0B5ED7),
-            ],
+      child: HoverShadow(
+        borderRadius: BorderRadius.circular(5),
+        normalShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
+        ],
+        hoverShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.35),
+            blurRadius: 16, // ✅ augmente au hover
+            offset: const Offset(0, 10),
+          ),
+        ],
+        child: Container(
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(5),
-            onTap: onPressed,
-            child: Center(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF1A7CFF),
+                Color(0xFF0B5ED7),
+              ],
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(5),
+              onTap: onPressed,
+              child: Center(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ),
@@ -51,6 +67,8 @@ class PrimaryButton extends StatelessWidget {
     );
   }
 }
+
+
 
 /// ✅ BOUTON SECONDAIRE (Annuler, Retour)
 class SecondaryButton extends StatelessWidget {
@@ -70,26 +88,43 @@ class SecondaryButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: height,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(5),
-          onTap: onPressed,
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFEFF3F8),
-              borderRadius: BorderRadius.circular(5),
-              border: Border.all(
-                color: const Color(0xFF1A7CFF).withOpacity(0.35),
-                width: 1.2,
+      child: HoverShadow(
+        borderRadius: BorderRadius.circular(5),
+        normalShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+        hoverShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.22),
+            blurRadius: 14,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(5),
+            onTap: onPressed,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(5),
+                border: Border.all(
+                  color: const Color(0xFF0B5ED7).withOpacity(0.35),
+                  width: 1.2,
+                ),
               ),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Color(0xFF1A7CFF),
-                fontWeight: FontWeight.w600,
+              alignment: Alignment.center,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFF0B5ED7),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -109,7 +144,7 @@ class OutlinedActionButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
-    this.height = 32, // ✅ même hauteur que ton bouton Réinitialiser
+    this.height = 32,
   });
 
   @override
@@ -117,30 +152,48 @@ class OutlinedActionButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: height,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5), // ✅ ultra arrondi
+      child: HoverShadow(
+        borderRadius: BorderRadius.circular(5),
+        normalShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.10),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-          side: const BorderSide(
-            color: Color(0xFFFF8A00), // ✅ contour ORANGE
-            width: 1.5,
+        ],
+        hoverShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.20),
+            blurRadius: 12,
+            offset: const Offset(0, 7),
           ),
-          backgroundColor: const Color(0xFFF2F4F7), // ✅ fond GRIS CLAIR
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFFFF8A00), // ✅ texte ORANGE
-            fontSize: 15,
-            
+        ],
+        child: OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
+            side: const BorderSide(
+              color: Color(0xFFFF8A00),
+              width: 1.5,
+            ),
+            backgroundColor: const Color(0xFFF2F4F7),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFFFF8A00),
+              fontSize: 15,
+            ),
           ),
         ),
       ),
     );
   }
 }
+
+
 
 
 /// ✅ BOUTON DANGEREUX (Supprimer, Bloquer)
@@ -161,22 +214,39 @@ class DangerButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: height,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(5),
-          onTap: onPressed,
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFD32F2F),
-              borderRadius: BorderRadius.circular(5),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
+      child: HoverShadow(
+        borderRadius: BorderRadius.circular(5),
+        normalShadow: [
+          BoxShadow(
+            color: Colors.red.withOpacity(0.30),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        hoverShadow: [
+          BoxShadow(
+            color: Colors.red.withOpacity(0.50),
+            blurRadius: 16,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(5),
+            onTap: onPressed,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFD32F2F),
+                borderRadius: BorderRadius.circular(5),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -185,3 +255,46 @@ class DangerButton extends StatelessWidget {
     );
   }
 }
+
+
+class HoverShadow extends StatefulWidget {
+  final Widget child;
+  final BorderRadius borderRadius;
+  final List<BoxShadow> normalShadow;
+  final List<BoxShadow> hoverShadow;
+
+  const HoverShadow({
+    super.key,
+    required this.child,
+    required this.borderRadius,
+    required this.normalShadow,
+    required this.hoverShadow,
+  });
+
+  @override
+  State<HoverShadow> createState() => _HoverShadowState();
+}
+
+class _HoverShadowState extends State<HoverShadow> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      cursor: SystemMouseCursors.click,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
+          borderRadius: widget.borderRadius,
+          boxShadow: _hovered
+              ? widget.hoverShadow
+              : widget.normalShadow,
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+

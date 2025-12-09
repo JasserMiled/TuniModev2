@@ -19,7 +19,7 @@ class TuniModeApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: colorScheme,
-
+scaffoldBackgroundColor: Colors.white, // ✅ BLANC GLOBAL
         // ✅ POLICE SYSTÈME (COMME VINTED)
         fontFamily: null,
 

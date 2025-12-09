@@ -20,7 +20,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   static const Color _primaryBlue = Color(0xFF0B6EFE);
-  static const Color _lightBackground = Color(0xFFF7F9FC);
+  static const Color _lightBackground = Color(0xFFFFFFFF);
   static const Color _lavender = Color(0xFFF1EDFD);
 
   static const double _pagePadding = 16;

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../widgets/tunimode_app_bar.dart';
+import '../widgets/tunimode_drawer.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
 enum RegistrationType { particulier, professionnel }
@@ -142,11 +145,19 @@ Future<void> _submit() async {
 
   setState(() => _loading = false);
 
-  if (ok) {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => LoginScreen()), // ✅ ICI
-    );
-  } else {
+if (ok) {
+  final email = isIndividual ? _individualEmail : _professionalEmail;
+
+  Navigator.of(context).pushReplacement(
+    MaterialPageRoute(
+      builder: (_) => LoginScreen(
+        successMessage: "Compte créé avec succès",
+        prefilledEmail: email,
+      ),
+    ),
+  );
+}
+ else {
     setState(() {
       _error = "Inscription échouée (serveur indisponible)";
     });
@@ -180,56 +191,88 @@ Future<void> _submit() async {
     return ok;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F6),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Card(
-            margin: const EdgeInsets.all(24),
-            elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: const Color(0xFFF3F4F6),
+
+    drawer: const TuniModeDrawer(),
+
+    appBar: const TuniModeAppBar(
+      showSearchBar: false,
+      showBackButton: false,
+    ),
+
+    body: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+
+          // ✅ ✅ ✅ MÊME CONTAINER QUE LOGIN
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.8,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.25),
+                  blurRadius: 25,
+                  spreadRadius: 3,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 28,
+              ),
+
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
                     'Créer un compte',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(height: 6),
+
+                  const SizedBox(height: 8),
+
                   const Text(
-                    'Choisissez votre profil et complétez les informations requises.',
+                    'Complétez les informations requises.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.black54),
                   ),
+
                   const SizedBox(height: 16),
-                  
-                  const SizedBox(height: 16),
+
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
                         _error!,
                         style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      child: SizedBox(
-                        height: 520,
-                        child: TabBarView(
-                          controller: _tabController,
-						  physics: const NeverScrollableScrollPhysics(), // ✅ empêche le swipe
-                          children: [
-                            _buildIndividualForm(),
-                            _buildProfessionalForm(),
-                          ],
-                        ),
-                      ),
+
+                  const SizedBox(height: 12),
+
+                  // ✅ ✅ ✅ SÉLECTION AUTOMATIQUE SANS TAB MENU
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _buildIndividualForm(),
+                        _buildProfessionalForm(),
+                      ],
                     ),
                   ),
                 ],
@@ -238,8 +281,11 @@ Future<void> _submit() async {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
+
 
   Widget _buildIndividualForm() {
     return Form(
@@ -388,12 +434,26 @@ Future<void> _submit() async {
             validator: _validateEmail,
           ),
           const SizedBox(height: 12),
-          TextFormField(
-            decoration: const InputDecoration(labelText: 'Numéro de téléphone (tunisien)'),
-            keyboardType: TextInputType.phone,
-            onSaved: (v) => _professionalPhone = v?.trim() ?? '',
-            validator: _validatePhone,
-          ),
+IntlPhoneField(
+  decoration: const InputDecoration(
+    labelText: 'Numéro de téléphone',
+    border: OutlineInputBorder(),
+  ),
+  initialCountryCode: 'TN',
+  onChanged: (phone) {
+    _professionalPhone = phone.completeNumber;
+  },
+  validator: (phone) {
+    if (phone == null || phone.number.isEmpty) {
+      return 'Champ obligatoire';
+    }
+    if (phone.countryISOCode == 'TN' && phone.number.length != 8) {
+      return 'Numéro tunisien invalide (8 chiffres)';
+    }
+    return null;
+  },
+),
+
           const SizedBox(height: 12),
           TextFormField(
             controller: _professionalPasswordController,

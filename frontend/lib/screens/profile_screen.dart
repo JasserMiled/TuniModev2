@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-
+import '../widgets/app_buttons.dart';
 import '../models/listing.dart';
 import '../models/review.dart';
 import '../models/user.dart';
@@ -138,6 +138,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildHeader(User user, {required bool isCurrentUser}) {
     return Card(
+	  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(5),
+  ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -182,19 +185,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             if (isCurrentUser) ...[
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: _openAccountSettings,
-                icon: const Icon(Icons.edit_outlined),
-                label: const Text('Modifier profil'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ],
+  const SizedBox(width: 12),
+  SizedBox(
+    width: 160, // ✅ largeur contrôlée (optionnel)
+    child: SecondaryButton(
+      label: 'Modifier profil',
+      height: 32,
+      onPressed: _openAccountSettings,
+    ),
+  ),
+],
           ],
         ),
       ),
@@ -203,6 +203,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildReviewTile(Review review) {
     return Card(
+	  shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(5),
+  ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(

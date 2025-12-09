@@ -28,8 +28,8 @@ class ListingCard extends StatelessWidget {
       child: Stack(
         children: [
           Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            elevation: 1,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+            elevation: 10,
             clipBehavior: Clip.hardEdge,
             child: InkWell(
               onTap: isDisabled ? null : onTap,
