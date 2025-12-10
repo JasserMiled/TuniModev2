@@ -87,6 +87,36 @@ const normalizeListing = (listing: ListingLike): Listing => ({
     .filter((url): url is string => Boolean(url)),
 });
 
+type OrderLike = Partial<Order> & {
+  listing_id?: number;
+  listing_title?: string | null;
+  total_amount?: number;
+  reception_mode?: string | null;
+  created_at?: string;
+  seller_id?: number | null;
+  buyer_id?: number | null;
+  buyer_note?: string | null;
+  shipping_address?: string | null;
+};
+
+const normalizeOrder = (order: OrderLike): Order => ({
+  id: order.id ?? 0,
+  listingId: order.listingId ?? order.listing_id ?? 0,
+  listingTitle: order.listingTitle ?? order.listing_title ?? "Annonce supprimée",
+  quantity: order.quantity ?? 0,
+  totalAmount: order.totalAmount ?? order.total_amount ?? 0,
+  status: order.status ?? "pending",
+  receptionMode: order.receptionMode ?? order.reception_mode ?? "retrait",
+  createdAt: order.createdAt ?? order.created_at ?? new Date().toISOString(),
+  sellerId: order.sellerId ?? order.seller_id ?? null,
+  buyerId: order.buyerId ?? order.buyer_id ?? null,
+  color: order.color ?? null,
+  size: order.size ?? null,
+  shippingAddress: order.shippingAddress ?? order.shipping_address ?? null,
+  phone: order.phone ?? null,
+  buyerNote: order.buyerNote ?? order.buyer_note ?? null,
+});
+
 export const ApiService = {
   get baseUrl() {
     return baseURL;
@@ -429,14 +459,22 @@ export const ApiService = {
     const res = await fetch(`${baseURL}/api/orders/me/buyer`, {
       headers: jsonHeaders(true),
     });
-    return handleResponse<Order[]>(res, "Impossible de charger vos commandes");
+    const orders = await handleResponse<OrderLike[]>(
+      res,
+      "Impossible de charger vos commandes"
+    );
+    return orders.map(normalizeOrder);
   },
 
   async fetchSellerOrders(): Promise<Order[]> {
     const res = await fetch(`${baseURL}/api/orders/me/seller`, {
       headers: jsonHeaders(true),
     });
-    return handleResponse<Order[]>(res, "Impossible de charger vos demandes de commandes");
+    const orders = await handleResponse<OrderLike[]>(
+      res,
+      "Impossible de charger vos demandes de commandes"
+    );
+    return orders.map(normalizeOrder);
   },
 
   async updateSellerOrderStatus(orderId: number, status: string): Promise<Order> {
