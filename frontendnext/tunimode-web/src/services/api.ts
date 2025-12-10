@@ -94,8 +94,8 @@ type OrderLike = Partial<Order> & {
   reception_mode?: string | null;
   created_at?: string;
   seller_id?: number | null;
-  buyer_id?: number | null;
-  buyer_note?: string | null;
+  client_id?: number | null;
+  client_note?: string | null;
   shipping_address?: string | null;
 };
 
@@ -109,12 +109,15 @@ const normalizeOrder = (order: OrderLike): Order => ({
   receptionMode: order.receptionMode ?? order.reception_mode ?? "retrait",
   createdAt: order.createdAt ?? order.created_at ?? new Date().toISOString(),
   sellerId: order.sellerId ?? order.seller_id ?? null,
-  buyerId: order.buyerId ?? order.buyer_id ?? null,
+  clientId: order.clientId ?? order.client_id ?? null,
   color: order.color ?? null,
   size: order.size ?? null,
   shippingAddress: order.shippingAddress ?? order.shipping_address ?? null,
   phone: order.phone ?? null,
-  buyerNote: order.buyerNote ?? order.buyer_note ?? null,
+  clientNote:
+    order.clientNote ??
+    order.client_note ??
+    null,
 });
 
 export const ApiService = {
@@ -436,7 +439,7 @@ export const ApiService = {
     size?: string;
     shippingAddress?: string;
     phone?: string;
-    buyerNote?: string;
+    clientNote?: string;
   }): Promise<Record<string, unknown>> {
     const res = await fetch(`${baseURL}/api/orders`, {
       method: "POST",
@@ -449,14 +452,14 @@ export const ApiService = {
         size: payload.size,
         shipping_address: payload.shippingAddress,
         phone: payload.phone,
-        buyer_note: payload.buyerNote,
+        buyer_note: payload.clientNote,
       }),
     });
     return handleResponse<Record<string, unknown>>(res, "Commande impossible");
   },
 
-  async fetchBuyerOrders(): Promise<Order[]> {
-    const res = await fetch(`${baseURL}/api/orders/me/buyer`, {
+  async fetchClientOrders(): Promise<Order[]> {
+    const res = await fetch(`${baseURL}/api/orders/me/client`, {
       headers: jsonHeaders(true),
     });
     const orders = await handleResponse<OrderLike[]>(

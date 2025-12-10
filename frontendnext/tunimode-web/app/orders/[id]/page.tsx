@@ -14,7 +14,7 @@ export default function OrderDetailPage() {
   useEffect(() => {
     const id = Number(params?.id);
     if (!id) return;
-    ApiService.fetchBuyerOrders()
+    ApiService.fetchClientOrders()
       .then((list) => list.find((o) => o.id === id))
       .then((found) => {
         if (!found) throw new Error("Commande introuvable");

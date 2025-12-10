@@ -8,7 +8,7 @@ import { useAuth } from "@/src/context/AuthContext";
 export default function RegisterPage() {
   const router = useRouter();
   const { register, loading } = useAuth();
-  const [role, setRole] = useState("buyer");
+  const [role, setRole] = useState("client");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,10 +29,10 @@ export default function RegisterPage() {
       <h1 className="text-2xl font-semibold">Créer un compte</h1>
       <div className="flex gap-2 text-sm">
         <button
-          onClick={() => setRole("buyer")}
-          className={`px-3 py-2 rounded-lg border ${role === "buyer" ? "bg-blue-600 text-white" : ""}`}
+          onClick={() => setRole("client")}
+          className={`px-3 py-2 rounded-lg border ${role === "client" ? "bg-blue-600 text-white" : ""}`}
         >
-          Acheteur
+          Client
         </button>
         <button
           onClick={() => setRole("seller")}

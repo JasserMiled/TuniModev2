@@ -9,11 +9,11 @@ export interface Order {
   createdAt: string;
   sellerId?: number | null;
   sellerName?: string | null;
-  buyerId?: number | null;
-  buyerName?: string | null;
+  clientId?: number | null;
+  clientName?: string | null;
   color?: string | null;
   size?: string | null;
   shippingAddress?: string | null;
   phone?: string | null;
-  buyerNote?: string | null;
+  clientNote?: string | null;
 }

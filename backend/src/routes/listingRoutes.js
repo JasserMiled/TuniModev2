@@ -273,7 +273,7 @@ router.get("/:id", async (req, res) => {
 /**
  * GET /api/listings/me/mine
  */
-router.get("/me/mine", authRequired, requireRole("buyer", "pro", "admin"), async (req, res) => {
+router.get("/me/mine", authRequired, requireRole("seller"), async (req, res) => {
   try {
     const result = await db.query(
       `SELECT
@@ -308,7 +308,7 @@ router.get("/me/mine", authRequired, requireRole("buyer", "pro", "admin"), async
 /**
  * POST /api/listings
  */
-router.post("/", authRequired, requireRole("buyer", "pro", "admin"), async (req, res) => {
+router.post("/", authRequired, requireRole("seller"), async (req, res) => {
   try {
     const {
       title,
@@ -395,16 +395,16 @@ router.post("/", authRequired, requireRole("buyer", "pro", "admin"), async (req,
 /**
  * PUT /api/listings/:id
  */
-router.put("/:id", authRequired, requireRole("buyer", "pro", "admin"), async (req, res) => {
+router.put("/:id", authRequired, requireRole("seller"), async (req, res) => {
   try {
     const listingId = req.params.id;
 
     // Ensure the listing exists and the requester is allowed to update it
-    // (owner or admin) before applying any changes.
+    // (owner only) before applying any changes.
     const check = await db.query("SELECT user_id FROM listings WHERE id = $1", [listingId]);
     const found = check.rows[0];
     if (!found) return res.status(404).json({ message: "Annonce introuvable" });
-    if (req.user.role !== "admin" && found.user_id !== req.user.id) {
+    if (found.user_id !== req.user.id) {
       return res.status(403).json({ message: "Vous ne pouvez pas modifier cette annonce" });
     }
 
@@ -497,16 +497,16 @@ router.put("/:id", authRequired, requireRole("buyer", "pro", "admin"), async (re
 /**
  * DELETE /api/listings/:id
  */
-router.delete("/:id", authRequired, requireRole("buyer", "pro", "admin"), async (req, res) => {
+router.delete("/:id", authRequired, requireRole("seller"), async (req, res) => {
   try {
     const listingId = req.params.id;
 
     // Validate ownership before deleting to prevent users from removing
-    // listings that are not theirs (unless they are administrators).
+    // listings that are not theirs.
     const check = await db.query("SELECT user_id FROM listings WHERE id = $1", [listingId]);
     const found = check.rows[0];
     if (!found) return res.status(404).json({ message: "Annonce introuvable" });
-    if (req.user.role !== "admin" && found.user_id !== req.user.id) {
+    if (found.user_id !== req.user.id) {
       return res.status(403).json({ message: "Vous ne pouvez pas supprimer cette annonce" });
     }
 

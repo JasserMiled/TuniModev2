@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     phone VARCHAR(30),
     avatar_url TEXT,
     address TEXT,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('buyer','pro','admin')),
+    role VARCHAR(20) NOT NULL CHECK (role IN ('seller','client')),
     business_name VARCHAR(255),
     business_id VARCHAR(100),
     created_at TIMESTAMP NOT NULL DEFAULT NOW()

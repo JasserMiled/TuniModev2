@@ -40,7 +40,7 @@ router.post("/register", async (req, res) => {
   }
 
   // ✅ Sécurité sur les rôles autorisés
-  const allowedRoles = ["buyer", "pro"];
+  const allowedRoles = ["seller", "client"];
   if (!allowedRoles.includes(role)) {
     return res.status(400).json({ message: "Rôle invalide" });
   }
