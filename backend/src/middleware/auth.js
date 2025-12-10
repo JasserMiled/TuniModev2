@@ -12,6 +12,10 @@ function authRequired(req, res, next) {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const allowedRoles = ["seller", "client"];
+    if (!allowedRoles.includes(payload.role)) {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
     req.user = payload; // { id, role }
     next();
   } catch (err) {

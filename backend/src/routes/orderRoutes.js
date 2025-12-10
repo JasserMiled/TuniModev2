@@ -120,20 +120,33 @@ router.post("/", authRequired, requireRole("client"), async (req, res) => {
 
 const getClientOrders = async (buyerId) => {
   const result = await db.query(
-    `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title
-     FROM orders o
-     LEFT JOIN listings l ON o.listing_id = l.id
-     WHERE o.buyer_id = $1
-     ORDER BY o.created_at DESC`,
-    [buyerId]
-  );
+      `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title
+       FROM orders o
+       LEFT JOIN listings l ON o.listing_id = l.id
+       WHERE o.buyer_id = $1
+       ORDER BY o.created_at DESC`,
+      [buyerId]
+    );
 
-  return result.rows.map(addClientAlias);
-};
+    return result.rows.map(addClientAlias);
+  };
 
-/**
- * GET /api/orders/me/client
- */
+  /**
+   * GET /api/orders/buyer
+   */
+  router.get("/buyer", authRequired, requireRole("client"), async (req, res) => {
+    try {
+      const orders = await getClientOrders(req.user.id);
+      res.json(orders);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  });
+
+  /**
+   * GET /api/orders/me/client
+   */
 router.get("/me/client", authRequired, requireRole("client"), async (req, res) => {
   try {
     const orders = await getClientOrders(req.user.id);
@@ -144,20 +157,40 @@ router.get("/me/client", authRequired, requireRole("client"), async (req, res) =
   }
 });
 
-// Legacy buyer route kept for backward compatibility
-router.get("/me/buyer", authRequired, requireRole("client"), async (req, res) => {
-  try {
-    const orders = await getClientOrders(req.user.id);
-    res.json(orders);
+  // Legacy buyer route kept for backward compatibility
+  router.get("/me/buyer", authRequired, requireRole("client"), async (req, res) => {
+    try {
+      const orders = await getClientOrders(req.user.id);
+      res.json(orders);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
 
-/**
- * GET /api/orders/me/seller
- */
+  /**
+   * GET /api/orders/seller
+   */
+  router.get("/seller", authRequired, requireRole("seller"), async (req, res) => {
+    try {
+      const result = await db.query(
+        `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title
+         FROM orders o
+         LEFT JOIN listings l ON o.listing_id = l.id
+         WHERE o.seller_id = $1
+         ORDER BY o.created_at DESC`,
+        [req.user.id]
+      );
+      res.json(result.rows.map(addClientAlias));
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Erreur serveur" });
+    }
+  });
+
+  /**
+   * GET /api/orders/me/seller
+   */
 router.get("/me/seller", authRequired, requireRole("seller"), async (req, res) => {
   try {
     const result = await db.query(

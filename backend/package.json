@@ -1,7 +1,7 @@
 {
   "name": "tunimode-backend",
   "version": "1.0.0",
-  "description": "API TuniMode - marketplace de v\u00eatements (buyers & pros) sans paiement en ligne",
+  "description": "API TuniMode - marketplace de v\u00eatements (sellers & clients) sans paiement en ligne",
   "main": "src/server.js",
   "scripts": {
     "dev": "node src/server.js"

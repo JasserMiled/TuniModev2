@@ -5,23 +5,36 @@ import { useParams } from "next/navigation";
 import { ApiService } from "@/src/services/api";
 import { Order } from "@/src/models/Order";
 import { Protected } from "@/src/components/app/Protected";
+import { useAuth } from "@/src/context/AuthContext";
 
 export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const id = Number(params?.id);
     if (!id) return;
-    ApiService.fetchClientOrders()
-      .then((list) => list.find((o) => o.id === id))
-      .then((found) => {
+    if (!user?.role) return;
+    const load = async () => {
+      try {
+        const isClient = user?.role === "client";
+        const isSeller = user?.role === "seller";
+        const list = isClient
+          ? await ApiService.fetchClientOrders()
+          : isSeller
+            ? await ApiService.fetchSellerOrders()
+            : [];
+        const found = list.find((o) => o.id === id);
         if (!found) throw new Error("Commande introuvable");
         setOrder(found);
-      })
-      .catch((e) => setError(e.message));
-  }, [params?.id]);
+      } catch (e: any) {
+        setError(e.message);
+      }
+    };
+    load();
+  }, [params?.id, user?.role]);
 
   return (
     <Protected>
