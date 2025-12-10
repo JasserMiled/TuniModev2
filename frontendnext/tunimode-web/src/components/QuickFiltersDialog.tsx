@@ -83,7 +83,7 @@ export default function QuickFiltersDialog({
     if (categories.length > 0) return;
 
     setCatLoading(true);
-    ApiService.fetchCategoriesTree?.()
+    ApiService.fetchCategoryTree()
       .then((data: Category[]) => {
         setCategories(data);
         setCatError(null);
