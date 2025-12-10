@@ -37,6 +37,9 @@ export default function ListingDetailPage() {
   const [useProfileContact, setUseProfileContact] = useState(false);
   const [isOrdering, setIsOrdering] = useState(false);
 
+  const isClient = user?.role === "client";
+  const isSeller = user?.role === "seller";
+
   useEffect(() => {
     const id = Number(params?.id);
     if (!id) return;
@@ -64,6 +67,16 @@ export default function ListingDetailPage() {
   const hasProfileContact = Boolean(user?.address || user?.phone);
 
   const openOrderModal = () => {
+    if (!user) {
+      router.push("/auth/login");
+      return;
+    }
+
+    if (!isClient) {
+      setActionError("Seuls les clients peuvent passer une commande.");
+      return;
+    }
+
     setOrderQuantity(1);
     setSelectedSize(listing?.sizes?.[0] ?? null);
     setDeliveryMode("retrait");
@@ -264,9 +277,10 @@ className="w-full h-[450px] object-contain bg-transparent"
             ) : (
               <button
                 onClick={openOrderModal}
-                className="px-5 py-3 bg-blue-600 text-white font-medium rounded-lg w-full"
+                disabled={Boolean(user && !isClient)}
+                className="px-5 py-3 bg-blue-600 text-white font-medium rounded-lg w-full disabled:opacity-50"
               >
-                Commander
+                {isSeller ? "Seuls les clients peuvent commander" : "Commander"}
               </button>
             )}
 

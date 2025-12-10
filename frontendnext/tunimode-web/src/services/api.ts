@@ -144,7 +144,7 @@ export const ApiService = {
     name: string;
     email: string;
     password: string;
-    role: string;
+    role: "seller" | "client";
     phone?: string;
     address?: string;
   }): Promise<boolean> {
@@ -459,7 +459,7 @@ export const ApiService = {
   },
 
   async fetchClientOrders(): Promise<Order[]> {
-    const res = await fetch(`${baseURL}/api/orders/me/client`, {
+    const res = await fetch(`${baseURL}/api/orders/buyer`, {
       headers: jsonHeaders(true),
     });
     const orders = await handleResponse<OrderLike[]>(
@@ -470,7 +470,7 @@ export const ApiService = {
   },
 
   async fetchSellerOrders(): Promise<Order[]> {
-    const res = await fetch(`${baseURL}/api/orders/me/seller`, {
+    const res = await fetch(`${baseURL}/api/orders/seller`, {
       headers: jsonHeaders(true),
     });
     const orders = await handleResponse<OrderLike[]>(

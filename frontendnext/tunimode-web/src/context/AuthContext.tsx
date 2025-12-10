@@ -13,7 +13,7 @@ type AuthState = {
     name: string;
     email: string;
     password: string;
-    role: string;
+    role: "seller" | "client";
     phone?: string;
     address?: string;
   }) => Promise<boolean>;
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     name: string;
     email: string;
     password: string;
-    role: string;
+    role: "seller" | "client";
     phone?: string;
     address?: string;
   }) => {
