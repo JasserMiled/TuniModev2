@@ -30,7 +30,11 @@ router.post("/image", authRequired, upload.single("image"), (req, res) => {
     return res.status(400).json({ message: "Aucun fichier" });
   }
   const relativeUrl = "/uploads/" + req.file.filename;
-  res.status(201).json({ url: relativeUrl });
+  const host = req.get("host");
+  const absoluteUrl = host
+    ? `${req.protocol}://${host}${relativeUrl}`
+    : relativeUrl;
+  res.status(201).json({ url: absoluteUrl, path: relativeUrl });
 });
 
 module.exports = router;

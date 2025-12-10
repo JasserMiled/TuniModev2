@@ -198,7 +198,7 @@ export const ApiService = {
       body: form,
     });
     const data = await handleResponse<{ url: string }>(res, "Upload impossible");
-    return data.url;
+    return resolveImageUrl(data.url) ?? data.url;
   },
 
   async updateProfile(payload: {

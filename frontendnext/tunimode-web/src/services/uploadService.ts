@@ -40,5 +40,5 @@ export async function uploadImage(file: File, type: UploadType): Promise<string>
     throw new Error("Aucune URL d'image renvoyée par le serveur.");
   }
 
-  return payload.url;
+  return ApiService.resolveImageUrl(payload.url) ?? payload.url;
 }
