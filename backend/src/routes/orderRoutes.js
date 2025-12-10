@@ -119,9 +119,9 @@ router.post("/", authRequired, async (req, res) => {
 router.get("/me/buyer", authRequired, async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT o.*, l.title AS listing_title
+      `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title
        FROM orders o
-       JOIN listings l ON o.listing_id = l.id
+       LEFT JOIN listings l ON o.listing_id = l.id
        WHERE o.buyer_id = $1
        ORDER BY o.created_at DESC`,
       [req.user.id]
@@ -139,9 +139,9 @@ router.get("/me/buyer", authRequired, async (req, res) => {
 router.get("/me/seller", authRequired, async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT o.*, l.title AS listing_title
+      `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title
        FROM orders o
-       JOIN listings l ON o.listing_id = l.id
+       LEFT JOIN listings l ON o.listing_id = l.id
        WHERE o.seller_id = $1
        ORDER BY o.created_at DESC`,
       [req.user.id]
