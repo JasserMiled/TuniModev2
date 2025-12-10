@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SearchFilters, useSearch } from "@/src/context/SearchContext";
@@ -36,21 +36,54 @@ export default function AppHeader() {
     deliveryAvailable: lastSearch.deliveryAvailable ?? null,
   });
 
+  const normalizedSelection = useMemo(normalizeSelection, [lastSearch]);
+
   const [lastFilters, setLastFilters] = useState<QuickFiltersSelection>(
-    normalizeSelection()
+    normalizedSelection
   );
 
+  const areSelectionsEqual = (
+    a: QuickFiltersSelection,
+    b: QuickFiltersSelection
+  ) => {
+    return (
+      a.city === b.city &&
+      a.minPrice === b.minPrice &&
+      a.maxPrice === b.maxPrice &&
+      a.categoryId === b.categoryId &&
+      a.deliveryAvailable === b.deliveryAvailable &&
+      a.sizes.join(",") === b.sizes.join(",") &&
+      a.colors.join(",") === b.colors.join(",")
+    );
+  };
+
   useEffect(() => {
-    setLastFilters(normalizeSelection());
-  }, [lastSearch]);
+    setLastFilters((prev) =>
+      areSelectionsEqual(prev, normalizedSelection) ? prev : normalizedSelection
+    );
+  }, [normalizedSelection]);
+
+  useEffect(() => {
+    const nextQuery =
+      searchParams.get("query") ?? searchParams.get("q") ?? "";
+
+    setQuery((prev) => (prev === nextQuery ? prev : nextQuery));
+  }, [searchParams]);
 
   const handleSearch = () => {
     const trimmed = query.trim();
     if (!trimmed) return;
 
     const filters: SearchFilters = { ...lastSearch, query: trimmed };
+    const nextUrl = buildResultsUrl(filters);
+
+    // Avoid spamming the search endpoint with identical queries.
+    if (lastSearch.query === trimmed && buildResultsUrl(lastSearch) === nextUrl) {
+      return;
+    }
+
     setSearch(filters);
-    router.push(buildResultsUrl(filters));
+    router.push(nextUrl);
   };
 
   const handleOpenFilters = () => {
