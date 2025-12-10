@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ApiService } from "@/src/services/api";
 import { Listing } from "@/src/models/Listing";
 import { useAuth } from "@/src/context/AuthContext";
@@ -12,13 +12,16 @@ import { FaHeart } from "react-icons/fa";
 export default function ListingDetailPage() {
   const params = useParams<{ id: string }>();
   const { user } = useAuth();
+  const router = useRouter();
 
   const [listing, setListing] = useState<Listing | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [sellerListings, setSellerListings] = useState<Listing[]>([]);
   const [error, setError] = useState<string | null>(null);
-const [isFavoriteListing, setIsFavoriteListing] = useState(false);
-const [isFavoriteSeller, setIsFavoriteSeller] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isFavoriteListing, setIsFavoriteListing] = useState(false);
+  const [isFavoriteSeller, setIsFavoriteSeller] = useState(false);
   // Popup state
   const [isOpen, setIsOpen] = useState(false);
   const [popupImage, setPopupImage] = useState<string | null>(null);
@@ -40,6 +43,31 @@ const [isFavoriteSeller, setIsFavoriteSeller] = useState(false);
       })
       .catch((e) => setError(e.message));
   }, [params?.id]);
+
+  const handleDeleteListing = async () => {
+    if (!listing) return;
+    const confirmed = window.confirm(
+      "Voulez-vous vraiment supprimer cette annonce ?"
+    );
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    setActionError(null);
+    try {
+      const ok = await ApiService.deleteListing(listing.id);
+      if (ok) {
+        router.push("/dashboard/listings");
+      } else {
+        setActionError("Suppression impossible pour le moment.");
+      }
+    } catch (e: any) {
+      setActionError(e.message ?? "Suppression impossible pour le moment.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const isOwner = Boolean(user?.id && listing?.userId === user.id);
 
   if (error)
     return <div className="max-w-6xl mx-auto px-4 py-8 text-red-600">{error}</div>;
@@ -138,10 +166,32 @@ className="w-full h-[450px] object-contain bg-transparent"
               </p>
             </div>
 
+            {actionError && (
+              <p className="text-red-600 text-sm">{actionError}</p>
+            )}
+
             {/* BUTTONS */}
-            <button className="px-5 py-3 bg-blue-600 text-white font-medium rounded-lg w-full">
-              Commander
-            </button>
+            {isOwner ? (
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => router.push("/dashboard/listings")}
+                  className="px-5 py-3 bg-blue-600 text-white font-medium rounded-lg w-full"
+                >
+                  Modifier
+                </button>
+                <button
+                  onClick={handleDeleteListing}
+                  disabled={isDeleting}
+                  className="px-5 py-3 bg-red-600 text-white font-medium rounded-lg w-full disabled:opacity-60"
+                >
+                  {isDeleting ? "Suppression..." : "Supprimer"}
+                </button>
+              </div>
+            ) : (
+              <button className="px-5 py-3 bg-blue-600 text-white font-medium rounded-lg w-full">
+                Commander
+              </button>
+            )}
 
             {/* SELLER BOX */}
 <div className="p-4 bg-gray-50 rounded-2xl shadow-md hover:shadow-lg transition flex items-center gap-3 border border-gray-200 relative">
