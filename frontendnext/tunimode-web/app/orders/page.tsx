@@ -24,6 +24,9 @@ export default function OrdersPage() {
   const isSeller = user?.role === "seller";
   const isClient = user?.role === "client";
 
+  const extractError = (e: unknown) =>
+    e instanceof Error ? e.message : "Une erreur est survenue";
+
   // ✅ LOAD DATA
   const loadOrders = async () => {
     try {
@@ -37,8 +40,8 @@ export default function OrdersPage() {
 
       setSellerOrders(seller ?? []);
       setClientOrders(client ?? []);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(extractError(e));
     }
   };
 
@@ -59,6 +62,8 @@ export default function OrdersPage() {
       case "received": return "Reçue";
       case "completed": return "Terminée";
       case "cancelled": return "Annulée";
+      case "refused": return "Refusée";
+      case "reception_refused": return "Réception refusée";
       default: return "En attente";
     }
   };
@@ -72,9 +77,185 @@ export default function OrdersPage() {
       case "picked_up": return "bg-teal-100 text-teal-700";
       case "received": return "bg-green-100 text-green-700";
       case "completed": return "bg-emerald-100 text-emerald-700";
-      case "cancelled": return "bg-red-100 text-red-700";
+      case "cancelled":
+      case "refused":
+      case "reception_refused":
+        return "bg-red-100 text-red-700";
       default: return "bg-orange-100 text-orange-700";
     }
+  };
+
+  const updateSellerStatus = async (orderId: number, status: string) => {
+    try {
+      await ApiService.updateSellerOrderStatus(orderId, status);
+      await loadOrders();
+    } catch (e) {
+      setError(extractError(e));
+    }
+  };
+
+  const cancelClientOrder = async (orderId: number) => {
+    try {
+      await ApiService.cancelOrder(orderId);
+      await loadOrders();
+    } catch (e) {
+      setError(extractError(e));
+    }
+  };
+
+  const clientReceptionAction = async (
+    orderId: number,
+    action: "receive" | "refuse"
+  ) => {
+    try {
+      if (action === "receive") {
+        await ApiService.confirmOrderReception(orderId);
+      } else {
+        await ApiService.refuseOrderReception(orderId);
+      }
+      await loadOrders();
+    } catch (e) {
+      setError(extractError(e));
+    }
+  };
+
+  const renderSellerActions = (order: Order) => {
+    if (activeTab !== "seller") return null;
+
+    switch (order.status) {
+      case "pending":
+        return (
+          <div className="flex flex-wrap gap-2 mt-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                updateSellerStatus(order.id, "confirmed");
+              }}
+              className="bg-blue-600 text-white px-3 py-1 rounded-lg"
+            >
+              Confirmer la commande
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                updateSellerStatus(order.id, "refused");
+              }}
+              className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
+            >
+              Refuser
+            </button>
+          </div>
+        );
+      case "confirmed":
+        return (
+          <div className="flex flex-wrap gap-2 mt-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                updateSellerStatus(order.id, "shipped");
+              }}
+              className="bg-purple-600 text-white px-3 py-1 rounded-lg"
+            >
+              Marquer expédiée
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                updateSellerStatus(order.id, "ready_for_pickup");
+              }}
+              className="border border-orange-500 text-orange-600 px-3 py-1 rounded-lg"
+            >
+              Mettre à retirer
+            </button>
+          </div>
+        );
+      case "ready_for_pickup":
+        return (
+          <div className="flex flex-wrap gap-2 mt-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                updateSellerStatus(order.id, "picked_up");
+              }}
+              className="bg-teal-600 text-white px-3 py-1 rounded-lg"
+            >
+              Marquer retirée
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                updateSellerStatus(order.id, "cancelled");
+              }}
+              className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
+            >
+              Annuler
+            </button>
+          </div>
+        );
+      case "picked_up":
+        return (
+          <div className="flex flex-wrap gap-2 mt-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                updateSellerStatus(order.id, "completed");
+              }}
+              className="bg-emerald-600 text-white px-3 py-1 rounded-lg"
+            >
+              Terminer
+            </button>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderClientActions = (order: Order) => {
+    if (activeTab !== "client") return null;
+
+    if (order.status === "pending") {
+      return (
+        <div className="mt-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              cancelClientOrder(order.id);
+            }}
+            className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
+          >
+            Annuler la commande
+          </button>
+        </div>
+      );
+    }
+
+    if (order.status === "shipped") {
+      return (
+        <div className="flex flex-wrap gap-2 mt-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              clientReceptionAction(order.id, "receive");
+            }}
+            className="bg-green-600 text-white px-3 py-1 rounded-lg"
+          >
+            Confirmer la réception
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              clientReceptionAction(order.id, "refuse");
+            }}
+            className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
+          >
+            Refuser la réception
+          </button>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   // ✅ FILTER
@@ -184,32 +365,9 @@ export default function OrdersPage() {
                     </p>
                   )}
 
-                  {/* ✅ CLIENT ACTIONS */}
-                  {activeTab === "client" && order.status === "pending" && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        ApiService.cancelOrder(order.id).then(loadOrders);
-                      }}
-                      className="mt-2 border border-red-500 text-red-600 px-3 py-1 rounded-lg"
-                    >
-                      Annuler la commande
-                    </button>
-                  )}
-
-                  {/* ✅ SELLER ACTIONS */}
-                  {activeTab === "seller" && order.status === "pending" && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        ApiService.updateSellerOrderStatus(order.id, "confirmed")
-                          .then(loadOrders);
-                      }}
-                      className="mt-2 bg-blue-600 text-white px-3 py-1 rounded-lg"
-                    >
-                      Confirmer la commande
-                    </button>
-                  )}
+                  {/* ✅ ACTIONS */}
+                  {renderClientActions(order)}
+                  {renderSellerActions(order)}
                 </div>
 
                 <div className="text-right">
