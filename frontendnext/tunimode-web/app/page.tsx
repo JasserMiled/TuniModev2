@@ -115,10 +115,25 @@ export default function HomePage() {
             <Link href="/dashboard" className="underline">Tableau de bord</Link>
           </div>
         </div>
-        <div className="w-full md:w-80 h-56 bg-gradient-to-r from-blue-600 to-indigo-500 rounded-2xl shadow-lg text-white p-6 flex items-end">
-          <div>
-            <p className="text-lg font-semibold">Commandes sécurisées</p>
-            <p className="text-sm text-white/80">Retrait ou livraison disponibles selon les annonces.</p>
+        <div className="w-full md:w-[420px]">
+          <div className="relative overflow-hidden rounded-3xl shadow-xl bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500 text-white px-8 py-10">
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,white,transparent_30%),radial-gradient(circle_at_80%_0%,white,transparent_25%)]" />
+            <div className="relative space-y-3">
+              <p className="text-xs uppercase tracking-[0.25em] text-white/70">Expérience premium</p>
+              <h2 className="text-2xl font-semibold leading-snug">Commandes sécurisées et suivies</h2>
+              <p className="text-white/85 text-sm leading-relaxed">
+                Profite d&apos;un retrait ou d&apos;une livraison fiable selon les annonces, avec des vendeurs vérifiés et un suivi
+                en temps réel.
+              </p>
+              <div className="flex items-center gap-3 text-sm">
+                <span className="px-3 py-1 rounded-full bg-white/15 border border-white/20">Vendeurs vérifiés</span>
+                <span className="px-3 py-1 rounded-full bg-white/15 border border-white/20">Paiements sécurisés</span>
+              </div>
+              <button className="mt-2 inline-flex items-center gap-2 px-5 py-3 bg-white text-blue-700 rounded-full font-semibold shadow-md hover:shadow-lg transition">
+                Découvrir les annonces
+                <span aria-hidden>→</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
