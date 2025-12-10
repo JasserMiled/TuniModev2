@@ -1,12 +1,12 @@
 import { ApiService } from "@/src/services/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export type UploadType = "profile" | "listing";
 
 export async function uploadImage(file: File, type: UploadType): Promise<string> {
   if (!API_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL is not configured.");
+    throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured.");
   }
 
   const formData = new FormData();
