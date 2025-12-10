@@ -34,6 +34,18 @@ export default function HomePage() {
     router.push(`/search/results?query=${encodeURIComponent(trimmed)}`);
   };
 
+  const handleOpenFilters = () => {
+    const trimmed = query.trim();
+    const filters = { ...lastSearch, query: trimmed };
+    setSearch(filters);
+
+    const targetUrl = trimmed
+      ? `/search/results?query=${encodeURIComponent(trimmed)}`
+      : "/search/results";
+
+    router.push(targetUrl);
+  };
+
   return (
     <main className="bg-white min-h-screen">
       <div className="border-b border-neutral-200 bg-white">
@@ -71,7 +83,7 @@ export default function HomePage() {
           </button>
 
           <button
-            onClick={handleSearch}
+            onClick={handleOpenFilters}
             className="px-5 py-2 bg-blue-600 text-white rounded-full text-sm font-semibold shadow-sm hover:bg-blue-700 whitespace-nowrap"
           >
             Filtrer
