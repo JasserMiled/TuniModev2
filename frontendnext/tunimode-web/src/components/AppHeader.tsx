@@ -144,11 +144,12 @@ export default function AppHeader() {
     return () =>
       document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
+  console.log("USER ROLE =", user?.role);
 
   const canCreateListing = useMemo(() => {
     if (!user?.role) return false;
     const normalizedRole = user.role.toLowerCase();
-    return ["seller", "professional", "professionnel"].includes(normalizedRole);
+    return ["seller", "professional", "pro"].includes(normalizedRole);
   }, [user?.role]);
 
   return (

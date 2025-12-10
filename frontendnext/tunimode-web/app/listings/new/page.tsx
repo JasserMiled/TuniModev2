@@ -36,7 +36,7 @@ export default function NewListingPage() {
   const { user } = useAuth();
 
   const isProfessional = useMemo(
-    () => Boolean(user && (user.role === "seller" || user.role === "professional")),
+    () => Boolean(user && (user.role === "seller" || user.role === "pro")),
     [user]
   );
 
