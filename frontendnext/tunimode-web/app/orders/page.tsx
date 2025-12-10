@@ -9,26 +9,26 @@ import { Protected } from "@/src/components/app/Protected";
 import AppHeader from "@/src/components/AppHeader";
 
 export default function OrdersPage() {
-  const [buyerOrders, setBuyerOrders] = useState<Order[]>([]);
+  const [clientOrders, setClientOrders] = useState<Order[]>([]);
   const [sellerOrders, setSellerOrders] = useState<Order[]>([]);
-  const [activeTab, setActiveTab] = useState<"seller" | "buyer">("seller");
+  const [activeTab, setActiveTab] = useState<"seller" | "client">("seller");
   const [error, setError] = useState<string | null>(null);
 
   const [sellerStatusFilter, setSellerStatusFilter] = useState<string | null>(null);
-  const [buyerStatusFilter, setBuyerStatusFilter] = useState<string | null>(null);
+  const [clientStatusFilter, setClientStatusFilter] = useState<string | null>(null);
 
   const router = useRouter();
 
   // ✅ LOAD DATA
   const loadOrders = async () => {
     try {
-      const [seller, buyer] = await Promise.all([
+      const [seller, client] = await Promise.all([
         ApiService.fetchSellerOrders(),
-        ApiService.fetchBuyerOrders(),
+        ApiService.fetchClientOrders(),
       ]);
 
       setSellerOrders(seller);
-      setBuyerOrders(buyer);
+      setClientOrders(client);
     } catch (e: any) {
       setError(e.message);
     }
@@ -73,7 +73,7 @@ export default function OrdersPage() {
   };
 
   const sellerFiltered = applyFilter(sellerOrders, sellerStatusFilter);
-  const buyerFiltered = applyFilter(buyerOrders, buyerStatusFilter);
+  const clientFiltered = applyFilter(clientOrders, clientStatusFilter);
 
   return (
     <Protected>
@@ -99,14 +99,14 @@ export default function OrdersPage() {
             </button>
 
             <button
-              onClick={() => setActiveTab("buyer")}
+              onClick={() => setActiveTab("client")}
               className={`px-6 py-2 font-semibold ${
-                activeTab === "buyer"
+                activeTab === "client"
                   ? "border-b-2 border-blue-600 text-blue-600"
                   : "text-gray-500"
               }`}
             >
-              Achats
+              Achats (client)
             </button>
           </div>
 
@@ -114,16 +114,16 @@ export default function OrdersPage() {
           <div className="mb-4">
             <select
               className="border rounded-lg px-3 py-2 w-full"
-              value={activeTab === "seller" ? sellerStatusFilter ?? "" : buyerStatusFilter ?? ""}
+              value={activeTab === "seller" ? sellerStatusFilter ?? "" : clientStatusFilter ?? ""}
               onChange={(e) =>
                 activeTab === "seller"
                   ? setSellerStatusFilter(e.target.value || null)
-                  : setBuyerStatusFilter(e.target.value || null)
+                  : setClientStatusFilter(e.target.value || null)
               }
             >
               <option value="">Tous les statuts</option>
               {[...new Set(
-                (activeTab === "seller" ? sellerOrders : buyerOrders).map(
+                (activeTab === "seller" ? sellerOrders : clientOrders).map(
                   (o) => o.status
                 )
               )].map((status) => (
@@ -135,7 +135,7 @@ export default function OrdersPage() {
           </div>
 
           {/* ✅ LIST */}
-          {(activeTab === "seller" ? sellerFiltered : buyerFiltered).map(
+          {(activeTab === "seller" ? sellerFiltered : clientFiltered).map(
             (order) => (
               <div
                 key={order.id}
@@ -165,8 +165,8 @@ export default function OrdersPage() {
                     </p>
                   )}
 
-                  {/* ✅ BUYER ACTIONS */}
-                  {activeTab === "buyer" && order.status === "pending" && (
+                  {/* ✅ CLIENT ACTIONS */}
+                  {activeTab === "client" && order.status === "pending" && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

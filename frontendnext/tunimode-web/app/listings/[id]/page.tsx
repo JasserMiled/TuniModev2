@@ -290,7 +290,7 @@ className="w-full h-[450px] object-contain bg-transparent"
 
               <div>
                 <p className="font-semibold">{listing.sellerName}</p>
-                <p className="text-sm text-neutral-600">Vendeur professionnel</p>
+                <p className="text-sm text-neutral-600">Vendeur</p>
                 <button className="text-blue-600 text-sm hover:underline">
                   Voir le profil
                 </button>

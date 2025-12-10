@@ -1,15 +1,16 @@
 // src/routes/orderRoutes.js
 const express = require("express");
 const db = require("../db");
-const { authRequired } = require("../middleware/auth");
+const { authRequired, requireRole } = require("../middleware/auth");
 const { notifyBuyer, notifySeller } = require("../services/emailService");
 
 const router = express.Router();
+const addClientAlias = (order) => ({ ...order, client_id: order.buyer_id });
 
 /**
  * POST /api/orders
  */
-router.post("/", authRequired, async (req, res) => {
+router.post("/", authRequired, requireRole("client"), async (req, res) => {
   try {
     console.log("[Orders] Extracted user ID from token:", req.user?.id);
 
@@ -73,7 +74,7 @@ router.post("/", authRequired, async (req, res) => {
 
     const total = Number(listing.price) * normalizedQuantity;
 
-    console.log("[Orders] Inserting order with buyer_id:", req.user?.id);
+    console.log("[Orders] Inserting order with client_id:", req.user?.id);
 
     const orderRes = await db.query(
       `INSERT INTO orders (buyer_id, seller_id, listing_id, quantity, total_amount, reception_mode, shipping_address, phone, color, size, buyer_note)
@@ -94,7 +95,7 @@ router.post("/", authRequired, async (req, res) => {
       ]
     );
 
-    const order = orderRes.rows[0];
+    const order = addClientAlias(orderRes.rows[0]);
 
     // Send notification emails (non-blocking but awaited for consistency)
     const buyerEmailRes = await db.query("SELECT email FROM users WHERE id = $1", [req.user.id]);
@@ -117,27 +118,37 @@ router.post("/", authRequired, async (req, res) => {
   }
 });
 
+const getClientOrders = async (buyerId) => {
+  const result = await db.query(
+    `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title
+     FROM orders o
+     LEFT JOIN listings l ON o.listing_id = l.id
+     WHERE o.buyer_id = $1
+     ORDER BY o.created_at DESC`,
+    [buyerId]
+  );
+
+  return result.rows.map(addClientAlias);
+};
+
 /**
- * GET /api/orders/me/buyer
+ * GET /api/orders/me/client
  */
-router.get("/me/buyer", authRequired, async (req, res) => {
+router.get("/me/client", authRequired, requireRole("client"), async (req, res) => {
   try {
-    const buyerId = req.user.id;
+    const orders = await getClientOrders(req.user.id);
+    res.json(orders);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
 
-    console.log(
-      "[Orders] Fetching buyer orders with query:",
-      `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title FROM orders o LEFT JOIN listings l ON o.listing_id = l.id WHERE o.buyer_id = ${buyerId} ORDER BY o.created_at DESC`
-    );
-
-    const result = await db.query(
-      `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title
-       FROM orders o
-       LEFT JOIN listings l ON o.listing_id = l.id
-       WHERE o.buyer_id = $1
-       ORDER BY o.created_at DESC`,
-      [buyerId]
-    );
-    res.json(result.rows);
+// Legacy buyer route kept for backward compatibility
+router.get("/me/buyer", authRequired, requireRole("client"), async (req, res) => {
+  try {
+    const orders = await getClientOrders(req.user.id);
+    res.json(orders);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Erreur serveur" });
@@ -147,7 +158,7 @@ router.get("/me/buyer", authRequired, async (req, res) => {
 /**
  * GET /api/orders/me/seller
  */
-router.get("/me/seller", authRequired, async (req, res) => {
+router.get("/me/seller", authRequired, requireRole("seller"), async (req, res) => {
   try {
     const result = await db.query(
       `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title
@@ -157,7 +168,7 @@ router.get("/me/seller", authRequired, async (req, res) => {
        ORDER BY o.created_at DESC`,
       [req.user.id]
     );
-    res.json(result.rows);
+    res.json(result.rows.map(addClientAlias));
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Erreur serveur" });
@@ -287,7 +298,7 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       [normalizedStatus, orderId]
     );
 
-    res.json(result.rows[0]);
+    res.json(addClientAlias(result.rows[0]));
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Erreur serveur" });

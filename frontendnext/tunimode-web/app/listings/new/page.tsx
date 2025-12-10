@@ -35,10 +35,7 @@ export default function NewListingPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const isProfessional = useMemo(
-    () => Boolean(user && (user.role === "seller" || user.role === "pro")),
-    [user]
-  );
+  const isSeller = useMemo(() => Boolean(user && user.role === "seller"), [user]);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -64,7 +61,7 @@ export default function NewListingPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || !isProfessional) return;
+    if (!user || !isSeller) return;
 
     setCategoryLoading(true);
     ApiService.fetchCategoryTree()
@@ -74,7 +71,7 @@ export default function NewListingPage() {
       })
       .catch(() => setCategoryError("Impossible de charger les catégories."))
       .finally(() => setCategoryLoading(false));
-  }, [user, isProfessional]);
+  }, [user, isSeller]);
 
   useEffect(() => {
     if (!categoryId) {
@@ -123,7 +120,7 @@ export default function NewListingPage() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!user || !isProfessional) return;
+    if (!user || !isSeller) return;
 
     setSubmitting(true);
     setError(null);
@@ -173,7 +170,7 @@ export default function NewListingPage() {
         {!user && (
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 space-y-3">
             <h1 className="text-2xl font-semibold">Espace réservé</h1>
-            <p>Connectez-vous avec un compte professionnel pour créer une annonce.</p>
+            <p>Connectez-vous avec un compte vendeur pour créer une annonce.</p>
             <div className="flex gap-3">
               <Link
                 href="/auth/login"
@@ -191,17 +188,17 @@ export default function NewListingPage() {
           </div>
         )}
 
-        {user && !isProfessional && (
+        {user && !isSeller && (
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 space-y-3">
             <h1 className="text-2xl font-semibold">Accès réservé</h1>
-            <p>Seuls les comptes professionnels peuvent publier une annonce.</p>
+            <p>Seuls les vendeurs peuvent publier une annonce.</p>
             <Link href="/" className="text-blue-600 underline">
               Retour à l'accueil
             </Link>
           </div>
         )}
 
-        {user && isProfessional && (
+        {user && isSeller && (
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <div>

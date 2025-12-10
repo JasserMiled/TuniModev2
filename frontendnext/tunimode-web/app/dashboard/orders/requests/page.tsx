@@ -31,7 +31,7 @@ export default function OrderRequestsPage() {
             <div key={order.id} className="border rounded-lg p-3 flex items-center justify-between">
               <div>
                 <p className="font-semibold">{order.listingTitle}</p>
-                <p className="text-sm text-neutral-500">{order.buyerName ?? "Acheteur"}</p>
+                <p className="text-sm text-neutral-500">{order.clientName ?? "Client"}</p>
               </div>
               <div className="flex gap-2">
                 <button
