@@ -35,6 +35,7 @@ export default function ListingDetailPage() {
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryPhone, setDeliveryPhone] = useState("");
   const [useProfileContact, setUseProfileContact] = useState(false);
+  const [isOrdering, setIsOrdering] = useState(false);
 
   useEffect(() => {
     const id = Number(params?.id);
@@ -69,6 +70,7 @@ export default function ListingDetailPage() {
     setUseProfileContact(false);
     setDeliveryAddress(user?.address ?? "");
     setDeliveryPhone(user?.phone ?? "");
+    setActionError(null);
     setIsOrderModalOpen(true);
   };
 
@@ -80,9 +82,40 @@ export default function ListingDetailPage() {
     }
   };
 
-  const handleSubmitOrder = (e: React.FormEvent) => {
+  const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsOrderModalOpen(false);
+    if (!listing) return;
+
+    if (
+      deliveryMode === "livraison" &&
+      (!deliveryAddress.trim() || !deliveryPhone.trim())
+    ) {
+      setActionError(
+        "Merci de renseigner l'adresse et le téléphone pour la livraison."
+      );
+      return;
+    }
+
+    setActionError(null);
+    setIsOrdering(true);
+
+    try {
+      await ApiService.createOrder({
+        listingId: listing.id,
+        quantity: orderQuantity,
+        receptionMode: deliveryMode,
+        size: selectedSize ?? undefined,
+        shippingAddress: deliveryMode === "livraison" ? deliveryAddress : undefined,
+        phone: deliveryMode === "livraison" ? deliveryPhone : undefined,
+      });
+
+      setIsOrderModalOpen(false);
+      router.push("/orders");
+    } catch (err: any) {
+      setActionError(err.message ?? "Impossible de passer la commande.");
+    } finally {
+      setIsOrdering(false);
+    }
   };
 
   const handleDeleteListing = async () => {
@@ -302,6 +335,7 @@ className="w-full h-[450px] object-contain bg-transparent"
         hasProfileContact={hasProfileContact}
         useProfileContact={useProfileContact}
         toggleProfileContact={toggleProfileContact}
+        isSubmitting={isOrdering}
       />
 
       {/* POPUP IMAGE FULLSCREEN */}
