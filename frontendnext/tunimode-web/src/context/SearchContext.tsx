@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 
 export type SearchFilters = {
   query: string;
@@ -26,11 +32,11 @@ const SearchContext = createContext<SearchState | undefined>(undefined);
 export const SearchProvider = ({ children }: { children: React.ReactNode }) => {
   const [lastSearch, setLastSearch] = useState<SearchFilters>(defaultFilters);
 
-  const setSearch = (filters: SearchFilters) => {
+  const setSearch = useCallback((filters: SearchFilters) => {
     setLastSearch({ ...filters });
-  };
+  }, []);
 
-  const value = useMemo(() => ({ lastSearch, setSearch }), [lastSearch]);
+  const value = useMemo(() => ({ lastSearch, setSearch }), [lastSearch, setSearch]);
 
   return <SearchContext.Provider value={value}>{children}</SearchContext.Provider>;
 };
