@@ -1,63 +1,199 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import { ApiService } from "@/src/services/api";
 import { FavoriteCollections } from "@/src/models/Favorite";
 import { Protected } from "@/src/components/app/Protected";
-import { useRouter } from "next/navigation";
+import AppHeader from "@/src/components/AppHeader";
+import ListingsGrid from "@/src/components/ListingsGrid";
+
+import { FaHeart } from "react-icons/fa";
 
 export default function FavoritesPage() {
-  const [collections, setCollections] = useState<FavoriteCollections | null>(null);
+  const [collections, setCollections] =
+    useState<FavoriteCollections | null>(null);
+
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] =
+    useState<"listings" | "sellers">("listings");
+
   const router = useRouter();
 
+  // ✅ LOAD FAVORITES
+  const loadFavorites = async () => {
+    try {
+      const data = await ApiService.fetchFavorites();
+      setCollections(data);
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
   useEffect(() => {
-    ApiService.fetchFavorites()
-      .then(setCollections)
-      .catch((e) => setError(e.message));
+    loadFavorites();
   }, []);
+
+  // ✅ REMOVE LISTING
+  const removeListing = async (id: number) => {
+    await ApiService.removeFavoriteListing(id);
+    loadFavorites();
+  };
+
+  // ✅ REMOVE SELLER
+  const removeSeller = async (id: number) => {
+    await ApiService.removeFavoriteSeller(id);
+    loadFavorites();
+  };
 
   return (
     <Protected>
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-        <h1 className="text-2xl font-semibold">Mes favoris</h1>
-        {error && <p className="text-red-600">{error}</p>}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h2 className="text-lg font-semibold mb-3">Annonces</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {collections?.listings.map((listing) => (
-                <div
-                  key={listing.id}
-                  className="border rounded-lg p-3 shadow-sm hover:shadow cursor-pointer"
-                  onClick={() => router.push(`/listings/${listing.id}`)}
-                >
-                  <p className="text-sm text-neutral-500">{listing.city ?? "Tunisie"}</p>
-                  <p className="font-semibold">{listing.title}</p>
-                </div>
-              ))}
-            </div>
+      <main className="bg-gray-50 min-h-screen">
+        <AppHeader />
+
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          {/* ✅ TITLE */}
+          <h1 className="text-2xl font-semibold mb-6">
+            Mes favoris
+          </h1>
+
+          {error && (
+            <p className="text-red-600 mb-4">
+              {error}
+            </p>
+          )}
+
+          {/* ✅ TAB BAR */}
+          <div className="flex border-b mb-6">
+            <button
+              onClick={() => setActiveTab("listings")}
+              className={`px-6 py-2 font-semibold transition ${
+                activeTab === "listings"
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-gray-500"
+              }`}
+            >
+              Annonces
+            </button>
+
+            <button
+              onClick={() => setActiveTab("sellers")}
+              className={`px-6 py-2 font-semibold transition ${
+                activeTab === "sellers"
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-gray-500"
+              }`}
+            >
+              Vendeurs
+            </button>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold mb-3">Vendeurs</h2>
-            <div className="space-y-3">
-              {collections?.sellers.map((seller) => (
-                <div
-                  key={seller.id}
-                  className="border rounded-lg p-3 flex items-center justify-between"
-                  onClick={() => router.push(`/profile/${seller.id}`)}
-                >
-                  <div>
-                    <p className="font-semibold">{seller.name}</p>
-                    <p className="text-sm text-neutral-500">{seller.email}</p>
-                  </div>
-                  <button className="text-blue-600 text-sm">Voir profil</button>
-                </div>
-              ))}
+
+          {/* ========================= */}
+          {/* ✅ LISTINGS TAB */}
+          {/* ========================= */}
+{activeTab === "listings" && collections && (
+  <>
+    {collections.listings.length === 0 ? (
+      <p className="text-neutral-500 py-6">
+        Aucune annonce dans vos favoris.
+      </p>
+    ) : (
+      <div className="relative">
+        
+        {/* 🟦 1) GRID DES ANNONCES */}
+        <ListingsGrid
+          listings={collections.listings}
+          columns={{ base: 2, sm: 3, md: 4, lg: 5 }}
+          rows={{ base: 2, sm: 2, md: 2, lg: 2 }}
+        />
+
+        {/* ❤️ 2) GRID DES COEURS SUPERPOSÉS */}
+        <div
+          className="
+            absolute inset-0 pointer-events-none
+            grid gap-4
+            grid-cols-2
+            sm:grid-cols-3
+            md:grid-cols-4
+            lg:grid-cols-5
+          "
+        >
+          {collections.listings.map((listing) => (
+            <div key={listing.id} className="relative">
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    removeListing(listing.id);
+  }}
+  className="
+    pointer-events-auto absolute top-2 right-2
+    hover:scale-125 transition
+  "
+  title="Retirer des favoris"
+>
+  <FaHeart className="text-red-600 drop-shadow" size={18} />
+</button>
+
             </div>
-          </div>
+          ))}
         </div>
+
       </div>
+    )}
+  </>
+)}
+
+
+            
+
+          {/* ========================= */}
+          {/* ✅ SELLERS TAB */}
+          {/* ========================= */}
+          {activeTab === "sellers" && collections && (
+            <>
+              {collections.sellers.length === 0 ? (
+                <p className="text-neutral-500 py-6">
+                  Aucun vendeur enregistré en favori.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {collections.sellers.map((seller) => (
+                    <div
+                      key={seller.id}
+                      className="bg-white border border-neutral-200 rounded-md p-4 shadow-sm hover:shadow transition flex items-center justify-between"
+                    >
+                      <div
+                        className="cursor-pointer"
+                        onClick={() =>
+                          router.push(`/profile/${seller.id}`)
+                        }
+                      >
+                        <p className="font-semibold">
+                          {seller.name}
+                        </p>
+                        <p className="text-sm text-neutral-500">
+                          {seller.email}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          removeSeller(seller.id)
+                        }
+                        className="text-red-600 hover:scale-110 transition"
+                        title="Retirer ce vendeur"
+                      >
+                        <FaHeart size={20} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </main>
     </Protected>
   );
 }

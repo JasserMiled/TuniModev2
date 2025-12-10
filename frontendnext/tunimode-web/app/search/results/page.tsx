@@ -5,64 +5,89 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Listing } from "@/src/models/Listing";
 import { ApiService } from "@/src/services/api";
 import { useSearch } from "@/src/context/SearchContext";
+import AppHeader from "@/src/components/AppHeader";
+import ListingsGrid from "@/src/components/ListingsGrid";
 
 export default function SearchResultsPage() {
   const params = useSearchParams();
   const router = useRouter();
   const { setSearch, lastSearch } = useSearch();
-  const [query, setQuery] = useState(params.get("query") ?? lastSearch.query ?? "");
+
+  const [query, setQuery] = useState(
+    params.get("query") ?? lastSearch.query ?? ""
+  );
+
   const [results, setResults] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ FETCH RESULTS EXACTEMENT COMME HOME
   useEffect(() => {
     const filters = { ...lastSearch, query: query ?? "" };
     setSearch(filters);
+
     setLoading(true);
-    ApiService.fetchListings({ query })
+    ApiService.fetchListings({ query: query || undefined })
       .then(setResults)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [query]);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-4">
-      <h1 className="text-2xl font-semibold">Résultats de recherche</h1>
-      <div className="flex gap-3">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Recherche"
-          className="flex-1 border rounded-lg px-3 py-2"
-        />
-        <button
-          onClick={() => router.push(`/search/results?query=${encodeURIComponent(query)}`)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-        >
-          Mettre à jour
-        </button>
-      </div>
-      {loading && <p>Chargement...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {results.map((listing) => (
-          <div
-            key={listing.id}
-            onClick={() => router.push(`/listings/${listing.id}`)}
-            className="border rounded-xl p-3 shadow-sm hover:shadow cursor-pointer"
+    <main className="bg-white min-h-screen">
+      {/* ✅ HEADER IDENTIQUE À HOME */}
+      <AppHeader />
+
+      {/* ✅ CONTENU IDENTIQUE À HOME (SANS BANNER) */}
+      <section className="max-w-6xl mx-auto px-4 pt-10 pb-12 space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-900">
+            Résultats de recherche
+          </h1>
+          <p className="text-sm text-neutral-600 mt-1">
+            Résultats pour : <span className="font-semibold">{query}</span>
+          </p>
+        </div>
+
+        {/* BARRE DE RECHERCHE (OPTIONNELLE) */}
+        <div className="flex gap-3">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Recherche"
+            className="flex-1 border rounded-lg px-3 py-2"
+          />
+          <button
+            onClick={() =>
+              router.push(`/search/results?query=${encodeURIComponent(query)}`)
+            }
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg"
           >
-            <div className="aspect-[4/3] bg-neutral-100 rounded-lg mb-2 overflow-hidden">
-              <img
-                src={listing.imageUrls?.[0] ?? "/placeholder-listing.svg"}
-                alt={listing.title}
-                className="w-full h-full object-cover"
+            Mettre à jour
+          </button>
+        </div>
+
+        {/* ✅ LOADING / ERROR */}
+        {loading && <div className="py-6 text-neutral-600">Chargement...</div>}
+        {error && <div className="py-6 text-red-600">{error}</div>}
+
+        {/* ✅ GRID IDENTIQUE À HOME */}
+        {!loading && !error && (
+          <>
+            {results.length === 0 ? (
+              <p className="text-neutral-500 py-6">
+                Aucun résultat trouvé.
+              </p>
+            ) : (
+              <ListingsGrid
+                listings={results}
+                columns={{ base: 2, sm: 3, md: 4, lg: 5 }}
+                rows={{ base: 2, sm: 2, md: 2, lg: 2 }}
               />
-            </div>
-            <h3 className="font-semibold">{listing.title}</h3>
-            <p className="text-blue-600 font-semibold">{listing.price} DT</p>
-          </div>
-        ))}
-      </div>
-    </div>
+            )}
+          </>
+        )}
+      </section>
+    </main>
   );
 }
