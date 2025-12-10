@@ -20,22 +20,41 @@ export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const [query, setQuery] = useState(
-    searchParams.get("q") ?? lastSearch.query ?? ""
-  );
+  // ✅ Optimized initial query (prevents hydration mismatch & extra renders)
+  const initialQuery = useMemo(() => {
+    return searchParams.get("q") ?? lastSearch.query ?? "";
+  }, [searchParams, lastSearch.query]);
+
+  const [query, setQuery] = useState(initialQuery);
 
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ FIXED: Proper dependency handling (no more cascading renders)
   useEffect(() => {
-    setLoading(true);
-    ApiService.fetchListings({ query: query || undefined })
-      .then(setListings)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  }, []);
+    let isMounted = true;
 
+    setLoading(true);
+    setError(null);
+
+    ApiService.fetchListings({ query: query || undefined })
+      .then((data) => {
+        if (isMounted) setListings(data);
+      })
+      .catch((e) => {
+        if (isMounted) setError(e.message);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [query]);
+
+  // ✅ Safe outside-click handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -47,7 +66,9 @@ export default function HomePage() {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, [menuOpen]);
 
   const latest = useMemo(() => listings.slice(0, 8), [listings]);
@@ -58,6 +79,7 @@ export default function HomePage() {
 
     const filters = { ...lastSearch, query: trimmed };
     setSearch(filters);
+
     router.push(`/search/results?query=${encodeURIComponent(trimmed)}`);
   };
 
@@ -72,38 +94,40 @@ export default function HomePage() {
 
     router.push(targetUrl);
   };
-return (
-  <main className="bg-white min-h-screen">
 
-    {/* ✅ HEADER GLOBAL */}
-    <AppHeader />
+  return (
+    <main className="bg-white min-h-screen">
+      {/* ✅ HEADER GLOBAL */}
+      <AppHeader />
 
-    {/* BANNER */}
-    <section
-      className="w-full h-[420px] bg-center bg-cover"
-      style={{ backgroundImage: "url('/banner.jpg')" }}
-    >
-      <div className="w-full h-full bg-black/20"></div>
-    </section>
+      {/* ✅ BANNER */}
+      <section
+        className="w-full h-[420px] bg-center bg-cover"
+        style={{ backgroundImage: "url('/banner.jpg')" }}
+      >
+        <div className="w-full h-full bg-black/20"></div>
+      </section>
 
-    {/* LISTINGS */}
-    <section className="max-w-6xl mx-auto px-4 pt-16 pb-12">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-neutral-900">
-          Derniers articles mis en ligne
-        </h2>
-        <p className="text-sm text-neutral-600 mt-1">
-          Choisis tes prochaines trouvailles parmi des milliers de vêtements et accessoires.
-        </p>
-      </div>
+      {/* ✅ LISTINGS */}
+      <section className="max-w-6xl mx-auto px-4 pt-16 pb-12">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-neutral-900">
+            Derniers articles mis en ligne
+          </h2>
+          <p className="text-sm text-neutral-600 mt-1">
+            Choisis tes prochaines trouvailles parmi des milliers de vêtements et accessoires.
+          </p>
+        </div>
 
-      {loading && <div className="py-6 text-neutral-600">Chargement...</div>}
-      {error && <div className="py-6 text-red-600">{error}</div>}
+        {loading && <div className="py-6 text-neutral-600">Chargement...</div>}
+        {error && <div className="py-6 text-red-600">{error}</div>}
 
-<ListingsGrid listings={latest} columns={{ base: 2, sm: 3, md: 4, lg: 5 }} rows={{ base: 2, md: 2, lg: 2 }} />
-    </section>
-
-  </main>
-);
-
+        <ListingsGrid
+          listings={latest}
+          columns={{ base: 2, sm: 3, md: 4, lg: 5 }}
+          rows={{ base: 2, md: 2, lg: 2 }}
+        />
+      </section>
+    </main>
+  );
 }
