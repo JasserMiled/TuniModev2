@@ -19,6 +19,7 @@ type OrderModalProps = {
   hasProfileContact: boolean;
   useProfileContact: boolean;
   toggleProfileContact: (checked: boolean) => void;
+  isSubmitting: boolean;
 };
 
 const OrderModal: React.FC<OrderModalProps> = ({
@@ -39,6 +40,7 @@ const OrderModal: React.FC<OrderModalProps> = ({
   hasProfileContact,
   useProfileContact,
   toggleProfileContact,
+  isSubmitting,
 }) => {
   if (!isOpen) return null;
 
@@ -171,9 +173,10 @@ const OrderModal: React.FC<OrderModalProps> = ({
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700"
+              disabled={isSubmitting}
+              className="px-5 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-60"
             >
-              Valider
+              {isSubmitting ? "Validation..." : "Valider"}
             </button>
           </div>
         </form>
