@@ -11,6 +11,8 @@ const router = express.Router();
  */
 router.post("/", authRequired, async (req, res) => {
   try {
+    console.log("[Orders] Extracted user ID from token:", req.user?.id);
+
     const {
       listing_id,
       quantity,
@@ -71,6 +73,8 @@ router.post("/", authRequired, async (req, res) => {
 
     const total = Number(listing.price) * normalizedQuantity;
 
+    console.log("[Orders] Inserting order with buyer_id:", req.user?.id);
+
     const orderRes = await db.query(
       `INSERT INTO orders (buyer_id, seller_id, listing_id, quantity, total_amount, reception_mode, shipping_address, phone, color, size, buyer_note)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
@@ -118,13 +122,20 @@ router.post("/", authRequired, async (req, res) => {
  */
 router.get("/me/buyer", authRequired, async (req, res) => {
   try {
+    const buyerId = req.user.id;
+
+    console.log(
+      "[Orders] Fetching buyer orders with query:",
+      `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title FROM orders o LEFT JOIN listings l ON o.listing_id = l.id WHERE o.buyer_id = ${buyerId} ORDER BY o.created_at DESC`
+    );
+
     const result = await db.query(
       `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title
        FROM orders o
        LEFT JOIN listings l ON o.listing_id = l.id
        WHERE o.buyer_id = $1
        ORDER BY o.created_at DESC`,
-      [req.user.id]
+      [buyerId]
     );
     res.json(result.rows);
   } catch (err) {
