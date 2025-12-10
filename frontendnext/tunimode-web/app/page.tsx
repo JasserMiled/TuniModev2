@@ -63,8 +63,11 @@ export default function HomePage() {
             </div>
           </div>
 
-          <button className="px-4 py-2 rounded-full border border-neutral-200 text-sm font-medium hover:bg-neutral-50 whitespace-nowrap">
-            Thème
+          <button
+            onClick={handleSearch}
+            className="px-4 py-2 rounded-full border border-neutral-200 text-sm font-medium hover:bg-neutral-50 whitespace-nowrap"
+          >
+            Chercher
           </button>
 
           <button
@@ -74,9 +77,12 @@ export default function HomePage() {
             Filtrer
           </button>
 
-          <div className="text-sm text-blue-600 font-semibold whitespace-nowrap">
-            {listings.length} annonces
-          </div>
+          <Link
+            href="/auth/login"
+            className="text-sm text-blue-600 font-semibold whitespace-nowrap hover:underline"
+          >
+            Se connecter
+          </Link>
         </div>
       </div>
 
