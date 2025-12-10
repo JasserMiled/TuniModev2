@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ApiService } from "@/src/services/api";
 import { Listing } from "@/src/models/Listing";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSearch } from "@/src/context/SearchContext";
+import { useAuth } from "@/src/context/AuthContext";
 
 export default function HomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setSearch, lastSearch } = useSearch();
+  const { user, logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState(searchParams.get("q") ?? lastSearch.query ?? "");
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(false);
@@ -23,6 +27,20 @@ export default function HomePage() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
 
   const latest = useMemo(() => listings.slice(0, 8), [listings]);
 
@@ -89,12 +107,76 @@ export default function HomePage() {
             Filtrer
           </button>
 
-          <Link
-            href="/auth/login"
-            className="text-sm text-blue-600 font-semibold whitespace-nowrap hover:underline"
-          >
-            Se connecter
-          </Link>
+          {user ? (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen((open) => !open)}
+                className="p-2 border border-neutral-200 rounded-full hover:bg-neutral-50 flex items-center gap-2"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+              >
+                <span className="block w-5 h-0.5 bg-neutral-900 mb-1" />
+                <span className="block w-5 h-0.5 bg-neutral-900 mb-1" />
+                <span className="block w-5 h-0.5 bg-neutral-900" />
+              </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-neutral-200 bg-white shadow-lg py-2 z-20">
+                  <Link
+                    href="/profile"
+                    className="block px-4 py-2 text-sm text-neutral-800 hover:bg-neutral-50"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Mon profil
+                  </Link>
+                  <Link
+                    href="/favorites"
+                    className="block px-4 py-2 text-sm text-neutral-800 hover:bg-neutral-50"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Mes favoris
+                  </Link>
+                  <Link
+                    href="/dashboard/listings"
+                    className="block px-4 py-2 text-sm text-neutral-800 hover:bg-neutral-50"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Mes annonces
+                  </Link>
+                  <Link
+                    href="/orders"
+                    className="block px-4 py-2 text-sm text-neutral-800 hover:bg-neutral-50"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Mes commandes
+                  </Link>
+                  <Link
+                    href="/account/settings"
+                    className="block px-4 py-2 text-sm text-neutral-800 hover:bg-neutral-50"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Paramètres de compte
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMenuOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-neutral-50"
+                  >
+                    Se déconnecter
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/auth/login"
+              className="text-sm text-blue-600 font-semibold whitespace-nowrap hover:underline"
+            >
+              Se connecter
+            </Link>
+          )}
         </div>
       </div>
 
