@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ApiService } from "@/src/services/api";
 import { User } from "@/src/models/User";
@@ -8,6 +8,8 @@ import { Listing } from "@/src/models/Listing";
 import ListingsGrid from "@/src/components/ListingsGrid";
 import AppHeader from "@/src/components/AppHeader";
 import { useAuth } from "@/src/context/AuthContext";
+import ImageUploader from "@/src/components/ImageUploader";
+import { uploadImage } from "@/src/services/uploadService";
 
 type Review = {
   id: number;
@@ -28,6 +30,9 @@ export default function ProfilePage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [activeTab, setActiveTab] = useState<"annonces" | "avis">("annonces");
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
 
   const isCurrentUser = currentUser?.id === user?.id;
 
@@ -54,6 +59,26 @@ export default function ProfilePage() {
         ).toFixed(1)
       : null;
 
+  const avatarUrl = useMemo(
+    () => uploadedUrl ?? user?.avatarUrl ?? null,
+    [uploadedUrl, user?.avatarUrl]
+  );
+
+  const handleProfileUpload = async (file: File) => {
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const url = await uploadImage(file, "profile");
+      setUploadedUrl(url);
+      setUser((prev) => (prev ? { ...prev, avatarUrl: url } : prev));
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Upload échoué";
+      setUploadError(message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <main className="bg-gray-50 min-h-screen">
       {/* ✅ HEADER GLOBAL */}
@@ -69,9 +94,9 @@ export default function ProfilePage() {
           <div className="bg-white border rounded-xl p-5 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center">
-                {user.avatarUrl ? (
+                {avatarUrl ? (
                   <img
-                    src={user.avatarUrl}
+                    src={avatarUrl}
                     className="w-full h-full object-cover"
                     alt="avatar"
                   />
@@ -100,12 +125,24 @@ export default function ProfilePage() {
             </div>
 
             {isCurrentUser && (
-              <button
-                onClick={() => router.push("/account/settings")}
-                className="px-4 py-2 border rounded-lg text-blue-600 hover:bg-blue-50"
-              >
-                Modifier profil
-              </button>
+              <div className="flex flex-col items-end gap-3">
+                <button
+                  onClick={() => router.push("/account/settings")}
+                  className="px-4 py-2 border rounded-lg text-blue-600 hover:bg-blue-50"
+                >
+                  Modifier profil
+                </button>
+
+                <div className="w-56">
+                  <ImageUploader onUpload={handleProfileUpload} loading={uploading} />
+                  {uploadError && (
+                    <p className="text-xs text-red-600 mt-1">{uploadError}</p>
+                  )}
+                  {uploadedUrl && (
+                    <p className="text-xs text-green-600 mt-1">Photo mise à jour.</p>
+                  )}
+                </div>
+              </div>
             )}
           </div>
         )}
