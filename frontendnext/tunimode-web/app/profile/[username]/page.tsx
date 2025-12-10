@@ -33,6 +33,7 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState(false);
 
   const isCurrentUser = currentUser?.id === user?.id;
 
@@ -40,7 +41,15 @@ export default function ProfilePage() {
     if (!userId) return;
 
     ApiService.fetchUserProfile(userId)
-      .then(setUser)
+      .then((profile) =>
+        setUser({
+          ...profile,
+          avatarUrl:
+            ApiService.resolveImageUrl(profile.avatarUrl ?? null) ??
+            profile.avatarUrl ??
+            null,
+        })
+      )
       .catch((e) => setError(e.message));
 
     ApiService.fetchUserListings(userId)
@@ -64,13 +73,19 @@ export default function ProfilePage() {
     [uploadedUrl, user?.avatarUrl]
   );
 
+  useEffect(() => {
+    setAvatarError(false);
+  }, [avatarUrl]);
+
   const handleProfileUpload = async (file: File) => {
     setUploading(true);
     setUploadError(null);
     try {
       const url = await uploadImage(file, "profile");
-      setUploadedUrl(url);
-      setUser((prev) => (prev ? { ...prev, avatarUrl: url } : prev));
+      const resolvedUrl = ApiService.resolveImageUrl(url) ?? url;
+      setUploadedUrl(resolvedUrl);
+      setAvatarError(false);
+      setUser((prev) => (prev ? { ...prev, avatarUrl: resolvedUrl } : prev));
     } catch (e) {
       const message = e instanceof Error ? e.message : "Upload échoué";
       setUploadError(message);
@@ -94,14 +109,17 @@ export default function ProfilePage() {
           <div className="bg-white border rounded-xl p-5 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-4">
               <div className="w-20 h-20 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center">
-                {avatarUrl ? (
+                {avatarUrl && !avatarError ? (
                   <img
                     src={avatarUrl}
                     className="w-full h-full object-cover"
-                    alt="avatar"
+                    alt=""
+                    onError={() => setAvatarError(true)}
                   />
                 ) : (
-                  <span className="text-3xl">👤</span>
+                  <span aria-hidden className="text-3xl">
+                    👤
+                  </span>
                 )}
               </div>
 

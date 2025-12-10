@@ -19,7 +19,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+const uploadsDir = path.join(__dirname, "..", "uploads");
+app.use("/uploads", express.static(uploadsDir));
 
 app.get("/", (req, res) => {
   res.json({ name: "TuniMode API", status: "OK" });

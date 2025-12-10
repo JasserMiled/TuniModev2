@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Protected } from "@/src/components/app/Protected";
 import { useAuth } from "@/src/context/AuthContext";
 import { ApiService } from "@/src/services/api";
 import AppHeader from "@/src/components/AppHeader";
-import Image from "next/image";
 
 export default function AccountSettingsPage() {
   const { user, refreshUser, logout } = useAuth();
@@ -18,6 +17,7 @@ export default function AccountSettingsPage() {
   const [newPassword, setNewPassword] = useState("");
 
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarError, setAvatarError] = useState(false);
 
   const [tab, setTab] = useState<"general" | "security">("general");
   const [message, setMessage] = useState<string | null>(null);
@@ -82,7 +82,8 @@ export default function AccountSettingsPage() {
 
     try {
       const url = await ApiService.uploadProfileImage(avatarFile);
-      const updated = await ApiService.updateProfile({ avatarUrl: url });
+      const resolvedUrl = ApiService.resolveImageUrl(url) ?? url;
+      const updated = await ApiService.updateProfile({ avatarUrl: resolvedUrl });
       refreshUser(updated);
 
       setAvatarFile(null);
@@ -92,14 +93,26 @@ export default function AccountSettingsPage() {
     }
   };
 
-return (
-  <Protected>
-    <main className="bg-gray-50 min-h-screen">
-      {/* ✅ SAME HEADER AS LISTINGS PAGE */}
-      <AppHeader />
+  const avatarUrl = useMemo(
+    () =>
+      user?.avatarUrl
+        ? ApiService.resolveImageUrl(user.avatarUrl) ?? user.avatarUrl
+        : null,
+    [user?.avatarUrl]
+  );
 
-      <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
-        <h1 className="text-2xl font-semibold mb-4">Paramètres du compte</h1>
+  useEffect(() => {
+    setAvatarError(false);
+  }, [avatarUrl]);
+
+  return (
+    <Protected>
+      <main className="bg-gray-50 min-h-screen">
+        {/* ✅ SAME HEADER AS LISTINGS PAGE */}
+        <AppHeader />
+
+        <div className="max-w-3xl mx-auto px-4 py-10 space-y-6">
+          <h1 className="text-2xl font-semibold mb-4">Paramètres du compte</h1>
 
         {/* Messages */}
         {message && (
@@ -137,21 +150,22 @@ return (
             <div className="border rounded-xl p-4 flex items-center gap-4 bg-white">
               <div className="w-20 h-20 rounded-full overflow-hidden bg-neutral-200 flex items-center justify-center">
                 {avatarFile ? (
-                  <Image
+                  <img
                     src={URL.createObjectURL(avatarFile)}
-                    alt="avatar preview"
-                    width={80}
-                    height={80}
+                    alt=""
+                    className="w-full h-full object-cover"
                   />
-                ) : user?.avatarUrl ? (
-                  <Image
-                    src={user.avatarUrl}
-                    alt="avatar"
-                    width={80}
-                    height={80}
+                ) : avatarUrl && !avatarError ? (
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    onError={() => setAvatarError(true)}
                   />
                 ) : (
-                  <span className="text-neutral-500 text-4xl">👤</span>
+                  <span aria-hidden className="text-neutral-500 text-4xl">
+                    👤
+                  </span>
                 )}
               </div>
 
