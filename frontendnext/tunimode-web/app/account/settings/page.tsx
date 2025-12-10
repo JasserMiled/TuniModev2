@@ -31,8 +31,20 @@ export default function AccountSettingsPage() {
   const handleUpdateGeneral = async () => {
     try {
       setError(null);
-      const updated = await ApiService.updateProfile({ name, address });
+      let resolvedAvatarUrl: string | undefined;
+
+      if (avatarFile) {
+        const url = await ApiService.uploadProfileImage(avatarFile);
+        resolvedAvatarUrl = ApiService.resolveImageUrl(url) ?? url;
+      }
+
+      const updated = await ApiService.updateProfile({
+        name,
+        address,
+        avatarUrl: resolvedAvatarUrl,
+      });
       refreshUser(updated);
+      setAvatarFile(null);
       setMessage("Informations mises à jour");
     } catch (e) {
       setError((e as Error).message);
