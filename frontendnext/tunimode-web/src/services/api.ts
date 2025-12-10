@@ -39,6 +39,20 @@ const resolveImageUrl = (url?: string | null) => {
   return `${baseURL}${normalized}`;
 };
 
+type UserLike = Partial<User> & {
+  avatar_url?: string | null;
+};
+
+const normalizeUser = (user: UserLike): User => ({
+  id: user.id ?? 0,
+  name: user.name ?? "",
+  email: user.email ?? "",
+  role: user.role ?? "client",
+  phone: user.phone ?? null,
+  avatarUrl: resolveImageUrl(user.avatarUrl ?? user.avatar_url ?? null),
+  address: user.address ?? null,
+});
+
 type ListingLike = Partial<Listing> & {
   image_urls?: string[];
   images?: Array<{ url?: string | null } | string>;
@@ -136,7 +150,7 @@ export const ApiService = {
   setAuth(token: string | null, user?: User | null) {
     authToken = token;
     if (user !== undefined) {
-      currentUser = user;
+      currentUser = user ? normalizeUser(user) : null;
     }
   },
 
@@ -165,7 +179,7 @@ export const ApiService = {
 
     if (!res.ok) return false;
     const data = (await res.json()) as { user: User; token: string };
-    currentUser = data.user;
+    currentUser = normalizeUser(data.user);
     authToken = data.token;
     return true;
   },
@@ -210,7 +224,7 @@ export const ApiService = {
       }),
     });
     const data = await handleResponse<{ user?: User } & Record<string, unknown>>(res, "Mise à jour impossible");
-    const updated = data.user ?? (data as unknown as User);
+    const updated = normalizeUser(data.user ?? (data as unknown as User));
     currentUser = updated;
     return updated;
   },
@@ -272,7 +286,7 @@ export const ApiService = {
       headers: jsonHeaders(),
     });
     const data = await handleResponse<{ user: User }>(res, "Impossible de charger le profil utilisateur");
-    return data.user;
+    return normalizeUser(data.user);
   },
 
   async fetchListings(params: {
