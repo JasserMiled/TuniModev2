@@ -239,12 +239,35 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       expédiée: "shipped",
       expedie: "shipped",
       expediee: "shipped",
+      expédiee: "shipped",
       recu: "received",
       reçu: "received",
+      recue: "received",
+      reçue: "received",
       refus_de_reception: "reception_refused",
       "refus de reception": "reception_refused",
       "refus_de_réception": "reception_refused",
+      "refus de réception": "reception_refused",
       done: "completed",
+      en_attente: "pending",
+      "en attente": "pending",
+      confirmée: "confirmed",
+      confirmee: "confirmed",
+      refusée: "cancelled",
+      refusee: "cancelled",
+      "refusé": "cancelled",
+      "refuse": "cancelled",
+      expédiée: "shipped",
+      expediee: "shipped",
+      "à retirer": "ready_for_pickup",
+      a_retirer: "ready_for_pickup",
+      "a retirer": "ready_for_pickup",
+      retirée: "picked_up",
+      retiree: "picked_up",
+      terminee: "completed",
+      terminée: "completed",
+      annulée: "cancelled",
+      annulee: "cancelled",
     };
 
     const rawStatus = status ? String(status).toLowerCase() : "";
@@ -264,62 +287,31 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     const isSeller = found.seller_id === req.user.id;
     const isBuyer = found.buyer_id === req.user.id;
 
-    const sellerStatuses = ["confirmed", "shipped", "ready_for_pickup", "picked_up", "cancelled"];
+    const workflow = {
+      pending: { seller: ["confirmed", "cancelled"], buyer: [] },
+      confirmed: { seller: ["shipped", "ready_for_pickup"], buyer: [] },
+      shipped: { seller: [], buyer: ["received", "reception_refused"] },
+      ready_for_pickup: { seller: ["picked_up", "cancelled"], buyer: [] },
+      picked_up: { seller: ["completed"], buyer: [] },
+      received: { seller: [], buyer: [] },
+      reception_refused: { seller: [], buyer: [] },
+      cancelled: { seller: [], buyer: [] },
+      completed: { seller: [], buyer: [] },
+    };
 
-    if (normalizedStatus === "cancelled") {
-      if (!isSeller && !isBuyer) {
-        return res.status(403).json({ message: "Vous ne pouvez pas modifier cette commande" });
-      }
+    const currentWorkflow = workflow[found.current_status];
 
-      const buyerCancellableStatuses = ["pending"];
-      const sellerCancellableStatuses = ["pending", "confirmed", "shipped", "ready_for_pickup"];
+    if (!currentWorkflow) {
+      return res.status(400).json({ message: "Statut actuel inconnu" });
+    }
 
-      const canBuyerCancel = isBuyer && buyerCancellableStatuses.includes(found.current_status);
-      const canSellerCancel = isSeller && sellerCancellableStatuses.includes(found.current_status);
+    const allowedForUser = [
+      ...(isSeller ? currentWorkflow.seller : []),
+      ...(isBuyer ? currentWorkflow.buyer : []),
+    ];
 
-      if (!canBuyerCancel && !canSellerCancel) {
-        return res
-          .status(400)
-          .json({ message: "La commande ne peut pas être annulée à ce stade" });
-      }
-    } else if (normalizedStatus === "received") {
-      if (!isBuyer) {
-        return res.status(403).json({ message: "Seul l'acheteur peut confirmer la réception" });
-      }
-
-      const allowedCurrentStatuses = ["shipped", "picked_up"];
-      if (!allowedCurrentStatuses.includes(found.current_status)) {
-        return res
-          .status(400)
-          .json({ message: "La commande ne peut pas être marquée comme reçue pour le moment" });
-      }
-    } else if (normalizedStatus === "reception_refused") {
-      if (!isSeller && !isBuyer) {
-        return res.status(403).json({ message: "Vous ne pouvez pas modifier cette commande" });
-      }
-
-      if (found.current_status !== "shipped") {
-        return res.status(400).json({ message: "La commande doit être expédiée pour refuser la réception" });
-      }
-    } else if (normalizedStatus === "completed") {
-      if (!isSeller) {
-        return res.status(403).json({ message: "Seul le vendeur peut clôturer la commande" });
-      }
-
-      const completableStatuses = ["received", "reception_refused"];
-      if (!completableStatuses.includes(found.current_status)) {
-        return res
-          .status(400)
-          .json({ message: "La commande doit être reçue ou refusée avant d'être terminée" });
-      }
-    } else {
-      if (!isSeller) {
-        return res.status(403).json({ message: "Vous ne pouvez pas modifier cette commande" });
-      }
-
-      if (!sellerStatuses.includes(normalizedStatus)) {
-        return res.status(400).json({ message: "Statut vendeur invalide" });
-      }
+    if (!allowedForUser.includes(normalizedStatus)) {
+      return res.status(403).json({ message: "Vous ne pouvez pas modifier cette commande" });
     }
 
     const result = await db.query(
