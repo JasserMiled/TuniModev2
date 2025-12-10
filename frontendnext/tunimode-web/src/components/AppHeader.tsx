@@ -145,6 +145,12 @@ export default function AppHeader() {
       document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
+  const canCreateListing = useMemo(() => {
+    if (!user?.role) return false;
+    const normalizedRole = user.role.toLowerCase();
+    return ["seller", "professional", "professionnel"].includes(normalizedRole);
+  }, [user?.role]);
+
   return (
     <header className="border-b border-neutral-200 bg-white">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-2">
@@ -191,15 +197,14 @@ export default function AppHeader() {
 
         {/* ✅ DROITE — USER / LOGIN */}
         <div className="flex items-center gap-3 flex-shrink-0">
-          {user &&
-            (user.role === "seller" || user.role === "professional") && (
-              <Link
-                href="/listings/new"
-                className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-semibold hover:bg-blue-700 transition"
-              >
-                Ajouter une annonce
-              </Link>
-            )}
+          {canCreateListing && (
+            <Link
+              href="/listings/new"
+              className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-semibold hover:bg-blue-700 transition"
+            >
+              Ajouter une annonce
+            </Link>
+          )}
 
           {user ? (
             <div className="relative ml-2" ref={menuRef}>
