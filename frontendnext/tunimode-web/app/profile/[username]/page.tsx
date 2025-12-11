@@ -8,6 +8,8 @@ import { Listing } from "@/src/models/Listing";
 import ListingsGrid from "@/src/components/ListingsGrid";
 import AppHeader from "@/src/components/AppHeader";
 import { useAuth } from "@/src/context/AuthContext";
+import VendorCard from "@/src/components/VendorCard";
+
 
 type Review = {
   id: number;
@@ -80,59 +82,19 @@ export default function ProfilePage() {
         {/* ===================== */}
         {/* ✅ HEADER PROFIL */}
         {/* ===================== */}
-        {user && (
-          <div className="bg-white border rounded-xl p-5 flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center">
-                {avatarUrl && !avatarError ? (
-                  <img
-                    src={avatarUrl}
-                    className="w-full h-full object-cover"
-                    alt=""
-                    onError={() => setAvatarError(true)}
-                  />
-                ) : (
-                  <span aria-hidden className="text-3xl">
-                    👤
-                  </span>
-                )}
-              </div>
-
-              <div>
-                <h1 className="text-xl font-semibold">{user.name}</h1>
-
-                {averageRating ? (
-                  <p className="text-sm text-neutral-600">
-                    ⭐ {averageRating} / 5 ({reviews.length} avis)
-                  </p>
-                ) : (
-                  <p className="text-sm text-neutral-500">
-                    Aucun avis pour le moment
-                  </p>
-                )}
-
-                <p className="text-sm text-neutral-500 flex items-center gap-1">
-                  📍 {user.address || "Adresse non renseignée"}
-                </p>
-              </div>
-            </div>
-
-            {isCurrentUser && (
-              <div className="flex flex-col items-end gap-3">
-                <button
-                  onClick={() => router.push("/account/settings")}
-                  className="px-4 py-2 border rounded-lg text-blue-600 hover:bg-blue-50"
-                >
-                  Modifier profil
-                </button>
-
-                <p className="text-xs text-neutral-500 text-right">
-                  La photo de profil se modifie depuis les paramètres.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+{user && (
+  <VendorCard
+  sellerId={userId}  
+    name={user.name}
+    avatarUrl={avatarUrl}
+    rating={averageRating ? Number(averageRating) : null}
+    reviewsCount={reviews.length}
+    address={user.address}
+    showEditButton={isCurrentUser}
+    avatarSize={80}        // tu peux ajuster !
+    padding="p-5"          // tu peux réduire si tu veux une version compacte
+  />
+)}
 
         {/* ===================== */}
         {/* ✅ TAB BAR */}

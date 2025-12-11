@@ -103,7 +103,7 @@ export default function HomePage() {
       {/* ✅ BANNER */}
       <section
         className="w-full h-[420px] bg-center bg-cover"
-        style={{ backgroundImage: "url('/banner.jpg')" }}
+        style={{ backgroundImage: "url('/banner.jpg')", backgroundSize: "100%"  }}
       >
         <div className="w-full h-full bg-black/20"></div>
       </section>

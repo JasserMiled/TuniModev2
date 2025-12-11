@@ -9,6 +9,7 @@ import AppHeader from "@/src/components/AppHeader";
 import ListingsGrid from "@/src/components/ListingsGrid";
 import OrderModal from "@/src/components/OrderModal";
 import { FaHeart } from "react-icons/fa";
+import VendorCard from "@/src/components/VendorCard";
 
 export default function ListingDetailPage() {
   const params = useParams<{ id: string }>();
@@ -59,6 +60,7 @@ export default function ListingDetailPage() {
   }, [params?.id]);
 
   useEffect(() => {
+	  console.log("LISTING DEBUG ===>", listing);
     if (listing?.sizes?.length) {
       setSelectedSize(listing.sizes[0]);
     }
@@ -285,32 +287,13 @@ className="w-full h-[450px] object-contain bg-transparent"
             )}
 
             {/* SELLER BOX */}
-<div className="p-4 bg-gray-50 rounded-2xl shadow-md hover:shadow-lg transition flex items-center gap-3 border border-gray-200 relative">
-              
-              {/* ❤️ Favorite Button for SELLER */}
-<button
-  onClick={() => setIsFavoriteSeller(!isFavoriteSeller)}
-  className="absolute top-4 right-4 transition transform hover:scale-110"
-  aria-label="Favori vendeur"
->
-  <FaHeart
-    size={22}
-    className={`transition ${
-      isFavoriteSeller ? "text-red-600 scale-110" : "text-gray-200"
-    }`}
-  />
-</button>
 
-
-              <div>
-                <p className="font-semibold">{listing.sellerName}</p>
-                <p className="text-sm text-neutral-600">Vendeur</p>
-                <button className="text-blue-600 text-sm hover:underline">
-                  Voir le profil
-                </button>
-              </div>
-            </div>
-
+<VendorCard
+  sellerId={listing.userId}
+  avatarSize={50}
+  padding="p-4"
+  showEditButton={false}
+/>
           </div>
 
         </div>
