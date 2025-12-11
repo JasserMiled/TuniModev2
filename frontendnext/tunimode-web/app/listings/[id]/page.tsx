@@ -50,8 +50,8 @@ export default function ListingDetailPage() {
         setListing(data);
         setSelectedImage(data.imageUrls?.[0] ?? null);
 
-        if (data.sellerId) {
-          ApiService.fetchListingsBySeller(data.sellerId).then((res) => {
+        if (data.userId) {
+          ApiService.fetchUserListings(data.userId).then((res) => {
             setSellerListings(res.filter((x) => x.id !== id));
           });
         }
@@ -60,7 +60,6 @@ export default function ListingDetailPage() {
   }, [params?.id]);
 
   useEffect(() => {
-	  console.log("LISTING DEBUG ===>", listing);
     if (listing?.sizes?.length) {
       setSelectedSize(listing.sizes[0]);
     }
