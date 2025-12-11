@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ApiService } from "@/src/services/api";
 import { User } from "@/src/models/User";
@@ -8,8 +8,6 @@ import { Listing } from "@/src/models/Listing";
 import ListingsGrid from "@/src/components/ListingsGrid";
 import AppHeader from "@/src/components/AppHeader";
 import { useAuth } from "@/src/context/AuthContext";
-import ImageUploader from "@/src/components/ImageUploader";
-import { uploadImage } from "@/src/services/uploadService";
 
 type Review = {
   id: number;
@@ -30,9 +28,6 @@ export default function ProfilePage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [activeTab, setActiveTab] = useState<"annonces" | "avis">("annonces");
   const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState(false);
 
   const isCurrentUser = currentUser?.id === user?.id;
@@ -68,31 +63,11 @@ export default function ProfilePage() {
         ).toFixed(1)
       : null;
 
-  const avatarUrl = useMemo(
-    () => uploadedUrl ?? user?.avatarUrl ?? null,
-    [uploadedUrl, user?.avatarUrl]
-  );
+  const avatarUrl = user?.avatarUrl ?? null;
 
   useEffect(() => {
     setAvatarError(false);
   }, [avatarUrl]);
-
-  const handleProfileUpload = async (file: File) => {
-    setUploading(true);
-    setUploadError(null);
-    try {
-      const url = await uploadImage(file, "profile");
-      const resolvedUrl = ApiService.resolveImageUrl(url) ?? url;
-      setUploadedUrl(resolvedUrl);
-      setAvatarError(false);
-      setUser((prev) => (prev ? { ...prev, avatarUrl: resolvedUrl } : prev));
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Upload échoué";
-      setUploadError(message);
-    } finally {
-      setUploading(false);
-    }
-  };
 
   return (
     <main className="bg-gray-50 min-h-screen">
@@ -151,15 +126,9 @@ export default function ProfilePage() {
                   Modifier profil
                 </button>
 
-                <div className="w-56">
-                  <ImageUploader onUpload={handleProfileUpload} loading={uploading} />
-                  {uploadError && (
-                    <p className="text-xs text-red-600 mt-1">{uploadError}</p>
-                  )}
-                  {uploadedUrl && (
-                    <p className="text-xs text-green-600 mt-1">Photo mise à jour.</p>
-                  )}
-                </div>
+                <p className="text-xs text-neutral-500 text-right">
+                  La photo de profil se modifie depuis les paramètres.
+                </p>
               </div>
             )}
           </div>
