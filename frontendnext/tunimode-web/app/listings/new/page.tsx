@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import AppHeader from "@/src/components/AppHeader";
+import ImageUploader from "@/src/components/ImageUploader";
 import { useAuth } from "@/src/context/AuthContext";
 import { ApiService } from "@/src/services/api";
+import { uploadImage } from "@/src/services/uploadService";
 
 type Category = {
   id: number;
@@ -46,7 +48,9 @@ export default function NewListingPage() {
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [sizes, setSizes] = useState<string[]>([]);
   const [colors, setColors] = useState<string[]>([]);
-  const [imageUrls, setImageUrls] = useState("");
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryError, setCategoryError] = useState<string | null>(null);
@@ -133,11 +137,6 @@ export default function NewListingPage() {
       return;
     }
 
-    const images = imageUrls
-      .split(/\n|,/)
-      .map((url) => url.trim())
-      .filter(Boolean);
-
     const ok = await ApiService.createListing({
       title: title.trim(),
       description: description.trim(),
@@ -147,7 +146,7 @@ export default function NewListingPage() {
       condition: condition.trim(),
       categoryId: categoryId ?? undefined,
       city: city.trim() || undefined,
-      images,
+      images: imageUrls,
       deliveryAvailable,
     });
 
@@ -160,6 +159,43 @@ export default function NewListingPage() {
     setSuccess("Annonce créée avec succès.");
     setSubmitting(false);
     router.push("/dashboard/listings");
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (imageUrls.length >= 10) {
+      setUploadError("Vous pouvez ajouter jusqu'à 10 images maximum.");
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const url = await uploadImage(file, "listing");
+      setImageUrls((prev) => {
+        if (prev.length >= 10) {
+          setUploadError("Vous pouvez ajouter jusqu'à 10 images maximum.");
+          return prev;
+        }
+
+        const updated = [...prev, url];
+        if (updated.length >= 10) {
+          setUploadError("Limite de 10 images atteinte.");
+        }
+        return updated;
+      });
+    } catch (e) {
+      const message =
+        e instanceof Error
+          ? e.message
+          : "Impossible de téléverser l'image.";
+      setUploadError(message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = (url: string) => {
+    setImageUrls((prev) => prev.filter((img) => img !== url));
   };
 
   return (
@@ -192,9 +228,9 @@ export default function NewListingPage() {
           <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 space-y-3">
             <h1 className="text-2xl font-semibold">Accès réservé</h1>
             <p>Seuls les vendeurs peuvent publier une annonce.</p>
-            <Link href="/" className="text-blue-600 underline">
-              Retour à l'accueil
-            </Link>
+              <Link href="/" className="text-blue-600 underline">
+                Retour à l&apos;accueil
+              </Link>
           </div>
         )}
 
@@ -354,12 +390,39 @@ export default function NewListingPage() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-neutral-700">Images</label>
-                    <textarea
-                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 min-h-[100px]"
-                      value={imageUrls}
-                      onChange={(e) => setImageUrls(e.target.value)}
-                      placeholder="Une URL par ligne ou séparées par une virgule"
-                    />
+                    <div className="space-y-2">
+                      <ImageUploader onUpload={handleImageUpload} loading={uploading} />
+                      <p className="text-xs text-neutral-500">
+                        Jusqu&apos;à 10 images. Utilisez le même téléversement que pour la photo de
+                        profil.
+                      </p>
+                      {uploadError && (
+                        <p className="text-xs text-red-600">{uploadError}</p>
+                      )}
+                    </div>
+                    {imageUrls.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {imageUrls.map((url) => (
+                          <div
+                            key={url}
+                            className="relative border rounded-lg overflow-hidden bg-neutral-100"
+                          >
+                            <img
+                              src={url}
+                              alt="Aperçu de l'annonce"
+                              className="w-full h-32 object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(url)}
+                              className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded"
+                            >
+                              Retirer
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
