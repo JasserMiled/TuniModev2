@@ -277,7 +277,7 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     }
 
     const check = await db.query(
-      "SELECT seller_id, buyer_id, status AS current_status FROM orders WHERE id = $1",
+      "SELECT seller_id, buyer_id, status AS current_status, reception_mode FROM orders WHERE id = $1",
       [orderId]
     );
     const found = check.rows[0];
@@ -287,7 +287,7 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     const isBuyer = found.buyer_id === req.user.id;
 
     // Prevent cancelling orders that are already fully completed or refused
-    const cancellableStatuses = ["pending", "shipped", "received"];
+    const cancellableStatuses = ["pending", "confirmed", "shipped", "received"];
     if (
       normalizedStatus === "cancelled" &&
       !cancellableStatuses.includes(found.current_status)
@@ -299,7 +299,13 @@ router.patch("/:id/status", authRequired, async (req, res) => {
 
     const workflow = {
       pending: { seller: ["confirmed", "cancelled"], buyer: [] },
-      confirmed: { seller: ["shipped", "ready_for_pickup"], buyer: [] },
+      confirmed: {
+        seller:
+          found.reception_mode === "retrait"
+            ? ["ready_for_pickup", "cancelled"]
+            : ["shipped", "cancelled"],
+        buyer: [],
+      },
       shipped: {
         seller: ["received", "reception_refused", "cancelled"],
         buyer: ["received", "reception_refused", "cancelled"],
