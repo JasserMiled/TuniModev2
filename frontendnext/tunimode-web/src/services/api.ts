@@ -56,9 +56,6 @@ const normalizeUser = (user: UserLike): User => ({
 type ListingLike = Partial<Listing> & {
   image_urls?: string[];
   images?: Array<{ url?: string | null } | string>;
-  image?: string | null;
-  mainImage?: string | null;
-  thumbnailUrl?: string | null;
   delivery_available?: boolean;
   category_name?: string | null;
   seller_name?: string | null;
@@ -84,55 +81,25 @@ const extractImageUrls = (listing: ListingLike) => {
 
   return [] as string[];
 };
-const extractListingImage = (listing: ListingLike): string | null => {
-  const possible =
-    listing.imageUrl ??
-    listing.image ??
-    listing.mainImage ??
-    listing.thumbnailUrl ??
-    (listing.images?.length
-      ? typeof listing.images[0] === "string"
-        ? listing.images[0]
-        : listing.images[0]?.url ?? null
-      : null) ??
-    (listing.imageUrls?.length ? listing.imageUrls[0] : null) ??
-    (listing.image_urls?.length ? listing.image_urls[0] : null);
 
-  return resolveImageUrl(possible ?? null);
-};
-
-const normalizeListing = (listing: ListingLike): Listing => {
-  const primaryImage = extractListingImage(listing);
-  const resolvedImages = extractImageUrls(listing)
+const normalizeListing = (listing: ListingLike): Listing => ({
+  ...listing,
+  userId: listing.userId ?? listing.user_id ?? listing.id ?? 0,
+  title: listing.title ?? "",
+  price: listing.price ?? 0,
+  sizes: listing.sizes ?? [],
+  colors: listing.colors ?? [],
+  deliveryAvailable: listing.deliveryAvailable ?? listing.delivery_available ?? false,
+  categoryName: listing.categoryName ?? listing.category_name ?? null,
+  sellerName: listing.sellerName ?? listing.seller_name ?? null,
+  stock: listing.stock ?? 0,
+  status: listing.status ?? null,
+  isDeleted:
+    listing.isDeleted ?? listing.is_deleted ?? (listing.status ? listing.status === "deleted" : false),
+  imageUrls: extractImageUrls(listing)
     .map(resolveImageUrl)
-    .filter((url): url is string => Boolean(url));
-
-  const imageUrls = Array.from(
-    new Set(
-      (primaryImage ? [primaryImage, ...resolvedImages] : resolvedImages).filter(
-        (url): url is string => Boolean(url)
-      )
-    )
-  );
-
-  return {
-    ...listing,
-    userId: listing.userId ?? listing.user_id ?? listing.id ?? 0,
-    title: listing.title ?? "",
-    price: listing.price ?? 0,
-    sizes: listing.sizes ?? [],
-    colors: listing.colors ?? [],
-    deliveryAvailable: listing.deliveryAvailable ?? listing.delivery_available ?? false,
-    categoryName: listing.categoryName ?? listing.category_name ?? null,
-    sellerName: listing.sellerName ?? listing.seller_name ?? null,
-    stock: listing.stock ?? 0,
-    status: listing.status ?? null,
-    isDeleted:
-      listing.isDeleted ?? listing.is_deleted ?? (listing.status ? listing.status === "deleted" : false),
-    imageUrl: primaryImage ?? imageUrls[0] ?? "",
-    imageUrls,
-  };
-};
+    .filter((url): url is string => Boolean(url)),
+});
 
 type OrderLike = Partial<Order> & {
   listing_id?: number;
@@ -173,9 +140,6 @@ export const ApiService = {
   },
   resolveImageUrl(url?: string | null) {
     return resolveImageUrl(url);
-  },
-  extractListingImage(listing: ListingLike) {
-    return extractListingImage(listing);
   },
   get token() {
     return authToken;
