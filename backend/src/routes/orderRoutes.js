@@ -282,11 +282,18 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     const isSeller = found.seller_id === req.user.id;
     const isBuyer = found.buyer_id === req.user.id;
 
+    // Prevent cancelling orders that are already engaged in fulfillment
+    if (normalizedStatus === "cancelled" && found.current_status !== "pending") {
+      return res
+        .status(403)
+        .json({ message: "Vous ne pouvez pas annuler cette commande" });
+    }
+
     const workflow = {
       pending: { seller: ["confirmed", "cancelled"], buyer: [] },
       confirmed: { seller: ["shipped", "ready_for_pickup"], buyer: [] },
       shipped: { seller: [], buyer: ["received", "reception_refused"] },
-      ready_for_pickup: { seller: ["picked_up", "cancelled"], buyer: [] },
+      ready_for_pickup: { seller: ["picked_up"], buyer: [] },
       picked_up: { seller: ["completed"], buyer: [] },
       received: { seller: [], buyer: [] },
       reception_refused: { seller: [], buyer: [] },
