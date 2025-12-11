@@ -132,7 +132,6 @@ const normalizeListing = (listing: ListingLike): Listing => {
     deliveryAvailable: listing.deliveryAvailable ?? listing.delivery_available ?? false,
     categoryName: listing.categoryName ?? listing.category_name ?? null,
     sellerName: listing.sellerName ?? listing.seller_name ?? null,
-    stock: listing.stock ?? 0,
     status: listing.status ?? null,
     isDeleted:
       listing.isDeleted ?? listing.is_deleted ?? (listing.status ? listing.status === "deleted" : false),
@@ -407,7 +406,6 @@ export const ApiService = {
     city?: string;
     deliveryAvailable?: boolean;
     status?: string;
-    stock?: number;
     images?: string[];
   }): Promise<boolean> {
     const res = await fetch(`${baseURL}/api/listings/${payload.id}`, {
@@ -424,7 +422,6 @@ export const ApiService = {
         city: payload.city,
         delivery_available: payload.deliveryAvailable,
         status: payload.status,
-        stock: payload.stock,
         images: payload.images,
       }),
     });
@@ -450,7 +447,6 @@ export const ApiService = {
     city?: string;
     images?: string[];
     deliveryAvailable?: boolean;
-    stock?: number;
   }): Promise<boolean> {
     const res = await fetch(`${baseURL}/api/listings`, {
       method: "POST",
@@ -465,7 +461,6 @@ export const ApiService = {
         category_id: payload.categoryId,
         city: payload.city,
         delivery_available: payload.deliveryAvailable ?? false,
-        stock: payload.stock,
         images: payload.images ?? [],
       }),
     });

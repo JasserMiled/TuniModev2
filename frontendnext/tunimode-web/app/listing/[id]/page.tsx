@@ -327,7 +327,6 @@ className="w-full h-[450px] object-contain bg-transparent"
               <p className="flex justify-between"><span>Couleurs</span><span>{listing.colors?.join(", ") || "—"}</span></p>
               <p className="flex justify-between"><span>Genre</span><span>{listing.gender ?? "—"}</span></p>
               <p className="flex justify-between"><span>Ville</span><span>{listing.city ?? "—"}</span></p>
-              <p className="flex justify-between"><span>Stock</span><span>{listing.stock ?? "—"}</span></p>
             </div>
 
             {/* DESCRIPTION */}

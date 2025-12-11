@@ -55,7 +55,6 @@ export default function NewListingModal({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [stock, setStock] = useState("");
   const [city, setCity] = useState("");
   const [condition, setCondition] = useState("neuf");
   const [deliveryAvailable, setDeliveryAvailable] = useState(false);
@@ -85,11 +84,6 @@ export default function NewListingModal({
       setTitle(listing.title ?? "");
       setDescription(listing.description ?? "");
       setPrice(listing.price ? String(listing.price) : "");
-      setStock(
-        listing.stock !== undefined && listing.stock !== null
-          ? String(listing.stock)
-          : ""
-      );
       setCity(listing.city ?? "");
       setCondition(listing.condition ?? "neuf");
       setDeliveryAvailable(Boolean(listing.deliveryAvailable));
@@ -166,7 +160,6 @@ export default function NewListingModal({
     setTitle("");
     setDescription("");
     setPrice("");
-    setStock("");
     setCity("");
     setCondition("neuf");
     setDeliveryAvailable(false);
@@ -202,13 +195,6 @@ export default function NewListingModal({
       return;
     }
 
-    const parsedStock = Number(stock || 0);
-    if (!Number.isInteger(parsedStock) || parsedStock < 0) {
-      setError("Veuillez saisir un stock valide.");
-      setSubmitting(false);
-      return;
-    }
-
     const payload = {
       title: title.trim(),
       description: description.trim(),
@@ -220,7 +206,6 @@ export default function NewListingModal({
       city: city.trim() || undefined,
       images: imageUrls,
       deliveryAvailable,
-      stock: parsedStock,
     };
 
     const ok = isEditMode && listing
@@ -331,28 +316,15 @@ export default function NewListingModal({
           <div className="space-y-2">
             <label className="text-sm font-medium text-neutral-700">Prix (TND)</label>
             <input
-              className="w-full border border-neutral-200 rounded-lg px-3 py-2"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              type="number"
-              min={0}
-              step="0.01"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-700">Stock</label>
-            <input
-              className="w-full border border-neutral-200 rounded-lg px-3 py-2"
-              value={stock}
-              onChange={(e) => setStock(e.target.value)}
-              type="number"
-              min={0}
-              step="1"
-              placeholder="Quantité disponible"
-            />
-          </div>
+          className="w-full border border-neutral-200 rounded-lg px-3 py-2"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          type="number"
+          min={0}
+          step="0.01"
+          required
+        />
+      </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-neutral-700">Condition</label>
