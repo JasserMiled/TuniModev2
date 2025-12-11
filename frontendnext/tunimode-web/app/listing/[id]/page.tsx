@@ -10,6 +10,7 @@ import ListingsGrid from "@/src/components/ListingsGrid";
 import OrderModal from "@/src/components/OrderModal";
 import { FaHeart } from "react-icons/fa";
 import VendorCard from "@/src/components/VendorCard";
+import NewListingModal from "@/src/components/NewListingModal";
 
 export default function ListingDetailPage() {
   const params = useParams<{ id: string }>();
@@ -37,26 +38,32 @@ export default function ListingDetailPage() {
   const [deliveryPhone, setDeliveryPhone] = useState("");
   const [useProfileContact, setUseProfileContact] = useState(false);
   const [isOrdering, setIsOrdering] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const isClient = user?.role === "client";
   const isSeller = user?.role === "seller";
 
-  useEffect(() => {
+  const loadListing = async () => {
     const id = Number(params?.id);
     if (!id) return;
 
-    ApiService.fetchListingDetail(id)
-      .then((data) => {
-        setListing(data);
-        setSelectedImage(data.imageUrls?.[0] ?? data.imageUrl ?? null);
+    try {
+      setError(null);
+      const data = await ApiService.fetchListingDetail(id);
+      setListing(data);
+      setSelectedImage(data.imageUrls?.[0] ?? data.imageUrl ?? null);
 
-        if (data.userId) {
-          ApiService.fetchUserListings(data.userId).then((res) => {
-            setSellerListings(res.filter((x) => x.id !== id));
-          });
-        }
-      })
-      .catch((e) => setError(e.message));
+      if (data.userId) {
+        const res = await ApiService.fetchUserListings(data.userId);
+        setSellerListings(res.filter((x) => x.id !== id));
+      }
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  useEffect(() => {
+    void loadListing();
   }, [params?.id]);
 
   useEffect(() => {
@@ -339,7 +346,7 @@ className="w-full h-[450px] object-contain bg-transparent"
             {isOwner ? (
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={() => router.push("/dashboard/listings")}
+                  onClick={() => setIsEditModalOpen(true)}
                   className="px-5 py-3 bg-blue-600 text-white font-medium rounded-lg w-full"
                 >
                   Modifier
@@ -457,6 +464,16 @@ className="w-full h-[450px] object-contain bg-transparent"
           </div>
         </div>
       )}
+
+      <NewListingModal
+        open={isEditModalOpen}
+        listing={listing}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={() => {
+          void loadListing();
+          setIsEditModalOpen(false);
+        }}
+      />
     </main>
   );
 }
