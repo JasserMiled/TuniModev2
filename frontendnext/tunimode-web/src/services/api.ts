@@ -59,10 +59,6 @@ type ListingLike = Partial<Listing> & {
   delivery_available?: boolean;
   category_name?: string | null;
   seller_name?: string | null;
-  seller_id?: number | null;
-  seller_avatar_url?: string | null;
-  seller_avatar?: string | null;
-  seller?: { avatarUrl?: string | null; avatar_url?: string | null } | null;
   user_id?: number;
   is_deleted?: boolean;
   status?: string | null;
@@ -88,15 +84,7 @@ const extractImageUrls = (listing: ListingLike) => {
 
 const normalizeListing = (listing: ListingLike): Listing => ({
   ...listing,
-  sellerId:
-    listing.sellerId ?? listing.seller_id ?? listing.userId ?? listing.user_id ?? null,
-  userId:
-    listing.userId ??
-    listing.user_id ??
-    listing.sellerId ??
-    listing.seller_id ??
-    listing.id ??
-    0,
+  userId: listing.userId ?? listing.user_id ?? listing.id ?? 0,
   title: listing.title ?? "",
   price: listing.price ?? 0,
   sizes: listing.sizes ?? [],
@@ -104,14 +92,6 @@ const normalizeListing = (listing: ListingLike): Listing => ({
   deliveryAvailable: listing.deliveryAvailable ?? listing.delivery_available ?? false,
   categoryName: listing.categoryName ?? listing.category_name ?? null,
   sellerName: listing.sellerName ?? listing.seller_name ?? null,
-  sellerAvatarUrl: resolveImageUrl(
-    listing.sellerAvatarUrl ??
-      listing.seller_avatar_url ??
-      listing.seller_avatar ??
-      listing.seller?.avatarUrl ??
-      listing.seller?.avatar_url ??
-      null
-  ),
   stock: listing.stock ?? 0,
   status: listing.status ?? null,
   isDeleted:
