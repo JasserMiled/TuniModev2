@@ -188,6 +188,25 @@ const normalizeOrder = (order: OrderLike): Order => ({
     null,
 });
 
+type ReviewLike = Partial<Review> & {
+  order_id?: number;
+  reviewer_id?: number;
+  reviewee_id?: number;
+  created_at?: string;
+  reviewer_name?: string | null;
+};
+
+const normalizeReview = (review: ReviewLike): Review => ({
+  id: review.id ?? 0,
+  orderId: review.orderId ?? review.order_id ?? 0,
+  reviewerId: review.reviewerId ?? review.reviewer_id ?? 0,
+  revieweeId: review.revieweeId ?? review.reviewee_id ?? 0,
+  rating: review.rating ?? 0,
+  comment: review.comment ?? null,
+  createdAt: review.createdAt ?? review.created_at ?? new Date().toISOString(),
+  reviewerName: review.reviewerName ?? review.reviewer_name ?? null,
+});
+
 export const ApiService = {
   get baseUrl() {
     return baseURL;
@@ -605,14 +624,22 @@ export const ApiService = {
     const res = await fetch(`${baseURL}/api/reviews/user/${userId}`, {
       headers: jsonHeaders(),
     });
-    return handleResponse<Review[]>(res, "Impossible de charger les avis de cet utilisateur");
+    const reviews = await handleResponse<ReviewLike[]>(
+      res,
+      "Impossible de charger les avis de cet utilisateur"
+    );
+    return reviews.map(normalizeReview);
   },
 
   async fetchOrderReviews(orderId: number): Promise<Review[]> {
     const res = await fetch(`${baseURL}/api/reviews/order/${orderId}`, {
       headers: jsonHeaders(true),
     });
-    return handleResponse<Review[]>(res, "Impossible de charger les avis de cette commande");
+    const reviews = await handleResponse<ReviewLike[]>(
+      res,
+      "Impossible de charger les avis de cette commande"
+    );
+    return reviews.map(normalizeReview);
   },
 
   async submitReview(payload: { orderId: number; rating: number; comment?: string }): Promise<Review> {
@@ -625,6 +652,10 @@ export const ApiService = {
         comment: payload.comment,
       }),
     });
-    return handleResponse<Review>(res, "Impossible d'enregistrer votre avis pour cette commande");
+    const review = await handleResponse<ReviewLike>(
+      res,
+      "Impossible d'enregistrer votre avis pour cette commande"
+    );
+    return normalizeReview(review);
   },
 };

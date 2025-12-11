@@ -11,6 +11,7 @@ import { Listing } from "@/src/models/Listing";
 import ClientCard from "@/src/components/ClientCard";
 import AppHeader from "@/src/components/AppHeader";
 import VendorCard from "@/src/components/VendorCard";
+import { Review } from "@/src/models/Review";
 
 export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
@@ -18,6 +19,12 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [listing, setListing] = useState<Listing | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
 
   const extractError = (e: unknown) =>
     e instanceof Error ? e.message : "Une erreur est survenue";
@@ -92,6 +99,21 @@ export default function OrderDetailPage() {
 
     fetchListing();
   }, [order?.listingId, user?.role]);
+
+  useEffect(() => {
+    const loadReviews = async () => {
+      if (!order?.id) return;
+      try {
+        const fetched = await ApiService.fetchOrderReviews(order.id);
+        setReviews(fetched);
+        setReviewsError(null);
+      } catch (e) {
+        setReviewsError(extractError(e));
+      }
+    };
+
+    loadReviews();
+  }, [order?.id]);
 
   const updateSellerStatus = async (status: string) => {
     if (!order) return;
@@ -276,6 +298,46 @@ export default function OrderDetailPage() {
     return null;
   };
 
+  const eligibleForReviewStatuses = new Set([
+    "confirmed",
+    "shipped",
+    "ready_for_pickup",
+    "picked_up",
+    "received",
+    "completed",
+  ]);
+
+  const canEvaluate = Boolean(
+    order && user && eligibleForReviewStatuses.has(order.status)
+  );
+
+  const hasLeftReview = Boolean(
+    user && reviews.some((review) => review.reviewerId === user.id)
+  );
+
+  const submitReview = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!order) return;
+    setIsSubmittingReview(true);
+    try {
+      await ApiService.submitReview({
+        orderId: order.id,
+        rating: reviewRating,
+        comment: reviewComment.trim() || undefined,
+      });
+      const refreshed = await ApiService.fetchOrderReviews(order.id);
+      setReviews(refreshed);
+      setShowReviewForm(false);
+      setReviewComment("");
+      setReviewRating(5);
+      setReviewsError(null);
+    } catch (e) {
+      setReviewsError(extractError(e));
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   return (
     <Protected>
       <main className="bg-gray-50 min-h-screen">
@@ -357,6 +419,114 @@ export default function OrderDetailPage() {
                 {renderActions() ?? (
                   <p className="text-sm text-gray-600">Aucune action disponible.</p>
                 )}
+              </div>
+
+              <div className="pt-4 border-t space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold">Évaluations</p>
+                  {canEvaluate && !hasLeftReview && (
+                    <button
+                      onClick={() => setShowReviewForm((prev) => !prev)}
+                      className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      {showReviewForm ? "Fermer" : "Ajouter une évaluation"}
+                    </button>
+                  )}
+                </div>
+
+                {canEvaluate && hasLeftReview && (
+                  <p className="text-sm text-green-700">
+                    Vous avez déjà évalué cette commande.
+                  </p>
+                )}
+
+                {canEvaluate && showReviewForm && !hasLeftReview && (
+                  <form onSubmit={submitReview} className="space-y-3 bg-white p-4 rounded-xl shadow-sm border">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Note (1 à 5)
+                      </label>
+                      <select
+                        value={reviewRating}
+                        onChange={(e) => setReviewRating(Number(e.target.value))}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                      >
+                        {[1, 2, 3, 4, 5].map((value) => (
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Votre message d'évaluation
+                      </label>
+                      <textarea
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                        rows={4}
+                        placeholder="Partagez votre expérience avec votre interlocuteur"
+                        required
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowReviewForm(false)}
+                        className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSubmittingReview}
+                        className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
+                      >
+                        {isSubmittingReview ? "Envoi..." : "Envoyer l'évaluation"}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {reviewsError && (
+                  <p className="text-sm text-red-600">{reviewsError}</p>
+                )}
+
+                <div className="space-y-2">
+                  {reviews.length === 0 ? (
+                    <p className="text-sm text-gray-600">
+                      Aucun avis pour le moment.
+                    </p>
+                  ) : (
+                    reviews.map((review) => (
+                      <div
+                        key={review.id}
+                        className="bg-white p-4 rounded-xl shadow-sm border"
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="font-semibold">
+                            {review.reviewerName ?? "Utilisateur"}
+                          </p>
+                          <span className="text-yellow-600 font-semibold">
+                            ⭐ {review.rating} / 5
+                          </span>
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm text-gray-700 mt-2 whitespace-pre-line">
+                            {review.comment}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-500 mt-2">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </>
           )}
