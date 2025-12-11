@@ -6,11 +6,15 @@ import { ApiService } from "@/src/services/api";
 import { Order } from "@/src/models/Order";
 import { Protected } from "@/src/components/app/Protected";
 import { useAuth } from "@/src/context/AuthContext";
+import ListingCard from "@/src/components/ListingCard";
+import { Listing } from "@/src/models/Listing";
+import ClientCard from "@/src/components/ClientCard";
 
 export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
   const { user } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
+  const [listing, setListing] = useState<Listing | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const extractError = (e: unknown) =>
@@ -61,6 +65,7 @@ export default function OrderDetailPage() {
       const found = list.find((o) => o.id === id);
       if (!found) throw new Error("Commande introuvable");
       setOrder(found);
+      setListing(null);
       setError(null);
     } catch (e) {
       setError(extractError(e));
@@ -71,6 +76,20 @@ export default function OrderDetailPage() {
     loadOrder();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params?.id, user?.role]);
+
+  useEffect(() => {
+    const fetchListing = async () => {
+      if (!order?.listingId || user?.role !== "seller") return;
+      try {
+        const listingDetail = await ApiService.fetchListingDetail(order.listingId);
+        setListing(listingDetail);
+      } catch (e) {
+        setError(extractError(e));
+      }
+    };
+
+    fetchListing();
+  }, [order?.listingId, user?.role]);
 
   const updateSellerStatus = async (status: string) => {
     if (!order) return;
@@ -242,6 +261,24 @@ export default function OrderDetailPage() {
             )}
 
             {order.phone && <p>Téléphone : {order.phone}</p>}
+
+            {user?.role === "seller" && (
+              <div className="space-y-3 pt-4 border-t">
+                <p className="font-semibold">Informations client</p>
+                {order.clientId ? (
+                  <ClientCard clientId={order.clientId} padding="p-4" avatarSize={64} />
+                ) : (
+                  <p className="text-sm text-gray-600">Client introuvable.</p>
+                )}
+
+                <p className="font-semibold">Annonce commandée</p>
+                {listing ? (
+                  <ListingCard listing={listing} />
+                ) : (
+                  <p className="text-sm text-gray-600">Annonce introuvable.</p>
+                )}
+              </div>
+            )}
 
             <div className="pt-4 border-t space-y-2">
               <p className="font-semibold">Actions disponibles</p>
