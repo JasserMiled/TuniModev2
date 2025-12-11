@@ -10,6 +10,7 @@ import ListingCard from "@/src/components/ListingCard";
 import { Listing } from "@/src/models/Listing";
 import ClientCard from "@/src/components/ClientCard";
 import AppHeader from "@/src/components/AppHeader";
+import VendorCard from "@/src/components/VendorCard";
 
 export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
@@ -80,7 +81,7 @@ export default function OrderDetailPage() {
 
   useEffect(() => {
     const fetchListing = async () => {
-      if (!order?.listingId || user?.role !== "seller") return;
+      if (!order?.listingId) return;
       try {
         const listingDetail = await ApiService.fetchListingDetail(order.listingId);
         setListing(listingDetail);
@@ -265,6 +266,29 @@ export default function OrderDetailPage() {
               )}
 
               {order.phone && <p>Téléphone : {order.phone}</p>}
+
+              {user?.role === "client" && (
+                <div className="space-y-3 pt-4 border-t">
+                  <p className="font-semibold">Annonce commandée</p>
+                  {listing ? (
+                    <ListingCard listing={listing} />
+                  ) : (
+                    <p className="text-sm text-gray-600">Annonce introuvable.</p>
+                  )}
+
+                  <p className="font-semibold">Vendeur</p>
+                  {order.sellerId ? (
+                    <VendorCard
+                      sellerId={order.sellerId}
+                      name={order.sellerName ?? undefined}
+                      padding="p-4"
+                      avatarSize={64}
+                    />
+                  ) : (
+                    <p className="text-sm text-gray-600">Vendeur introuvable.</p>
+                  )}
+                </div>
+              )}
 
               {user?.role === "seller" && (
                 <div className="space-y-3 pt-4 border-t">
