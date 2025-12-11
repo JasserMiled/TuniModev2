@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { ApiService } from "@/src/services/api";
 import { FavoriteCollections } from "@/src/models/Favorite";
@@ -9,6 +8,7 @@ import { Protected } from "@/src/components/app/Protected";
 import AppHeader from "@/src/components/AppHeader";
 import ListingsGrid from "@/src/components/ListingsGrid";
 import TabMenu from "@/src/components/TabMenu";
+import VendorCard from "@/src/components/VendorCard";
 
 import { FaHeart } from "react-icons/fa";
 
@@ -19,8 +19,6 @@ export default function FavoritesPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] =
     useState<"listings" | "sellers">("listings");
-
-  const router = useRouter();
 
   // LOAD FAVORITES
   const loadFavorites = async () => {
@@ -113,24 +111,23 @@ export default function FavoritesPage() {
               ) : (
                 <div className="space-y-4">
                   {collections.sellers.map((seller) => (
-                    <div
-                      key={seller.id}
-                      className="bg-white border border-neutral-200 rounded-md p-4 shadow-sm hover:shadow transition flex items-center justify-between"
-                    >
-                      <div
-                        className="cursor-pointer"
-                        onClick={() => router.push(`/profile/${seller.id}`)}
-                      >
-                        <p className="font-semibold">{seller.name}</p>
-                        <p className="text-sm text-neutral-500">
-                          {seller.email}
-                        </p>
-                      </div>
+                    <div key={seller.id} className="relative">
+                      <VendorCard
+                        sellerId={seller.id}
+                        name={seller.name}
+                        avatarUrl={seller.avatarUrl}
+                        address={seller.address ?? null}
+                        padding="p-4"
+                      />
 
                       <button
-                        onClick={() => removeSeller(seller.id)}
-                        className="text-red-600 hover:scale-110 transition"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          removeSeller(seller.id);
+                        }}
+                        className="absolute top-4 right-4 text-red-600 hover:scale-110 transition"
                         title="Retirer ce vendeur"
+                        aria-label="Retirer ce vendeur"
                       >
                         <FaHeart size={20} />
                       </button>
