@@ -21,27 +21,37 @@ export default function FavoritesPage() {
 
   const router = useRouter();
 
-  // ✅ LOAD FAVORITES
-  const loadFavorites = async () => {
-    try {
-      const data = await ApiService.fetchFavorites();
-      setCollections(data);
-    } catch (e: any) {
-      setError(e.message);
-    }
-  };
+  // LOAD FAVORITES
+const loadFavorites = async () => {
+  try {
+    const data = await ApiService.fetchFavorites();
+console.log("FAVORITE LISTING RAW:", data.listings[0]);
+
+    setCollections({
+      ...data,
+      listings: data.listings.map((l) => ({
+        ...l,
+        imageUrl: ApiService.resolveImageUrl(l.imageUrl ?? null),
+      })),
+      sellers: data.sellers,
+    });
+  } catch (e: any) {
+    setError(e.message);
+  }
+};
+
 
   useEffect(() => {
     loadFavorites();
   }, []);
 
-  // ✅ REMOVE LISTING
+  // REMOVE LISTING
   const removeListing = async (id: number) => {
     await ApiService.removeFavoriteListing(id);
     loadFavorites();
   };
 
-  // ✅ REMOVE SELLER
+  // REMOVE SELLER
   const removeSeller = async (id: number) => {
     await ApiService.removeFavoriteSeller(id);
     loadFavorites();
@@ -53,18 +63,11 @@ export default function FavoritesPage() {
         <AppHeader />
 
         <div className="max-w-6xl mx-auto px-4 py-8">
-          {/* ✅ TITLE */}
-          <h1 className="text-2xl font-semibold mb-6">
-            Mes favoris
-          </h1>
+          <h1 className="text-2xl font-semibold mb-6">Mes favoris</h1>
 
-          {error && (
-            <p className="text-red-600 mb-4">
-              {error}
-            </p>
-          )}
+          {error && <p className="text-red-600 mb-4">{error}</p>}
 
-          {/* ✅ TAB BAR */}
+          {/* TAB BAR */}
           <div className="flex border-b mb-6">
             <button
               onClick={() => setActiveTab("listings")}
@@ -89,67 +92,36 @@ export default function FavoritesPage() {
             </button>
           </div>
 
-          {/* ========================= */}
-          {/* ✅ LISTINGS TAB */}
-          {/* ========================= */}
-{activeTab === "listings" && collections && (
-  <>
-    {collections.listings.length === 0 ? (
-      <p className="text-neutral-500 py-6">
-        Aucune annonce dans vos favoris.
-      </p>
-    ) : (
-      <div className="relative">
-        
-        {/* 🟦 1) GRID DES ANNONCES */}
-        <ListingsGrid
-          listings={collections.listings}
-          columns={{ base: 2, sm: 3, md: 4, lg: 5 }}
-          rows={{ base: 2, sm: 2, md: 2, lg: 2 }}
-        />
+          {/* LISTINGS (annonces favorites) */}
+          {activeTab === "listings" && collections && (
+            <>
+              {collections.listings.length === 0 ? (
+                <p className="text-neutral-500 py-6">
+                  Aucune annonce dans vos favoris.
+                </p>
+              ) : (
+                <ListingsGrid
+                  listings={collections.listings}
+                  columns={{ base: 2, sm: 3, md: 4, lg: 5 }}
+                  rows={{ base: 2, sm: 2, md: 2, lg: 2 }}
+                  renderOverlay={(listing) => (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeListing(listing.id);
+                      }}
+                      className="hover:scale-125 transition"
+                      title="Retirer des favoris"
+                    >
+                      <FaHeart className="text-red-600 drop-shadow" size={18} />
+                    </button>
+                  )}
+                />
+              )}
+            </>
+          )}
 
-        {/* ❤️ 2) GRID DES COEURS SUPERPOSÉS */}
-        <div
-          className="
-            absolute inset-0 pointer-events-none
-            grid gap-4
-            grid-cols-2
-            sm:grid-cols-3
-            md:grid-cols-4
-            lg:grid-cols-5
-          "
-        >
-          {collections.listings.map((listing) => (
-            <div key={listing.id} className="relative">
-<button
-  onClick={(e) => {
-    e.stopPropagation();
-    removeListing(listing.id);
-  }}
-  className="
-    pointer-events-auto absolute top-2 right-2
-    hover:scale-125 transition
-  "
-  title="Retirer des favoris"
->
-  <FaHeart className="text-red-600 drop-shadow" size={18} />
-</button>
-
-            </div>
-          ))}
-        </div>
-
-      </div>
-    )}
-  </>
-)}
-
-
-            
-
-          {/* ========================= */}
-          {/* ✅ SELLERS TAB */}
-          {/* ========================= */}
+          {/* SELLERS (vendeurs favoris) */}
           {activeTab === "sellers" && collections && (
             <>
               {collections.sellers.length === 0 ? (
@@ -165,22 +137,16 @@ export default function FavoritesPage() {
                     >
                       <div
                         className="cursor-pointer"
-                        onClick={() =>
-                          router.push(`/profile/${seller.id}`)
-                        }
+                        onClick={() => router.push(`/profile/${seller.id}`)}
                       >
-                        <p className="font-semibold">
-                          {seller.name}
-                        </p>
+                        <p className="font-semibold">{seller.name}</p>
                         <p className="text-sm text-neutral-500">
                           {seller.email}
                         </p>
                       </div>
 
                       <button
-                        onClick={() =>
-                          removeSeller(seller.id)
-                        }
+                        onClick={() => removeSeller(seller.id)}
                         className="text-red-600 hover:scale-110 transition"
                         title="Retirer ce vendeur"
                       >
