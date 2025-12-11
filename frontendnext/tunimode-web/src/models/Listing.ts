@@ -1,5 +1,6 @@
 export interface Listing {
   id: number;
+  sellerId: number;
   userId: number;
   title: string;
   description?: string | null;
