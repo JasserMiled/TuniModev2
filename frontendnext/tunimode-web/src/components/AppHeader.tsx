@@ -198,7 +198,7 @@ export default function AppHeader() {
         <div className="flex items-center gap-3 flex-shrink-0">
           {canCreateListing && (
             <Link
-              href="/listings/new"
+              href="/listing/new"
               className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-semibold hover:bg-blue-700 transition"
             >
               Ajouter une annonce
