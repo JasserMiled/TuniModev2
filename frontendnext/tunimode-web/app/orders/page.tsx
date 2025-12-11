@@ -8,6 +8,7 @@ import { Order } from "@/src/models/Order";
 import { Protected } from "@/src/components/app/Protected";
 import AppHeader from "@/src/components/AppHeader";
 import { useAuth } from "@/src/context/AuthContext";
+import TabMenu from "@/src/components/TabMenu";
 
 export default function OrdersPage() {
   const { user } = useAuth();
@@ -96,34 +97,15 @@ export default function OrdersPage() {
 
           {error && <p className="text-red-600">{error}</p>}
 
-          {/* ✅ TAB BAR */}
-          <div className="flex border-b mb-6">
-            {isSeller && (
-              <button
-                onClick={() => setActiveTab("seller")}
-                className={`px-6 py-2 font-semibold ${
-                  activeTab === "seller"
-                    ? "border-b-2 border-blue-600 text-blue-600"
-                    : "text-gray-500"
-                }`}
-              >
-                Ventes
-              </button>
-            )}
-
-            {isClient && (
-              <button
-                onClick={() => setActiveTab("client")}
-                className={`px-6 py-2 font-semibold ${
-                  activeTab === "client"
-                    ? "border-b-2 border-blue-600 text-blue-600"
-                    : "text-gray-500"
-                }`}
-              >
-                Achats (client)
-              </button>
-            )}
-          </div>
+          <TabMenu
+            className="mb-6"
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            tabs={[
+              { key: "seller", label: "Ventes", hidden: !isSeller },
+              { key: "client", label: "Achats (client)", hidden: !isClient },
+            ]}
+          />
 
           {/* ✅ FILTER */}
           <div className="mb-4">

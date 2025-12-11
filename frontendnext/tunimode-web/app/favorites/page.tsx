@@ -8,6 +8,7 @@ import { FavoriteCollections } from "@/src/models/Favorite";
 import { Protected } from "@/src/components/app/Protected";
 import AppHeader from "@/src/components/AppHeader";
 import ListingsGrid from "@/src/components/ListingsGrid";
+import TabMenu from "@/src/components/TabMenu";
 
 import { FaHeart } from "react-icons/fa";
 
@@ -63,30 +64,15 @@ export default function FavoritesPage() {
 
           {error && <p className="text-red-600 mb-4">{error}</p>}
 
-          {/* TAB BAR */}
-          <div className="flex border-b mb-6">
-            <button
-              onClick={() => setActiveTab("listings")}
-              className={`px-6 py-2 font-semibold transition ${
-                activeTab === "listings"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-500"
-              }`}
-            >
-              Annonces
-            </button>
-
-            <button
-              onClick={() => setActiveTab("sellers")}
-              className={`px-6 py-2 font-semibold transition ${
-                activeTab === "sellers"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-500"
-              }`}
-            >
-              Vendeurs
-            </button>
-          </div>
+          <TabMenu
+            className="mb-6"
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            tabs={[
+              { key: "listings", label: "Annonces" },
+              { key: "sellers", label: "Vendeurs" },
+            ]}
+          />
 
           {/* LISTINGS (annonces favorites) */}
           {activeTab === "listings" && collections && (

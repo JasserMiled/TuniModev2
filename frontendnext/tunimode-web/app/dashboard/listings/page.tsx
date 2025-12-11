@@ -8,6 +8,7 @@ import { Listing } from "@/src/models/Listing";
 import { Protected } from "@/src/components/app/Protected";
 import AppHeader from "@/src/components/AppHeader";
 import ListingsGrid from "@/src/components/ListingsGrid";
+import TabMenu from "@/src/components/TabMenu";
 
 export default function MyListingsPage() {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -57,29 +58,15 @@ export default function MyListingsPage() {
           )}
 
           {/* ✅ TAB BAR (EN LIGNE / SUPPRIMÉE) */}
-          <div className="flex border-b mb-6">
-            <button
-              onClick={() => setActiveTab("online")}
-              className={`px-6 py-2 font-semibold transition ${
-                activeTab === "online"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-500"
-              }`}
-            >
-              En ligne
-            </button>
-
-            <button
-              onClick={() => setActiveTab("deleted")}
-              className={`px-6 py-2 font-semibold transition ${
-                activeTab === "deleted"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-500"
-              }`}
-            >
-              Supprimée
-            </button>
-          </div>
+          <TabMenu
+            className="mb-6"
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            tabs={[
+              { key: "online", label: "En ligne" },
+              { key: "deleted", label: "Supprimée" },
+            ]}
+          />
 
           {/* ========================= */}
           {/* ✅ TAB EN LIGNE */}

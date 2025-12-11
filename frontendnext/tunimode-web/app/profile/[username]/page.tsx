@@ -9,6 +9,7 @@ import ListingsGrid from "@/src/components/ListingsGrid";
 import AppHeader from "@/src/components/AppHeader";
 import { useAuth } from "@/src/context/AuthContext";
 import VendorCard from "@/src/components/VendorCard";
+import TabMenu from "@/src/components/TabMenu";
 
 
 type Review = {
@@ -99,29 +100,14 @@ export default function ProfilePage() {
         {/* ===================== */}
         {/* ✅ TAB BAR */}
         {/* ===================== */}
-        <div className="flex border-b">
-          <button
-            onClick={() => setActiveTab("annonces")}
-            className={`px-6 py-2 font-semibold transition ${
-              activeTab === "annonces"
-                ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-gray-500"
-            }`}
-          >
-            Annonces
-          </button>
-
-          <button
-            onClick={() => setActiveTab("avis")}
-            className={`px-6 py-2 font-semibold transition ${
-              activeTab === "avis"
-                ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-gray-500"
-            }`}
-          >
-            Avis
-          </button>
-        </div>
+        <TabMenu
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          tabs={[
+            { key: "annonces", label: "Annonces" },
+            { key: "avis", label: "Avis" },
+          ]}
+        />
 
         {/* ===================== */}
         {/* ✅ TAB ANNONCES */}
