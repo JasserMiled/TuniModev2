@@ -15,7 +15,6 @@ export interface Listing {
   categoryName?: string | null;
   sellerName?: string | null;
   imageUrls: string[];
-  stock: number;
   status?: string | null;
   isDeleted: boolean;
 }

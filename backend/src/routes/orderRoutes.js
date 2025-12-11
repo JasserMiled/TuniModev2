@@ -30,7 +30,7 @@ router.post("/", authRequired, requireRole("client"), async (req, res) => {
     }
 
     const listingRes = await db.query(
-      "SELECT id, user_id AS seller_id, price, stock, title, colors, sizes FROM listings WHERE id = $1",
+      "SELECT id, user_id AS seller_id, price, title, colors, sizes FROM listings WHERE id = $1",
       [listing_id]
     );
     const listing = listingRes.rows[0];
@@ -39,11 +39,6 @@ router.post("/", authRequired, requireRole("client"), async (req, res) => {
     }
 
     const normalizedQuantity = Math.max(1, Number(quantity) || 1);
-    const availableStock = Number(listing.stock) || 0;
-    if (availableStock > 0 && normalizedQuantity > availableStock) {
-      return res.status(400).json({ message: "Stock insuffisant pour cette quantité" });
-    }
-
     const normalizedMode =
       reception_mode && String(reception_mode).toLowerCase() === "livraison"
         ? "livraison"

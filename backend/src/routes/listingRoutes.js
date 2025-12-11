@@ -321,7 +321,6 @@ router.post("/", authRequired, requireRole("seller"), async (req, res) => {
       city,
       delivery_available,
       images,
-      stock,
     } = req.body;
 
     const normalizeStringArray = (value) => {
@@ -344,12 +343,11 @@ router.post("/", authRequired, requireRole("seller"), async (req, res) => {
 
     const parsedSizes = normalizeStringArray(sizes);
     const parsedColors = normalizeStringArray(colors);
-    const parsedStock = stock === undefined ? 1000 : Math.max(1, Number(stock) || 1);
 
     const listingRes = await db.query(
       `INSERT INTO listings
-       (user_id, title, description, price, sizes, colors, gender, condition, category_id, city, delivery_available, stock)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       (user_id, title, description, price, sizes, colors, gender, condition, category_id, city, delivery_available)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
        RETURNING *`,
       [
         req.user.id,
@@ -363,7 +361,6 @@ router.post("/", authRequired, requireRole("seller"), async (req, res) => {
         category_id || null,
         city || null,
         Boolean(delivery_available),
-        parsedStock,
       ]
     );
 
@@ -422,7 +419,6 @@ router.put("/:id", authRequired, requireRole("seller"), async (req, res) => {
       city,
       delivery_available,
       status,
-      stock,
     } = req.body;
 
     const normalizeStringArray = (value) => {
@@ -453,8 +449,6 @@ router.put("/:id", authRequired, requireRole("seller"), async (req, res) => {
     const parsedSizes = normalizeStringArray(sizes);
     const parsedColors = normalizeStringArray(colors);
 
-    const parsedStock = stock === undefined ? null : Math.max(1, Number(stock) || 1);
-
     const result = await db.query(
       `UPDATE listings
        SET title = COALESCE($1, title),
@@ -468,9 +462,8 @@ router.put("/:id", authRequired, requireRole("seller"), async (req, res) => {
            city = COALESCE($10, city),
            delivery_available = COALESCE($11, delivery_available),
            status = COALESCE($12, status),
-           stock = COALESCE($13, stock),
            updated_at = NOW()
-       WHERE id = $14
+       WHERE id = $13
        RETURNING *`,
       [
         title,
@@ -485,7 +478,6 @@ router.put("/:id", authRequired, requireRole("seller"), async (req, res) => {
         city,
         normalizedDelivery,
         status,
-        parsedStock,
         listingId,
       ]
     );
