@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ApiService } from "@/src/services/api";
 import { Listing } from "@/src/models/Listing";
+import { User } from "@/src/models/User";
 import { useAuth } from "@/src/context/AuthContext";
 import AppHeader from "@/src/components/AppHeader";
 import ListingsGrid from "@/src/components/ListingsGrid";
@@ -18,6 +19,8 @@ export default function ListingDetailPage() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [sellerListings, setSellerListings] = useState<Listing[]>([]);
+  const [sellerProfile, setSellerProfile] = useState<User | null>(null);
+  const [sellerAvatarError, setSellerAvatarError] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -39,6 +42,11 @@ export default function ListingDetailPage() {
 
   const isClient = user?.role === "client";
   const isSeller = user?.role === "seller";
+  const sellerAvatarUrl = sellerProfile?.avatarUrl ?? listing?.sellerAvatarUrl ?? null;
+
+  useEffect(() => {
+    setSellerAvatarError(false);
+  }, [sellerAvatarUrl]);
 
   useEffect(() => {
     const id = Number(params?.id);
@@ -53,6 +61,13 @@ export default function ListingDetailPage() {
           ApiService.fetchListingsBySeller(data.sellerId).then((res) => {
             setSellerListings(res.filter((x) => x.id !== id));
           });
+        }
+
+        const sellerUserId = data.sellerId ?? data.userId;
+        if (sellerUserId) {
+          ApiService.fetchUserProfile(sellerUserId)
+            .then((profile) => setSellerProfile(profile))
+            .catch(() => {});
         }
       })
       .catch((e) => setError(e.message));
@@ -285,22 +300,35 @@ className="w-full h-[450px] object-contain bg-transparent"
             )}
 
             {/* SELLER BOX */}
-<div className="p-4 bg-gray-50 rounded-2xl shadow-md hover:shadow-lg transition flex items-center gap-3 border border-gray-200 relative">
-              
+            <div className="p-4 bg-gray-50 rounded-2xl shadow-md hover:shadow-lg transition flex items-center gap-3 border border-gray-200 relative">
               {/* ❤️ Favorite Button for SELLER */}
-<button
-  onClick={() => setIsFavoriteSeller(!isFavoriteSeller)}
-  className="absolute top-4 right-4 transition transform hover:scale-110"
-  aria-label="Favori vendeur"
->
-  <FaHeart
-    size={22}
-    className={`transition ${
-      isFavoriteSeller ? "text-red-600 scale-110" : "text-gray-200"
-    }`}
-  />
-</button>
+              <button
+                onClick={() => setIsFavoriteSeller(!isFavoriteSeller)}
+                className="absolute top-4 right-4 transition transform hover:scale-110"
+                aria-label="Favori vendeur"
+              >
+                <FaHeart
+                  size={22}
+                  className={`transition ${
+                    isFavoriteSeller ? "text-red-600 scale-110" : "text-gray-200"
+                  }`}
+                />
+              </button>
 
+              <div className="w-16 h-16 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center">
+                {sellerAvatarUrl && !sellerAvatarError ? (
+                  <img
+                    src={sellerAvatarUrl}
+                    alt={listing.sellerName ?? "Profil vendeur"}
+                    className="w-full h-full object-cover"
+                    onError={() => setSellerAvatarError(true)}
+                  />
+                ) : (
+                  <span className="text-xl font-semibold text-neutral-600">
+                    {listing.sellerName?.charAt(0)?.toUpperCase() ?? "?"}
+                  </span>
+                )}
+              </div>
 
               <div>
                 <p className="font-semibold">{listing.sellerName}</p>
