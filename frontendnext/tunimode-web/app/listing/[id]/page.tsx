@@ -53,8 +53,8 @@ export default function ListingDetailPage() {
       setListing(data);
       setSelectedImage(data.imageUrls?.[0] ?? data.imageUrl ?? null);
 
-      if (data.userId) {
-        const res = await ApiService.fetchUserListings(data.userId);
+      if (data.sellerId) {
+        const res = await ApiService.fetchUserListings(data.sellerId);
         setSellerListings(res.filter((x) => x.id !== id));
       }
     } catch (e: any) {
@@ -86,7 +86,7 @@ export default function ListingDetailPage() {
           favorites.listings.some((fav) => fav.id === listing.id)
         );
         setIsFavoriteSeller(
-          favorites.sellers.some((fav) => fav.id === listing.userId)
+          favorites.sellers.some((fav) => fav.id === listing.sellerId)
         );
       } catch (err) {
         console.error("Impossible de charger les favoris", err);
@@ -159,7 +159,7 @@ export default function ListingDetailPage() {
       return;
     }
 
-    if (!listing?.userId) return;
+    if (!listing?.sellerId) return;
 
     setActionError(null);
     const nextState = !isFavoriteSeller;
@@ -167,8 +167,8 @@ export default function ListingDetailPage() {
 
     try {
       const ok = nextState
-        ? await ApiService.addFavoriteSeller(listing.userId)
-        : await ApiService.removeFavoriteSeller(listing.userId);
+        ? await ApiService.addFavoriteSeller(listing.sellerId)
+        : await ApiService.removeFavoriteSeller(listing.sellerId);
 
       if (!ok) {
         throw new Error("Impossible de mettre à jour les favoris vendeur.");
@@ -239,7 +239,7 @@ export default function ListingDetailPage() {
     }
   };
 
-  const isOwner = Boolean(user?.id && listing?.userId === user.id);
+  const isOwner = Boolean(user?.id && listing?.sellerId === user.id);
 
   if (error)
     return <div className="max-w-6xl mx-auto px-4 py-8 text-red-600">{error}</div>;
@@ -394,7 +394,7 @@ export default function ListingDetailPage() {
 
   {/* Seller Card */}
   <VendorCard
-    sellerId={listing.userId}
+    sellerId={listing.sellerId}
     avatarSize={50}
     padding="p-4"
     showEditButton={false}

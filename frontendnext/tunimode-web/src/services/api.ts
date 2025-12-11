@@ -69,6 +69,7 @@ type ListingLike = Partial<Listing> & {
   delivery_available?: boolean;
   category_name?: string | null;
   seller_name?: string | null;
+  seller_id?: number;
   user_id?: number;
   is_deleted?: boolean;
   status?: string | null;
@@ -127,9 +128,17 @@ const normalizeListing = (listing: ListingLike): Listing => {
     )
   );
 
+  const sellerId =
+    listing.sellerId ??
+    listing.seller_id ??
+    listing.userId ??
+    listing.user_id ??
+    0;
+
   return {
     ...listing,
-    userId: listing.userId ?? listing.user_id ?? listing.id ?? 0,
+    sellerId,
+    userId: sellerId,
     title: listing.title ?? "",
     price: listing.price ?? 0,
     sizes: listing.sizes ?? [],
