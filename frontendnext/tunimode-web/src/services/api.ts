@@ -85,20 +85,24 @@ const extractImageUrls = (listing: ListingLike) => {
   return [] as string[];
 };
 const extractListingImage = (listing: ListingLike): string | null => {
-  const possible =
-    listing.imageUrl ??
-    listing.image ??
-    listing.mainImage ??
-    listing.thumbnailUrl ??
+  const raw =
+    listing.imageUrl ||
+    listing.image ||
+    listing.mainImage ||
+    listing.thumbnailUrl ||
     (listing.images?.length
       ? typeof listing.images[0] === "string"
         ? listing.images[0]
         : listing.images[0]?.url ?? null
-      : null) ??
-    (listing.imageUrls?.length ? listing.imageUrls[0] : null) ??
+      : null) ||
+    (listing.imageUrls?.length
+      ? typeof listing.imageUrls[0] === "string"
+        ? listing.imageUrls[0]
+        : (listing.imageUrls[0] as { url?: string | null })?.url ?? null
+      : null) ||
     (listing.image_urls?.length ? listing.image_urls[0] : null);
 
-  return resolveImageUrl(possible ?? null);
+  return resolveImageUrl(raw);
 };
 
 const normalizeListing = (listing: ListingLike): Listing => {
