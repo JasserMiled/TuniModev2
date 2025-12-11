@@ -63,6 +63,7 @@ export default function NewListingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (!user || !isSeller) return;
@@ -198,279 +199,310 @@ export default function NewListingPage() {
     setImageUrls((prev) => prev.filter((img) => img !== url));
   };
 
+  const renderFormContent = () => (
+    <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <p className="text-sm text-neutral-500">Nouvelle annonce</p>
+          <h1 className="text-2xl font-semibold">Ajouter une annonce</h1>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-700">Titre</label>
+            <input
+              className="w-full border border-neutral-200 rounded-lg px-3 py-2"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Titre de votre annonce"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-700">Ville</label>
+            <input
+              className="w-full border border-neutral-200 rounded-lg px-3 py-2"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="Tunis, Sfax..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-700">Prix (TND)</label>
+            <input
+              className="w-full border border-neutral-200 rounded-lg px-3 py-2"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              type="number"
+              min={0}
+              step="0.01"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-700">Condition</label>
+            <select
+              className="w-full border border-neutral-200 rounded-lg px-3 py-2 bg-white"
+              value={condition}
+              onChange={(e) => setCondition(e.target.value)}
+            >
+              <option value="neuf">Neuf</option>
+              <option value="comme neuf">Comme neuf</option>
+              <option value="bon etat">Bon état</option>
+              <option value="usage">Usagé</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-neutral-700">Description</label>
+          <textarea
+            className="w-full border border-neutral-200 rounded-lg px-3 py-2 min-h-[120px]"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Décrivez votre produit"
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-700">Catégorie</label>
+            <select
+              className="w-full border border-neutral-200 rounded-lg px-3 py-2 bg-white"
+              value={categoryId ?? ""}
+              onChange={(e) =>
+                setCategoryId(e.target.value ? Number(e.target.value) : null)
+              }
+            >
+              <option value="">Sélectionner une catégorie</option>
+              {flatCategories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            {categoryLoading && (
+              <p className="text-xs text-neutral-500">Chargement des catégories...</p>
+            )}
+            {categoryError && (
+              <p className="text-xs text-red-600">{categoryError}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-700">Livraison</label>
+            <div className="flex items-center gap-2">
+              <input
+                id="delivery"
+                type="checkbox"
+                checked={deliveryAvailable}
+                onChange={(e) => setDeliveryAvailable(e.target.checked)}
+              />
+              <label htmlFor="delivery" className="text-sm text-neutral-700">
+                Livraison disponible
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-700">Tailles</label>
+              {sizesLoading && (
+                <p className="text-xs text-neutral-500">Chargement des tailles...</p>
+              )}
+              {sizesError && (
+                <p className="text-xs text-red-600">{sizesError}</p>
+              )}
+              {sizeOptions.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {sizeOptions.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => toggleSize(size)}
+                      className={`px-3 py-1 rounded-full border text-sm ${
+                        sizes.includes(size)
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "border-neutral-200"
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-neutral-500">
+                  Sélectionnez une catégorie pour voir les tailles disponibles.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-700">Images</label>
+              <div className="space-y-2">
+                <ImageUploader onUpload={handleImageUpload} loading={uploading} />
+                <p className="text-xs text-neutral-500">
+                  Jusqu&apos;à 10 images. Utilisez le même téléversement que pour la photo de
+                  profil.
+                </p>
+                {uploadError && (
+                  <p className="text-xs text-red-600">{uploadError}</p>
+                )}
+              </div>
+              {imageUrls.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {imageUrls.map((url) => (
+                    <div
+                      key={url}
+                      className="relative border rounded-lg overflow-hidden bg-neutral-100"
+                    >
+                      <img
+                        src={url}
+                        alt="Aperçu de l'annonce"
+                        className="w-full h-32 object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(url)}
+                        className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded"
+                      >
+                        Retirer
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-700">Couleurs</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {COLOR_OPTIONS.map((color) => (
+                <button
+                  key={color.name}
+                  type="button"
+                  onClick={() => toggleColor(color.name)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${
+                    colors.includes(color.name)
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-neutral-200"
+                  }`}
+                >
+                  <span
+                    className="w-4 h-4 rounded-full border"
+                    style={{ backgroundColor: color.hex }}
+                  />
+                  {color.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {success && <p className="text-green-600 text-sm">{success}</p>}
+
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="px-5 py-2 bg-blue-600 text-white rounded-full font-semibold disabled:opacity-60"
+          >
+            {submitting ? "Publication..." : "Publier l'annonce"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(false)}
+            className="px-5 py-2 border border-neutral-300 rounded-full"
+          >
+            Annuler
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+
   return (
     <main className="bg-gray-50 min-h-screen">
       <AppHeader />
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {!user && (
-          <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 space-y-3">
-            <h1 className="text-2xl font-semibold">Espace réservé</h1>
-            <p>Connectez-vous avec un compte vendeur pour créer une annonce.</p>
-            <div className="flex gap-3">
-              <Link
-                href="/auth/login"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-              >
-                Connexion
-              </Link>
-              <Link
-                href="/auth/register"
-                className="px-4 py-2 border border-neutral-300 rounded-lg"
-              >
-                Créer un compte
-              </Link>
-            </div>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-semibold">Ajouter une interface</h1>
+            <p className="text-neutral-600">
+              Cliquez sur le bouton ci-dessous pour ouvrir le formulaire dans une fenêtre
+              modale.
+            </p>
           </div>
-        )}
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow"
+          >
+            Ouvrir le formulaire
+          </button>
+        </div>
 
-        {user && !isSeller && (
-          <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 space-y-3">
-            <h1 className="text-2xl font-semibold">Accès réservé</h1>
-            <p>Seuls les vendeurs peuvent publier une annonce.</p>
-              <Link href="/" className="text-blue-600 underline">
-                Retour à l&apos;accueil
-              </Link>
-          </div>
-        )}
-
-        {user && isSeller && (
-          <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <p className="text-sm text-neutral-500">Nouvelle annonce</p>
-                <h1 className="text-2xl font-semibold">Ajouter une annonce</h1>
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-700">
-                    Titre
-                  </label>
-                  <input
-                    className="w-full border border-neutral-200 rounded-lg px-3 py-2"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Titre de votre annonce"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-700">
-                    Ville
-                  </label>
-                  <input
-                    className="w-full border border-neutral-200 rounded-lg px-3 py-2"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Tunis, Sfax..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-700">
-                    Prix (TND)
-                  </label>
-                  <input
-                    className="w-full border border-neutral-200 rounded-lg px-3 py-2"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-700">
-                    Condition
-                  </label>
-                  <select
-                    className="w-full border border-neutral-200 rounded-lg px-3 py-2 bg-white"
-                    value={condition}
-                    onChange={(e) => setCondition(e.target.value)}
-                  >
-                    <option value="neuf">Neuf</option>
-                    <option value="comme neuf">Comme neuf</option>
-                    <option value="bon etat">Bon état</option>
-                    <option value="usage">Usagé</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-700">Description</label>
-                <textarea
-                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 min-h-[120px]"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Décrivez votre produit"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-700">Catégorie</label>
-                  <select
-                    className="w-full border border-neutral-200 rounded-lg px-3 py-2 bg-white"
-                    value={categoryId ?? ""}
-                    onChange={(e) =>
-                      setCategoryId(e.target.value ? Number(e.target.value) : null)
-                    }
-                  >
-                    <option value="">Sélectionner une catégorie</option>
-                    {flatCategories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                  {categoryLoading && (
-                    <p className="text-xs text-neutral-500">Chargement des catégories...</p>
-                  )}
-                  {categoryError && (
-                    <p className="text-xs text-red-600">{categoryError}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-700">Livraison</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      id="delivery"
-                      type="checkbox"
-                      checked={deliveryAvailable}
-                      onChange={(e) => setDeliveryAvailable(e.target.checked)}
-                    />
-                    <label htmlFor="delivery" className="text-sm text-neutral-700">
-                      Livraison disponible
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-neutral-700">Tailles</label>
-                    {sizesLoading && (
-                      <p className="text-xs text-neutral-500">Chargement des tailles...</p>
-                    )}
-                    {sizesError && (
-                      <p className="text-xs text-red-600">{sizesError}</p>
-                    )}
-                    {sizeOptions.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {sizeOptions.map((size) => (
-                          <button
-                            key={size}
-                            type="button"
-                            onClick={() => toggleSize(size)}
-                            className={`px-3 py-1 rounded-full border text-sm ${
-                              sizes.includes(size)
-                                ? "bg-blue-600 text-white border-blue-600"
-                                : "border-neutral-200"
-                            }`}
-                          >
-                            {size}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-neutral-500">
-                        Sélectionnez une catégorie pour voir les tailles disponibles.
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-neutral-700">Images</label>
-                    <div className="space-y-2">
-                      <ImageUploader onUpload={handleImageUpload} loading={uploading} />
-                      <p className="text-xs text-neutral-500">
-                        Jusqu&apos;à 10 images. Utilisez le même téléversement que pour la photo de
-                        profil.
-                      </p>
-                      {uploadError && (
-                        <p className="text-xs text-red-600">{uploadError}</p>
-                      )}
-                    </div>
-                    {imageUrls.length > 0 && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {imageUrls.map((url) => (
-                          <div
-                            key={url}
-                            className="relative border rounded-lg overflow-hidden bg-neutral-100"
-                          >
-                            <img
-                              src={url}
-                              alt="Aperçu de l'annonce"
-                              className="w-full h-32 object-cover"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveImage(url)}
-                              className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded"
-                            >
-                              Retirer
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-neutral-700">Couleurs</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {COLOR_OPTIONS.map((color) => (
-                      <button
-                        key={color.name}
-                        type="button"
-                        onClick={() => toggleColor(color.name)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${
-                          colors.includes(color.name)
-                            ? "border-blue-600 bg-blue-50"
-                            : "border-neutral-200"
-                        }`}
-                      >
-                        <span
-                          className="w-4 h-4 rounded-full border"
-                          style={{ backgroundColor: color.hex }}
-                        />
-                        {color.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {error && <p className="text-red-600 text-sm">{error}</p>}
-              {success && <p className="text-green-600 text-sm">{success}</p>}
-
-              <div className="flex items-center gap-3">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2 bg-blue-600 text-white rounded-full font-semibold disabled:opacity-60"
-                >
-                  {submitting ? "Publication..." : "Publier l'annonce"}
-                </button>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 py-10 overflow-y-auto">
+            <div className="relative w-full max-w-5xl">
+              <div className="absolute -top-4 right-0">
                 <button
                   type="button"
-                  onClick={() => router.back()}
-                  className="px-5 py-2 border border-neutral-300 rounded-full"
+                  onClick={() => setIsModalOpen(false)}
+                  className="rounded-full bg-white shadow p-2 hover:bg-neutral-100"
+                  aria-label="Fermer la fenêtre"
                 >
-                  Annuler
+                  ✕
                 </button>
               </div>
-            </form>
+              <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 overflow-hidden">
+                <div className="max-h-[80vh] overflow-y-auto p-6">
+                  {!user && (
+                    <div className="space-y-3">
+                      <h1 className="text-2xl font-semibold">Espace réservé</h1>
+                      <p>Connectez-vous avec un compte vendeur pour créer une annonce.</p>
+                      <div className="flex gap-3">
+                        <Link
+                          href="/auth/login"
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                        >
+                          Connexion
+                        </Link>
+                        <Link
+                          href="/auth/register"
+                          className="px-4 py-2 border border-neutral-300 rounded-lg"
+                        >
+                          Créer un compte
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+
+                  {user && !isSeller && (
+                    <div className="space-y-3">
+                      <h1 className="text-2xl font-semibold">Accès réservé</h1>
+                      <p>Seuls les vendeurs peuvent publier une annonce.</p>
+                      <Link href="/" className="text-blue-600 underline">
+                        Retour à l&apos;accueil
+                      </Link>
+                    </div>
+                  )}
+
+                  {user && isSeller && renderFormContent()}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
