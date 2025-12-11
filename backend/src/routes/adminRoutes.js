@@ -5,25 +5,56 @@ const { authRequired, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
 
+const accountCte = `
+  WITH accounts AS (
+    SELECT
+      s.id,
+      s.name,
+      s.email,
+      s.phone,
+      s.avatar_url,
+      s.address,
+      'seller' AS role,
+      s.store_name AS business_name,
+      s.business_id,
+      NULL::DATE AS date_of_birth,
+      s.created_at
+    FROM sellers s
+    UNION ALL
+    SELECT
+      c.id,
+      COALESCE(c.profile_name, c.name) AS name,
+      c.email,
+      c.phone,
+      c.avatar_url,
+      c.address,
+      'client' AS role,
+      NULL::TEXT AS business_name,
+      NULL::TEXT AS business_id,
+      c.date_of_birth,
+      c.created_at
+    FROM clients c
+  )
+`;
+
 router.use(authRequired, requireRole("seller"));
 
 router.get("/users", async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT
-         u.id,
-         u.name,
-         u.email,
-         u.phone,
-         u.role,
-         COALESCE(s.store_name, u.business_name) AS business_name,
-         COALESCE(s.business_id, u.business_id) AS business_id,
-         COALESCE(c.date_of_birth, u.date_of_birth) AS date_of_birth,
-         u.created_at
-       FROM users u
-       LEFT JOIN sellers s ON s.user_id = u.id
-       LEFT JOIN clients c ON c.user_id = u.id
-       ORDER BY u.created_at DESC
+      `${accountCte}
+       SELECT
+         a.id,
+         a.name,
+         a.email,
+         a.phone,
+         a.role,
+         a.business_name,
+         a.business_id,
+         a.date_of_birth,
+         a.created_at
+       FROM accounts a
+       ORDER BY a.created_at DESC
        LIMIT 100`
     );
     res.json(result.rows);
@@ -36,9 +67,9 @@ router.get("/users", async (req, res) => {
 router.get("/listings", async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT l.*, u.name AS seller_name
+      `SELECT l.*, COALESCE(s.store_name, s.name) AS seller_name
        FROM listings l
-       JOIN users u ON l.user_id = u.id
+       JOIN sellers s ON l.seller_id = s.id
        ORDER BY l.created_at DESC
        LIMIT 200`
     );

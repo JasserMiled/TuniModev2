@@ -1,109 +1,74 @@
 const db = require("../db");
 
-const baseUserFields = [
-  "u.id",
-  "u.name",
-  "u.email",
-  "u.phone",
-  "u.avatar_url",
-  "u.address",
-  "u.role",
-  "u.created_at",
-].join(", ");
-
-const sellerFields = [
-  "COALESCE(s.store_name, u.business_name) AS business_name",
-  "COALESCE(s.business_id, u.business_id) AS business_id",
-  "COALESCE(s.phone, u.phone) AS seller_phone",
-  "COALESCE(s.address, u.address) AS seller_address",
-  "COALESCE(s.avatar_url, u.avatar_url) AS seller_avatar_url",
-  "s.created_at AS seller_created_at",
-];
-
-const clientFields = [
-  "COALESCE(c.profile_name, u.name) AS profile_name",
-  "COALESCE(c.date_of_birth, u.date_of_birth) AS date_of_birth",
-  "COALESCE(c.phone, u.phone) AS client_phone",
-  "COALESCE(c.address, u.address) AS client_address",
-  "COALESCE(c.avatar_url, u.avatar_url) AS client_avatar_url",
-  "c.created_at AS client_created_at",
-];
-
-const withJoins = `
-  FROM users u
-  LEFT JOIN sellers s ON s.user_id = u.id
-  LEFT JOIN clients c ON c.user_id = u.id
+const accountCte = `
+  WITH accounts AS (
+    SELECT
+      s.id,
+      s.name,
+      s.email,
+      s.password_hash,
+      s.phone,
+      s.avatar_url,
+      s.address,
+      'seller' AS role,
+      s.store_name AS business_name,
+      s.business_id,
+      NULL::DATE AS date_of_birth,
+      s.created_at
+    FROM sellers s
+    UNION ALL
+    SELECT
+      c.id,
+      COALESCE(c.profile_name, c.name) AS name,
+      c.email,
+      c.password_hash,
+      c.phone,
+      c.avatar_url,
+      c.address,
+      'client' AS role,
+      NULL::TEXT AS business_name,
+      NULL::TEXT AS business_id,
+      c.date_of_birth,
+      c.created_at
+    FROM clients c
+  )
 `;
 
+const baseUserFields = [
+  "a.id",
+  "a.name",
+  "a.email",
+  "a.phone",
+  "a.avatar_url",
+  "a.address",
+  "a.role",
+  "a.created_at",
+  "a.business_name",
+  "a.business_id",
+  "a.date_of_birth",
+].join(", ");
+
 function buildSelect({ includePassword = false } = {}) {
-  const passwordField = includePassword ? ", u.password_hash" : "";
-  return `SELECT ${baseUserFields}, ${sellerFields.join(", ")}, ${clientFields.join(", ")} ${passwordField}`;
+  const passwordField = includePassword ? ", a.password_hash" : "";
+  return `SELECT ${baseUserFields}${passwordField} FROM accounts a`;
 }
 
 async function getUserByEmail(email, options = {}) {
-  const query = `${buildSelect(options)} ${withJoins} WHERE LOWER(u.email) = LOWER($1)`;
+  const query = `${accountCte} ${buildSelect(options)} WHERE LOWER(a.email) = LOWER($1)`;
   const { rows } = await db.query(query, [email]);
   return rows[0];
 }
 
 async function getUserById(userId, options = {}) {
-  const query = `${buildSelect(options)} ${withJoins} WHERE u.id = $1`;
+  const query = `${accountCte} ${buildSelect(options)} WHERE a.id = $1`;
   const { rows } = await db.query(query, [userId]);
   return rows[0];
 }
 
 async function listUsers(limit = 100) {
-  const query = `${buildSelect()} ${withJoins} ORDER BY u.created_at DESC LIMIT $1`;
+  const query = `${accountCte} ${buildSelect()} ORDER BY a.created_at DESC LIMIT $1`;
   const { rows } = await db.query(query, [limit]);
   return rows;
-}
-
-async function upsertSellerProfile(userId, { storeName, businessId, phone, address, avatarUrl }) {
-  await db.query(
-    `INSERT INTO sellers (user_id, store_name, business_id, phone, address, avatar_url)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     ON CONFLICT (user_id) DO UPDATE SET
-       store_name = COALESCE(EXCLUDED.store_name, sellers.store_name),
-       business_id = COALESCE(EXCLUDED.business_id, sellers.business_id),
-       phone = COALESCE(EXCLUDED.phone, sellers.phone),
-       address = COALESCE(EXCLUDED.address, sellers.address),
-       avatar_url = COALESCE(EXCLUDED.avatar_url, sellers.avatar_url),
-       updated_at = NOW()`.
-      replace(/\s+/g, " "),
-    [userId, storeName || null, businessId || null, phone || null, address || null, avatarUrl || null]
-  );
-
-  // Keep deprecated columns aligned until the migration is complete.
-  await db.query(
-    `UPDATE users
-     SET business_name = COALESCE($2, business_name),
-         business_id = COALESCE($3, business_id)
-     WHERE id = $1`,
-    [userId, storeName || null, businessId || null]
-  );
-}
-
-async function upsertClientProfile(userId, { profileName, dateOfBirth, phone, address, avatarUrl }) {
-  await db.query(
-    `INSERT INTO clients (user_id, profile_name, date_of_birth, phone, address, avatar_url)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     ON CONFLICT (user_id) DO UPDATE SET
-       profile_name = COALESCE(EXCLUDED.profile_name, clients.profile_name),
-       date_of_birth = COALESCE(EXCLUDED.date_of_birth, clients.date_of_birth),
-       phone = COALESCE(EXCLUDED.phone, clients.phone),
-       address = COALESCE(EXCLUDED.address, clients.address),
-       avatar_url = COALESCE(EXCLUDED.avatar_url, clients.avatar_url),
-       updated_at = NOW()`.
-      replace(/\s+/g, " "),
-    [userId, profileName || null, dateOfBirth || null, phone || null, address || null, avatarUrl || null]
-  );
-
-  await db.query(
-    `UPDATE users
-     SET date_of_birth = COALESCE($2, date_of_birth)
-     WHERE id = $1`,
-    [userId, dateOfBirth || null]
-  );
 }
 
 async function createUser({
@@ -120,45 +85,44 @@ async function createUser({
   dateOfBirth,
 }) {
   const normalizedEmail = String(email).toLowerCase();
+
+  if (role === "seller") {
+    const { rows } = await db.query(
+      `INSERT INTO sellers (name, email, password_hash, phone, address, avatar_url, store_name, business_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id`,
+      [
+        name,
+        normalizedEmail,
+        passwordHash,
+        phone,
+        address || null,
+        avatarUrl || null,
+        storeName || null,
+        businessId || null,
+      ]
+    );
+
+    return getUserById(rows[0].id);
+  }
+
   const { rows } = await db.query(
-    `INSERT INTO users (name, email, password_hash, role, phone, address, avatar_url, business_name, business_id, date_of_birth)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+    `INSERT INTO clients (name, profile_name, email, password_hash, phone, address, avatar_url, date_of_birth)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING id`,
     [
       name,
+      profileName || name,
       normalizedEmail,
       passwordHash,
-      role,
       phone,
       address || null,
       avatarUrl || null,
-      role === "seller" ? storeName || null : null,
-      role === "seller" ? businessId || null : null,
-      role === "client" ? dateOfBirth || null : null,
+      dateOfBirth || null,
     ]
   );
 
-  const userId = rows[0].id;
-
-  if (role === "seller") {
-    await upsertSellerProfile(userId, {
-      storeName,
-      businessId,
-      phone,
-      address,
-      avatarUrl,
-    });
-  } else if (role === "client") {
-    await upsertClientProfile(userId, {
-      profileName: profileName || name,
-      dateOfBirth,
-      phone,
-      address,
-      avatarUrl,
-    });
-  }
-
-  return getUserById(userId);
+  return getUserById(rows[0].id);
 }
 
 async function updateUser(userId, role, {
@@ -202,35 +166,47 @@ async function updateUser(userId, role, {
     values.push(password_hash);
   }
 
-  if (updates.length) {
-    values.push(userId);
-    const query = `UPDATE users SET ${updates.join(", ")} WHERE id = $${idx} RETURNING id`;
-    await db.query(query, values);
+  if (!updates.length) {
+    return getUserById(userId);
   }
 
+  const tableName = role === "seller" ? "sellers" : "clients";
+  const roleSpecificUpdates = [...updates];
+
   if (role === "seller") {
-    await upsertSellerProfile(userId, {
-      storeName: business_name,
-      businessId: business_id,
-      phone,
-      address,
-      avatarUrl: avatar_url,
-    });
+    if (business_name !== undefined) {
+      roleSpecificUpdates.push(`store_name = $${idx++}`);
+      values.push(business_name || null);
+    }
+    if (business_id !== undefined) {
+      roleSpecificUpdates.push(`business_id = $${idx++}`);
+      values.push(business_id || null);
+    }
   } else if (role === "client") {
-    await upsertClientProfile(userId, {
-      profileName: profile_name || name,
-      dateOfBirth: date_of_birth,
-      phone,
-      address,
-      avatarUrl: avatar_url,
-    });
+    if (profile_name !== undefined) {
+      roleSpecificUpdates.push(`profile_name = $${idx++}`);
+      values.push(profile_name || null);
+    }
+    if (date_of_birth !== undefined) {
+      roleSpecificUpdates.push(`date_of_birth = $${idx++}`);
+      values.push(date_of_birth || null);
+    }
   }
+
+  values.push(userId);
+
+  const query = `UPDATE ${tableName} SET ${roleSpecificUpdates.join(", ")}, updated_at = NOW() WHERE id = $${idx} RETURNING id`;
+  await db.query(query, values);
 
   return getUserById(userId);
 }
 
 async function deleteUserById(userId) {
-  await db.query("DELETE FROM users WHERE id = $1", [userId]);
+  const user = await getUserById(userId);
+  if (!user) return;
+
+  const tableName = user.role === "seller" ? "sellers" : "clients";
+  await db.query(`DELETE FROM ${tableName} WHERE id = $1`, [userId]);
 }
 
 module.exports = {
