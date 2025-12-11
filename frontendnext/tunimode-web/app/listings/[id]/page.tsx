@@ -95,7 +95,14 @@ export default function ListingDetailPage() {
       setDeliveryPhone(user?.phone ?? "");
     }
   };
+const toggleFavoriteSeller = () => {
+  if (!user) {
+    router.push("/auth/login");
+    return;
+  }
 
+  setIsFavoriteSeller(!isFavoriteSeller);
+};
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!listing) return;
@@ -287,12 +294,28 @@ className="w-full h-[450px] object-contain bg-transparent"
 
             {/* SELLER BOX */}
 
-<VendorCard
-  sellerId={listing.userId}
-  avatarSize={50}
-  padding="p-4"
-  showEditButton={false}
-/>
+<div className="relative">
+  {/* ❤️ Favorite Seller Button */}
+  <button
+    onClick={toggleFavoriteSeller}
+    className="absolute top-2 right-2 hover:scale-110 transition"
+    aria-label="Favori vendeur"
+  >
+    <FaHeart
+      size={22}
+      className={isFavoriteSeller ? "text-red-500" : "text-gray-300"}
+    />
+  </button>
+
+  {/* Seller Card */}
+  <VendorCard
+    sellerId={listing.userId}
+    avatarSize={50}
+    padding="p-4"
+    showEditButton={false}
+  />
+</div>
+
           </div>
 
         </div>
@@ -304,11 +327,16 @@ className="w-full h-[450px] object-contain bg-transparent"
               Autres articles du vendeur
             </h2>
 
-            <ListingsGrid
-              listings={sellerListings}
-              columns={{ base: 2, sm: 3, md: 4, lg: 5 }}
-              rows={{ base: 1, md: 1, lg: 1 }}
-            />
+<div className="w-full flex justify-center">
+  <div className="scale-[0.82] origin-top">
+    <ListingsGrid
+      listings={sellerListings}
+      columns={{ base: 2, sm: 3, md: 4, lg: 5 }}
+      rows={{ base: 1, md: 1, lg: 1 }}
+    />
+  </div>
+</div>
+
           </div>
         )}
       </div>
