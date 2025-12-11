@@ -212,6 +212,7 @@ export default function NewListingModal({
       ? await ApiService.updateListing({
           id: listing.id,
           ...payload,
+          ...(listing.isDeleted ? { status: "active" as const } : {}),
         })
       : await ApiService.createListing(payload);
 

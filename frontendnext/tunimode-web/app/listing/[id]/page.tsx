@@ -344,21 +344,30 @@ className="w-full h-[450px] object-contain bg-transparent"
 
             {/* BUTTONS */}
             {isOwner ? (
-              <div className="flex flex-col sm:flex-row gap-3">
+              listing.isDeleted ? (
                 <button
                   onClick={() => setIsEditModalOpen(true)}
                   className="px-5 py-3 bg-blue-600 text-white font-medium rounded-lg w-full"
                 >
-                  Modifier
+                  Republier l'annonce
                 </button>
-                <button
-                  onClick={handleDeleteListing}
-                  disabled={isDeleting}
-                  className="px-5 py-3 bg-red-600 text-white font-medium rounded-lg w-full disabled:opacity-60"
-                >
-                  {isDeleting ? "Suppression..." : "Supprimer"}
-                </button>
-              </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="px-5 py-3 bg-blue-600 text-white font-medium rounded-lg w-full"
+                  >
+                    Modifier
+                  </button>
+                  <button
+                    onClick={handleDeleteListing}
+                    disabled={isDeleting}
+                    className="px-5 py-3 bg-red-600 text-white font-medium rounded-lg w-full disabled:opacity-60"
+                  >
+                    {isDeleting ? "Suppression..." : "Supprimer"}
+                  </button>
+                </div>
+              )
             ) : (
               <button
                 onClick={openOrderModal}
