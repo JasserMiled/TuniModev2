@@ -22,23 +22,19 @@ export default function FavoritesPage() {
   const router = useRouter();
 
   // LOAD FAVORITES
-const loadFavorites = async () => {
-  try {
-    const data = await ApiService.fetchFavorites();
-console.log("FAVORITE LISTING RAW:", data.listings[0]);
+  const loadFavorites = async () => {
+    try {
+      const data = await ApiService.fetchFavorites();
 
-    setCollections({
-      ...data,
-      listings: data.listings.map((l) => ({
-        ...l,
-        imageUrl: ApiService.resolveImageUrl(l.imageUrl ?? null),
-      })),
-      sellers: data.sellers,
-    });
-  } catch (e: any) {
-    setError(e.message);
-  }
-};
+      setCollections({
+        ...data,
+        listings: data.listings,
+        sellers: data.sellers,
+      });
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
 
 
   useEffect(() => {

@@ -18,7 +18,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
       {/* ✅ IMAGE PLUS HAUTE */}
       <div className="h-62 bg-neutral-100">
         <img
-          src={listing.imageUrls?.[0] ?? "/placeholder-listing.svg"}
+          src={listing.imageUrl || "/placeholder-listing.svg"}
           alt={listing.title}
           className="w-full h-full object-cover"
         />
