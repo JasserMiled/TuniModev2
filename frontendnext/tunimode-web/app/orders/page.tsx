@@ -192,6 +192,24 @@ export default function OrdersPage() {
                       Confirmer la commande
                     </button>
                   )}
+
+                  {activeTab === "seller" &&
+                    ["confirmed", "shipped", "ready_for_pickup"].includes(
+                      order.status
+                    ) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          ApiService.updateSellerOrderStatus(
+                            order.id,
+                            "cancelled"
+                          ).then(loadOrders);
+                        }}
+                        className="mt-2 border border-red-500 text-red-600 px-3 py-1 rounded-lg"
+                      >
+                        Annuler la commande
+                      </button>
+                    )}
                 </div>
 
                 <div className="text-right">
