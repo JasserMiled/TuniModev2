@@ -12,7 +12,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
 
   return (
     <article
-      onClick={() => router.push(`/listings/${listing.id}`)}
+      onClick={() => router.push(`/listing/${listing.id}`)}
       className="border border-neutral-300 rounded-md overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer flex flex-col"
     >
       {/* ✅ IMAGE PLUS HAUTE */}
