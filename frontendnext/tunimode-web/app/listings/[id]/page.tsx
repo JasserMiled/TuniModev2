@@ -65,6 +65,30 @@ export default function ListingDetailPage() {
     }
   }, [listing?.sizes]);
 
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!user || !listing) {
+        setIsFavoriteListing(false);
+        setIsFavoriteSeller(false);
+        return;
+      }
+
+      try {
+        const favorites = await ApiService.fetchFavorites();
+        setIsFavoriteListing(
+          favorites.listings.some((fav) => fav.id === listing.id)
+        );
+        setIsFavoriteSeller(
+          favorites.sellers.some((fav) => fav.id === listing.userId)
+        );
+      } catch (err) {
+        console.error("Impossible de charger les favoris", err);
+      }
+    };
+
+    void loadFavorites();
+  }, [user?.id, listing?.id, listing?.userId]);
+
   const hasProfileContact = Boolean(user?.address || user?.phone);
 
   const openOrderModal = () => {
@@ -95,14 +119,60 @@ export default function ListingDetailPage() {
       setDeliveryPhone(user?.phone ?? "");
     }
   };
-const toggleFavoriteSeller = () => {
-  if (!user) {
-    router.push("/auth/login");
-    return;
-  }
 
-  setIsFavoriteSeller(!isFavoriteSeller);
-};
+  const toggleFavoriteListing = async () => {
+    if (!user) {
+      router.push("/auth/login");
+      return;
+    }
+
+    if (!listing) return;
+
+    setActionError(null);
+    const nextState = !isFavoriteListing;
+    setIsFavoriteListing(nextState);
+
+    try {
+      const ok = nextState
+        ? await ApiService.addFavoriteListing(listing.id)
+        : await ApiService.removeFavoriteListing(listing.id);
+
+      if (!ok) {
+        throw new Error("Impossible de mettre à jour les favoris.");
+      }
+    } catch (err: any) {
+      setIsFavoriteListing(!nextState);
+      setActionError(err?.message ?? "Impossible de mettre à jour les favoris.");
+    }
+  };
+
+  const toggleFavoriteSeller = async () => {
+    if (!user) {
+      router.push("/auth/login");
+      return;
+    }
+
+    if (!listing?.userId) return;
+
+    setActionError(null);
+    const nextState = !isFavoriteSeller;
+    setIsFavoriteSeller(nextState);
+
+    try {
+      const ok = nextState
+        ? await ApiService.addFavoriteSeller(listing.userId)
+        : await ApiService.removeFavoriteSeller(listing.userId);
+
+      if (!ok) {
+        throw new Error("Impossible de mettre à jour les favoris vendeur.");
+      }
+    } catch (err: any) {
+      setIsFavoriteSeller(!nextState);
+      setActionError(
+        err?.message ?? "Impossible de mettre à jour les favoris vendeur."
+      );
+    }
+  };
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!listing) return;
@@ -221,21 +291,21 @@ className="w-full h-[450px] object-contain bg-transparent"
           </div>
 
           {/* ---------------------- RIGHT BIG CONTAINER ---------------------- */}
-<div className="bg-gray-50 p-6 rounded-2xl shadow-md hover:shadow-lg transition border border-gray-200 relative space-y-4">
+          <div className="bg-gray-50 p-6 rounded-2xl shadow-md hover:shadow-lg transition border border-gray-200 relative space-y-4">
 
             {/* ❤️ Favorite Button for ARTICLE */}
-<button
-  onClick={() => setIsFavoriteListing(!isFavoriteListing)}
-  className="absolute top-4 right-4 transition transform hover:scale-110"
-  aria-label="Favori article"
->
-  <FaHeart
-    size={26}
-    className={`transition ${
-      isFavoriteListing ? "text-red-600 scale-110" : "text-gray-200"
-    }`}
-  />
-</button>
+            <button
+              onClick={toggleFavoriteListing}
+              className="absolute top-4 right-4 transition transform hover:scale-110"
+              aria-label="Favori article"
+            >
+              <FaHeart
+                size={26}
+                className={`transition ${
+                  isFavoriteListing ? "text-red-600 scale-110" : "text-gray-200"
+                }`}
+              />
+            </button>
 
 
             <h1 className="text-2xl font-semibold">{listing.title}</h1>
