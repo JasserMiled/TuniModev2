@@ -57,6 +57,7 @@ type ListingLike = Partial<Listing> & {
   image_urls?: string[];
   images?: Array<{ url?: string | null } | string>;
   image?: string | null;
+  image_url?: string | null;
   mainImage?: string | null;
   thumbnailUrl?: string | null;
   delivery_available?: boolean;
@@ -87,6 +88,7 @@ const extractImageUrls = (listing: ListingLike) => {
 const extractListingImage = (listing: ListingLike): string | null => {
   const raw =
     listing.imageUrl ||
+    listing.image_url ||
     listing.image ||
     listing.mainImage ||
     listing.thumbnailUrl ||
