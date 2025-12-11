@@ -146,7 +146,7 @@ router.get("/", async (req, res) => {
     const sql = `
       SELECT
         l.*,
-        u.name AS seller_name,
+        COALESCE(s.store_name, s.name) AS seller_name,
         c.name AS category_name,
         COALESCE(
           (
@@ -160,7 +160,7 @@ router.get("/", async (req, res) => {
           '[]'::json
         ) AS images
       FROM listings l
-      JOIN users u ON l.user_id = u.id
+      JOIN sellers s ON l.seller_id = s.id
       LEFT JOIN categories c ON l.category_id = c.id
       WHERE ${conditions.join(" AND ")}
       ORDER BY l.created_at DESC
@@ -191,7 +191,7 @@ router.get("/user/:userId", async (req, res) => {
     const result = await db.query(
       `SELECT
         l.*,
-        u.name AS seller_name,
+        COALESCE(s.store_name, s.name) AS seller_name,
         c.name AS category_name,
         COALESCE(
           (
@@ -205,9 +205,9 @@ router.get("/user/:userId", async (req, res) => {
           '[]'::json
         ) AS images
       FROM listings l
-      JOIN users u ON l.user_id = u.id
+      JOIN sellers s ON l.seller_id = s.id
       LEFT JOIN categories c ON l.category_id = c.id
-      WHERE l.status = 'active' AND l.user_id = $1
+      WHERE l.status = 'active' AND l.seller_id = $1
       ORDER BY l.created_at DESC`,
       [userId]
     );
@@ -227,9 +227,9 @@ router.get("/:id", async (req, res) => {
     // Fetch the listing along with seller and category metadata in a single query
     // to minimize round-trips before loading related images below.
     const listingRes = await db.query(
-      `SELECT l.*, u.name AS seller_name, u.phone AS seller_phone, c.name AS category_name
+      `SELECT l.*, COALESCE(s.store_name, s.name) AS seller_name, s.phone AS seller_phone, c.name AS category_name
        FROM listings l
-       JOIN users u ON l.user_id = u.id
+       JOIN sellers s ON l.seller_id = s.id
        LEFT JOIN categories c ON l.category_id = c.id
        WHERE l.id = $1`,
       [req.params.id]
@@ -245,7 +245,7 @@ router.get("/:id", async (req, res) => {
       try {
         const token = authHeader.substring(7);
         const payload = jwt.verify(token, process.env.JWT_SECRET);
-        isOwner = payload?.id === listing.user_id;
+        isOwner = payload?.id === listing.seller_id;
       } catch (err) {
         // En cas de token invalide ou expiré, on ignore simplement et on
         // applique la logique par défaut pour les visiteurs.
@@ -278,7 +278,7 @@ router.get("/me/mine", authRequired, requireRole("seller"), async (req, res) => 
     const result = await db.query(
       `SELECT
         l.*,
-        u.name AS seller_name,
+        COALESCE(s.store_name, s.name) AS seller_name,
         c.name AS category_name,
         COALESCE(
           (
@@ -292,9 +292,9 @@ router.get("/me/mine", authRequired, requireRole("seller"), async (req, res) => 
           '[]'::json
         ) AS images
       FROM listings l
-      JOIN users u ON l.user_id = u.id
+      JOIN sellers s ON l.seller_id = s.id
       LEFT JOIN categories c ON l.category_id = c.id
-      WHERE l.user_id = $1
+      WHERE l.seller_id = $1
       ORDER BY l.created_at DESC`,
       [req.user.id]
     );
@@ -346,7 +346,7 @@ router.post("/", authRequired, requireRole("seller"), async (req, res) => {
 
     const listingRes = await db.query(
       `INSERT INTO listings
-       (user_id, title, description, price, sizes, colors, gender, condition, category_id, city, delivery_available)
+       (seller_id, title, description, price, sizes, colors, gender, condition, category_id, city, delivery_available)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
        RETURNING *`,
       [
@@ -401,10 +401,10 @@ router.put("/:id", authRequired, requireRole("seller"), async (req, res) => {
 
     // Ensure the listing exists and the requester is allowed to update it
     // (owner only) before applying any changes.
-    const check = await db.query("SELECT user_id FROM listings WHERE id = $1", [listingId]);
+    const check = await db.query("SELECT seller_id FROM listings WHERE id = $1", [listingId]);
     const found = check.rows[0];
     if (!found) return res.status(404).json({ message: "Annonce introuvable" });
-    if (found.user_id !== req.user.id) {
+    if (found.seller_id !== req.user.id) {
       return res.status(403).json({ message: "Vous ne pouvez pas modifier cette annonce" });
     }
 
@@ -498,10 +498,10 @@ router.delete("/:id", authRequired, requireRole("seller"), async (req, res) => {
 
     // Validate ownership before deleting to prevent users from removing
     // listings that are not theirs.
-    const check = await db.query("SELECT user_id FROM listings WHERE id = $1", [listingId]);
+    const check = await db.query("SELECT seller_id FROM listings WHERE id = $1", [listingId]);
     const found = check.rows[0];
     if (!found) return res.status(404).json({ message: "Annonce introuvable" });
-    if (found.user_id !== req.user.id) {
+    if (found.seller_id !== req.user.id) {
       return res.status(403).json({ message: "Vous ne pouvez pas supprimer cette annonce" });
     }
 

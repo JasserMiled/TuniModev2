@@ -30,7 +30,7 @@ router.post("/", authRequired, requireRole("client"), async (req, res) => {
     }
 
     const listingRes = await db.query(
-      "SELECT id, user_id AS seller_id, price, title, colors, sizes FROM listings WHERE id = $1",
+      "SELECT id, seller_id, price, title, colors, sizes FROM listings WHERE id = $1",
       [listing_id]
     );
     const listing = listingRes.rows[0];
@@ -93,8 +93,8 @@ router.post("/", authRequired, requireRole("client"), async (req, res) => {
     const order = addClientAlias(orderRes.rows[0]);
 
     // Send notification emails (non-blocking but awaited for consistency)
-    const buyerEmailRes = await db.query("SELECT email FROM users WHERE id = $1", [req.user.id]);
-    const sellerEmailRes = await db.query("SELECT email FROM users WHERE id = $1", [listing.seller_id]);
+    const buyerEmailRes = await db.query("SELECT email FROM clients WHERE id = $1", [req.user.id]);
+    const sellerEmailRes = await db.query("SELECT email FROM sellers WHERE id = $1", [listing.seller_id]);
 
     const buyerEmail = buyerEmailRes.rows[0]?.email;
     const sellerEmail = sellerEmailRes.rows[0]?.email;

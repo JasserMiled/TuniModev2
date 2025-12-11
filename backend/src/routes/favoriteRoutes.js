@@ -12,9 +12,9 @@ router.get("/me", authRequired, async (req, res) => {
   try {
     const favoriteListings = await db.query(
       `SELECT
-         l.*,
-         c.name AS category_name,
-         u.name AS seller_name,
+        l.*,
+        c.name AS category_name,
+        COALESCE(s.store_name, s.name) AS seller_name,
          COALESCE(
            (
              SELECT json_agg(
@@ -28,27 +28,25 @@ router.get("/me", authRequired, async (req, res) => {
          ) AS images
        FROM favorites f
        JOIN listings l ON f.listing_id = l.id
-       JOIN users u ON l.user_id = u.id
+       JOIN sellers s ON l.seller_id = s.id
        LEFT JOIN categories c ON l.category_id = c.id
-       WHERE f.user_id = $1
+       WHERE f.client_id = $1
        ORDER BY f.created_at DESC`,
       [req.user.id]
     );
 
     const favoriteSellers = await db.query(
       `SELECT
-         u.id,
-         u.name,
-         u.email,
-         u.phone,
-         u.address,
-         u.role,
-         COALESCE(s.store_name, u.business_name) AS business_name,
-         COALESCE(s.avatar_url, u.avatar_url) AS avatar_url
+         s.id,
+         COALESCE(s.store_name, s.name) AS name,
+         s.email,
+         s.phone,
+         s.address,
+         s.store_name AS business_name,
+         s.avatar_url
        FROM favorite_sellers fs
-       JOIN users u ON fs.seller_id = u.id
-       LEFT JOIN sellers s ON s.user_id = u.id
-       WHERE fs.user_id = $1
+       JOIN sellers s ON fs.seller_id = s.id
+       WHERE fs.client_id = $1
        ORDER BY fs.created_at DESC`,
       [req.user.id]
     );
@@ -67,7 +65,7 @@ router.post("/listings/:listingId", authRequired, async (req, res) => {
   try {
     const listingId = req.params.listingId;
     await db.query(
-      `INSERT INTO favorites (user_id, listing_id)
+      `INSERT INTO favorites (client_id, listing_id)
        VALUES ($1,$2)
        ON CONFLICT DO NOTHING`,
       [req.user.id, listingId]
@@ -86,7 +84,7 @@ router.delete("/listings/:listingId", authRequired, async (req, res) => {
   try {
     const listingId = req.params.listingId;
     await db.query(
-      `DELETE FROM favorites WHERE user_id = $1 AND listing_id = $2`,
+      `DELETE FROM favorites WHERE client_id = $1 AND listing_id = $2`,
       [req.user.id, listingId]
     );
     res.json({ message: "Annonce retirée des favoris" });
@@ -103,7 +101,7 @@ router.post("/sellers/:sellerId", authRequired, async (req, res) => {
   try {
     const sellerId = req.params.sellerId;
     await db.query(
-      `INSERT INTO favorite_sellers (user_id, seller_id)
+      `INSERT INTO favorite_sellers (client_id, seller_id)
        VALUES ($1,$2)
        ON CONFLICT DO NOTHING`,
       [req.user.id, sellerId]
@@ -122,7 +120,7 @@ router.delete("/sellers/:sellerId", authRequired, async (req, res) => {
   try {
     const sellerId = req.params.sellerId;
     await db.query(
-      `DELETE FROM favorite_sellers WHERE user_id = $1 AND seller_id = $2`,
+      `DELETE FROM favorite_sellers WHERE client_id = $1 AND seller_id = $2`,
       [req.user.id, sellerId]
     );
     res.json({ message: "Vendeur retiré des favoris" });

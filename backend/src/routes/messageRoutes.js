@@ -5,6 +5,14 @@ const { authRequired } = require("../middleware/auth");
 
 const router = express.Router();
 
+const accountCte = `
+  WITH accounts AS (
+    SELECT id, COALESCE(store_name, name) AS name FROM sellers
+    UNION ALL
+    SELECT id, COALESCE(profile_name, name) AS name FROM clients
+  )
+`;
+
 /**
  * POST /api/messages
  */
@@ -31,9 +39,10 @@ router.post("/", authRequired, async (req, res) => {
 router.get("/inbox", authRequired, async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT m.*, u.name AS sender_name
+      `${accountCte}
+       SELECT m.*, a.name AS sender_name
        FROM messages m
-       JOIN users u ON m.sender_id = u.id
+       JOIN accounts a ON m.sender_id = a.id
        WHERE m.receiver_id = $1
        ORDER BY m.created_at DESC`,
       [req.user.id]
@@ -51,9 +60,10 @@ router.get("/inbox", authRequired, async (req, res) => {
 router.get("/sent", authRequired, async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT m.*, u.name AS receiver_name
+      `${accountCte}
+       SELECT m.*, a.name AS receiver_name
        FROM messages m
-       JOIN users u ON m.receiver_id = u.id
+       JOIN accounts a ON m.receiver_id = a.id
        WHERE m.sender_id = $1
        ORDER BY m.created_at DESC`,
       [req.user.id]

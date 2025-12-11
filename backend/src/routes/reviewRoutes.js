@@ -6,6 +6,14 @@ const { authRequired } = require("../middleware/auth");
 const router = express.Router();
 const REVIEWS_TABLE = "reviews";
 
+const accountCte = `
+  WITH accounts AS (
+    SELECT id, COALESCE(store_name, name) AS name FROM sellers
+    UNION ALL
+    SELECT id, COALESCE(profile_name, name) AS name FROM clients
+  )
+`;
+
 // Vérifie qu'une commande existe bien entre l'acheteur et le vendeur avant d'autoriser un avis.
 const fetchOrderForReview = async (orderId, userId) => {
   const orderRes = await db.query(
@@ -94,9 +102,10 @@ router.get("/order/:orderId", authRequired, async (req, res) => {
     }
 
     const reviews = await db.query(
-      `SELECT r.*, u.name AS reviewer_name
+      `${accountCte}
+       SELECT r.*, a.name AS reviewer_name
        FROM ${REVIEWS_TABLE} r
-       JOIN users u ON r.reviewer_id = u.id
+       JOIN accounts a ON r.reviewer_id = a.id
        WHERE r.order_id = $1
        ORDER BY r.created_at ASC`,
       [orderId]
@@ -117,9 +126,10 @@ router.get("/user/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
     const reviews = await db.query(
-      `SELECT r.*, u.name AS reviewer_name
+      `${accountCte}
+       SELECT r.*, a.name AS reviewer_name
        FROM ${REVIEWS_TABLE} r
-       JOIN users u ON r.reviewer_id = u.id
+       JOIN accounts a ON r.reviewer_id = a.id
        WHERE r.reviewee_id = $1
        ORDER BY r.created_at DESC`,
       [userId]
