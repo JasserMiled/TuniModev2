@@ -8,6 +8,8 @@ type Props = {
   clientId: number;
   name?: string;
   avatarUrl?: string | null;
+  rating?: number | null;
+  reviewsCount?: number;
   address?: string | null;
   avatarSize?: number;
   padding?: string;
@@ -17,6 +19,8 @@ export default function ClientCard({
   clientId,
   name,
   avatarUrl,
+  rating,
+  reviewsCount,
   address,
   avatarSize = 80,
   padding = "p-5",
@@ -24,6 +28,8 @@ export default function ClientCard({
   const router = useRouter();
 
   const [avatar, setAvatar] = useState<string | null>(avatarUrl ?? null);
+  const [clientRating, setClientRating] = useState<number | null>(rating ?? null);
+  const [clientReviews, setClientReviews] = useState<number>(reviewsCount ?? 0);
   const [clientAddress, setClientAddress] = useState<string | null>(address ?? null);
   const [clientName, setClientName] = useState<string>(name ?? "");
 
@@ -35,6 +41,22 @@ export default function ClientCard({
 
       const resolved = ApiService.resolveImageUrl(profile.avatarUrl ?? null);
       setAvatar(resolved);
+    });
+  }, [clientId]);
+
+  // FETCH REVIEWS TO COMPUTE RATING
+  useEffect(() => {
+    ApiService.fetchUserReviews(clientId).then((reviews) => {
+      if (reviews.length === 0) {
+        setClientRating(null);
+        setClientReviews(0);
+        return;
+      }
+
+      const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+
+      setClientRating(Number(avg.toFixed(1)));
+      setClientReviews(reviews.length);
     });
   }, [clientId]);
 
@@ -71,6 +93,11 @@ export default function ClientCard({
 
         <div>
           <h1 className="font-semibold">{clientName}</h1>
+          {clientRating !== null ? (
+            <p className="text-neutral-600">⭐ {clientRating} / 5 ({clientReviews} avis)</p>
+          ) : (
+            <p className="text-neutral-500">Aucun avis</p>
+          )}
           <p className="text-neutral-500">
             📍 {clientAddress ?? "Adresse non renseignée"}
           </p>
