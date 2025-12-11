@@ -51,6 +51,12 @@ const normalizeUser = (user: UserLike): User => ({
   phone: user.phone ?? null,
   avatarUrl: resolveImageUrl(user.avatarUrl ?? user.avatar_url ?? null),
   address: user.address ?? null,
+  businessName: (user as { businessName?: string | null }).businessName ??
+    (user as { business_name?: string | null }).business_name ??
+    null,
+  dateOfBirth: (user as { dateOfBirth?: string | null }).dateOfBirth ??
+    (user as { date_of_birth?: string | null }).date_of_birth ??
+    null,
 });
 
 type ListingLike = Partial<Listing> & {
@@ -201,8 +207,10 @@ export const ApiService = {
     email: string;
     password: string;
     role: "seller" | "client";
-    phone?: string;
+    phone: string;
     address?: string;
+    businessName?: string;
+    dateOfBirth?: string;
   }): Promise<boolean> {
     const res = await fetch(`${baseURL}/api/auth/register`, {
       method: "POST",
@@ -251,6 +259,8 @@ export const ApiService = {
     currentPassword?: string;
     newPassword?: string;
     avatarUrl?: string;
+    businessName?: string | null;
+    dateOfBirth?: string | null;
   }): Promise<User> {
     const res = await fetch(`${baseURL}/api/auth/me`, {
       method: "PUT",
@@ -263,6 +273,8 @@ export const ApiService = {
         current_password: payload.currentPassword,
         new_password: payload.newPassword,
         avatar_url: payload.avatarUrl,
+        business_name: payload.businessName,
+        date_of_birth: payload.dateOfBirth,
       }),
     });
     const data = await handleResponse<{ user?: User } & Record<string, unknown>>(res, "Mise à jour impossible");

@@ -14,8 +14,10 @@ type AuthState = {
     email: string;
     password: string;
     role: "seller" | "client";
-    phone?: string;
+    phone: string;
     address?: string;
+    businessName?: string;
+    dateOfBirth?: string;
   }) => Promise<boolean>;
   logout: () => void;
   refreshUser: (user: User | null) => void;

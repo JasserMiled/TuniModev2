@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     role VARCHAR(20) NOT NULL CHECK (role IN ('seller','client')),
     business_name VARCHAR(255),
     business_id VARCHAR(100),
+    date_of_birth DATE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
