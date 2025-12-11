@@ -450,6 +450,7 @@ export const ApiService = {
     city?: string;
     images?: string[];
     deliveryAvailable?: boolean;
+    stock?: number;
   }): Promise<boolean> {
     const res = await fetch(`${baseURL}/api/listings`, {
       method: "POST",
@@ -464,6 +465,7 @@ export const ApiService = {
         category_id: payload.categoryId,
         city: payload.city,
         delivery_available: payload.deliveryAvailable ?? false,
+        stock: payload.stock,
         images: payload.images ?? [],
       }),
     });
