@@ -48,7 +48,7 @@ export default function ListingDetailPage() {
     ApiService.fetchListingDetail(id)
       .then((data) => {
         setListing(data);
-        setSelectedImage(data.imageUrls?.[0] ?? null);
+        setSelectedImage(data.imageUrls?.[0] ?? data.imageUrl ?? null);
 
         if (data.userId) {
           ApiService.fetchUserListings(data.userId).then((res) => {
