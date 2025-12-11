@@ -239,6 +239,10 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       reçu: "received",
       recue: "received",
       reçue: "received",
+      livré: "received",
+      livre: "received",
+      livrée: "received",
+      livree: "received",
       refus_de_reception: "reception_refused",
       "refus de reception": "reception_refused",
       "refus_de_réception": "reception_refused",
@@ -282,8 +286,12 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     const isSeller = found.seller_id === req.user.id;
     const isBuyer = found.buyer_id === req.user.id;
 
-    // Prevent cancelling orders that are already engaged in fulfillment
-    if (normalizedStatus === "cancelled" && found.current_status !== "pending") {
+    // Prevent cancelling orders that are already fully completed or refused
+    const cancellableStatuses = ["pending", "shipped", "received"];
+    if (
+      normalizedStatus === "cancelled" &&
+      !cancellableStatuses.includes(found.current_status)
+    ) {
       return res
         .status(403)
         .json({ message: "Vous ne pouvez pas annuler cette commande" });
@@ -292,10 +300,13 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     const workflow = {
       pending: { seller: ["confirmed", "cancelled"], buyer: [] },
       confirmed: { seller: ["shipped", "ready_for_pickup"], buyer: [] },
-      shipped: { seller: [], buyer: ["received", "reception_refused"] },
+      shipped: {
+        seller: ["received", "reception_refused", "cancelled"],
+        buyer: ["received", "reception_refused", "cancelled"],
+      },
       ready_for_pickup: { seller: ["picked_up"], buyer: [] },
       picked_up: { seller: ["completed"], buyer: [] },
-      received: { seller: ["completed"], buyer: [] },
+      received: { seller: ["completed"], buyer: ["reception_refused", "cancelled"] },
       reception_refused: { seller: [], buyer: [] },
       cancelled: { seller: [], buyer: [] },
       completed: { seller: [], buyer: [] },

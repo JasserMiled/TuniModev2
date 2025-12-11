@@ -58,6 +58,7 @@ export default function OrdersPage() {
       case "ready_for_pickup": return "À retirer";
       case "picked_up": return "Retirée";
       case "received": return "Reçue";
+      case "reception_refused": return "Réception refusée";
       case "completed": return "Terminée";
       case "cancelled": return "Annulée";
       default: return "En attente";
@@ -72,6 +73,7 @@ export default function OrdersPage() {
       case "ready_for_pickup": return "bg-orange-100 text-orange-700";
       case "picked_up": return "bg-teal-100 text-teal-700";
       case "received": return "bg-green-100 text-green-700";
+      case "reception_refused": return "bg-red-100 text-red-700";
       case "completed": return "bg-emerald-100 text-emerald-700";
       case "cancelled": return "bg-red-100 text-red-700";
       default: return "bg-orange-100 text-orange-700";
