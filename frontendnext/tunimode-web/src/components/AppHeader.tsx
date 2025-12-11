@@ -10,6 +10,7 @@ import QuickFiltersDialog, {
   QuickFiltersSelection,
 } from "@/src/components/QuickFiltersDialog";
 import { buildResultsUrl } from "@/src/utils/searchFilters";
+import NewListingModal from "./NewListingModal";
 
 export default function AppHeader() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function AppHeader() {
   const { user, logout } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [listingModalOpen, setListingModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const [query, setQuery] = useState(
@@ -197,12 +199,12 @@ export default function AppHeader() {
         {/* ✅ DROITE — USER / LOGIN */}
         <div className="flex items-center gap-3 flex-shrink-0">
           {canCreateListing && (
-            <Link
-              href="/listing/new"
+            <button
+              onClick={() => setListingModalOpen(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-semibold hover:bg-blue-700 transition"
             >
               Ajouter une annonce
-            </Link>
+            </button>
           )}
 
           {user ? (
@@ -282,6 +284,10 @@ export default function AppHeader() {
           onReset={handleResetFilters}
         />
       )}
+      <NewListingModal
+        open={listingModalOpen}
+        onClose={() => setListingModalOpen(false)}
+      />
     </header>
   );
 }
