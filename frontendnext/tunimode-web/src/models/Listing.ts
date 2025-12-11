@@ -4,7 +4,6 @@ export interface Listing {
   title: string;
   description?: string | null;
   price: number;
-  imageUrl: string;
   sizes: string[];
   colors: string[];
   gender?: string | null;
