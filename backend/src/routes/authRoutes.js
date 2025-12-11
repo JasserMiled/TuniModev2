@@ -30,13 +30,31 @@ function verifyToken(req, res, next) {
 // Inscription d'un utilisateur avec hash du mot de passe, réponse compatible Flutter Web
 // POST /api/auth/register
 router.post("/register", async (req, res) => {
-  const { name, email, password, role, phone, address } = req.body || {};
+  const {
+    name,
+    email,
+    password,
+    role,
+    phone,
+    address,
+    businessName,
+    dateOfBirth,
+  } = req.body || {};
 
-  // ✅ Vérifications obligatoires
-  if (!name || !email || !password || !role) {
+  // ✅ Vérifications obligatoires communes
+  if (!name || !email || !password || !role || !phone) {
     return res.status(400).json({
-      message: "Nom, email, mot de passe et rôle sont requis",
+      message: "Nom, email, téléphone, mot de passe et rôle sont requis",
     });
+  }
+
+  // ✅ Règles spécifiques au rôle
+  if (role === "seller" && !businessName) {
+    return res.status(400).json({ message: "Le nom de la boutique est requis" });
+  }
+
+  if (role === "client" && !dateOfBirth) {
+    return res.status(400).json({ message: "La date de naissance est requise" });
   }
 
   // ✅ Sécurité sur les rôles autorisés
@@ -61,16 +79,18 @@ router.post("/register", async (req, res) => {
 
     // ✅ INSERT COMPLET AVEC ROLE
     const insertResult = await db.query(
-      `INSERT INTO users (name, email, password_hash, role, phone, address)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, name, email, role, phone, address`,
+      `INSERT INTO users (name, email, password_hash, role, phone, address, business_name, date_of_birth)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id, name, email, role, phone, address, business_name, date_of_birth`,
       [
         name,
         normalizedEmail,
         passwordHash,
-        role,                 // ✅ IMPORTANT
-        phone || null,
+        role, // ✅ IMPORTANT
+        phone,
         address || null,
+        businessName || null,
+        dateOfBirth || null,
       ]
     );
 
@@ -94,7 +114,8 @@ router.post("/login", async (req, res) => {
 
   try {
     const result = await db.query(
-      "SELECT id, name, email, password_hash, role FROM users WHERE email = $1",
+      `SELECT id, name, email, phone, address, business_name, date_of_birth, password_hash, role
+       FROM users WHERE email = $1`,
       [email]
     );
     const user = result.rows[0];
@@ -123,7 +144,17 @@ router.post("/login", async (req, res) => {
 // Permet à l'utilisateur connecté de mettre à jour ses informations de compte
 router.put("/me", verifyToken, async (req, res) => {
   try {
-    const { name, address, email, phone, current_password, new_password, avatar_url } = req.body;
+    const {
+      name,
+      address,
+      email,
+      phone,
+      current_password,
+      new_password,
+      avatar_url,
+      business_name,
+      date_of_birth,
+    } = req.body;
 
     const existingResult = await db.query(
       "SELECT id, name, email, phone, avatar_url, address, password_hash, role FROM users WHERE id = $1",
@@ -159,6 +190,16 @@ router.put("/me", verifyToken, async (req, res) => {
       values.push(avatar_url || null);
     }
 
+    if (business_name !== undefined) {
+      updates.push(`business_name = $${index++}`);
+      values.push(business_name || null);
+    }
+
+    if (date_of_birth !== undefined) {
+      updates.push(`date_of_birth = $${index++}`);
+      values.push(date_of_birth || null);
+    }
+
     if (new_password) {
       if (!current_password) {
         return res
@@ -183,7 +224,7 @@ router.put("/me", verifyToken, async (req, res) => {
 
     values.push(req.user.id);
 
-    const updateQuery = `UPDATE users SET ${updates.join(", ")} WHERE id = $${index} RETURNING id, name, email, phone, avatar_url, address, role`;
+    const updateQuery = `UPDATE users SET ${updates.join(", ")} WHERE id = $${index} RETURNING id, name, email, phone, avatar_url, address, role, business_name, date_of_birth`;
     const updateResult = await db.query(updateQuery, values);
     const updatedUser = updateResult.rows[0];
 
@@ -208,7 +249,8 @@ router.get("/user/:id", async (req, res) => {
     }
 
     const result = await db.query(
-      "SELECT id, name, email, phone, avatar_url, address, role FROM users WHERE id = $1",
+      `SELECT id, name, email, phone, avatar_url, address, role, business_name, date_of_birth
+       FROM users WHERE id = $1`,
       [userId]
     );
 

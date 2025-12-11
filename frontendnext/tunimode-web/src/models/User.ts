@@ -6,4 +6,6 @@ export interface User {
   phone?: string | null;
   avatarUrl?: string | null;
   address?: string | null;
+  businessName?: string | null;
+  dateOfBirth?: string | null;
 }

@@ -10,13 +10,24 @@ export default function RegisterPage() {
   const { register, loading } = useAuth();
   const [role, setRole] = useState("client");
   const [name, setName] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = await register({ name, email, password, role });
+    const ok = await register({
+      name,
+      email,
+      password,
+      role,
+      phone,
+      businessName: role === "seller" ? businessName : undefined,
+      dateOfBirth: role === "client" ? dateOfBirth : undefined,
+    });
     if (!ok) {
       setError("Inscription impossible");
     } else {
@@ -42,6 +53,14 @@ export default function RegisterPage() {
         </button>
       </div>
       <form onSubmit={handleSubmit} className="space-y-3">
+        {role === "seller" && (
+          <input
+            className="w-full border rounded-lg px-3 py-2"
+            placeholder="Nom de la boutique"
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+          />
+        )}
         <input
           className="w-full border rounded-lg px-3 py-2"
           placeholder="Nom"
@@ -55,6 +74,27 @@ export default function RegisterPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
+        <input
+          className="w-full border rounded-lg px-3 py-2"
+          placeholder="Téléphone"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+        {role === "client" && (
+          <div className="space-y-1">
+            <label className="text-sm text-neutral-700" htmlFor="dob">
+              Date de naissance
+            </label>
+            <input
+              id="dob"
+              className="w-full border rounded-lg px-3 py-2"
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+            />
+          </div>
+        )}
         <input
           className="w-full border rounded-lg px-3 py-2"
           placeholder="Mot de passe"
