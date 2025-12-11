@@ -232,6 +232,8 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       awaiting_pickup: "ready_for_pickup",
       expédié: "shipped",
       expédiée: "shipped",
+      expidée: "shipped",
+      expidee: "shipped",
       expedie: "shipped",
       expediee: "shipped",
       expédiee: "shipped",
@@ -283,6 +285,8 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     const found = check.rows[0];
     if (!found) return res.status(404).json({ message: "Commande introuvable" });
 
+    const normalizedReceptionMode = (found.reception_mode || "").toLowerCase();
+
     const isSeller = found.seller_id === req.user.id;
     const isBuyer = found.buyer_id === req.user.id;
 
@@ -301,7 +305,7 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       pending: { seller: ["confirmed", "cancelled"], buyer: [] },
       confirmed: {
         seller:
-          found.reception_mode === "retrait"
+          normalizedReceptionMode === "retrait"
             ? ["ready_for_pickup", "cancelled"]
             : ["shipped", "cancelled"],
         buyer: [],
