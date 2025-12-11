@@ -9,6 +9,7 @@ import { useAuth } from "@/src/context/AuthContext";
 import ListingCard from "@/src/components/ListingCard";
 import { Listing } from "@/src/models/Listing";
 import ClientCard from "@/src/components/ClientCard";
+import AppHeader from "@/src/components/AppHeader";
 
 export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
@@ -232,63 +233,67 @@ export default function OrderDetailPage() {
 
   return (
     <Protected>
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-3">
-        {error && <p className="text-red-600">{error}</p>}
-        {!order && !error && <p>Chargement...</p>}
-        {order && (
-          <>
-            <h1 className="text-2xl font-semibold">Commande #{order.id}</h1>
-            <p className="text-neutral-600">{order.listingTitle}</p>
-            <p className="font-semibold text-blue-600">{order.totalAmount} DT</p>
+      <main className="bg-gray-50 min-h-screen">
+        <AppHeader />
 
-            <div className="flex items-center gap-3">
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor(
-                  order.status
-                )}`}
-              >
-                {statusLabel(order.status)}
-              </span>
-              <span className="text-sm text-gray-600">
-                Mode : {order.receptionMode === "livraison" ? "Livraison" : "Retrait"}
-              </span>
-            </div>
+        <div className="max-w-3xl mx-auto px-4 py-8 space-y-3">
+          {error && <p className="text-red-600">{error}</p>}
+          {!order && !error && <p>Chargement...</p>}
+          {order && (
+            <>
+              <h1 className="text-2xl font-semibold">Commande #{order.id}</h1>
+              <p className="text-neutral-600">{order.listingTitle}</p>
+              <p className="font-semibold text-blue-600">{order.totalAmount} DT</p>
 
-            <p>Quantité : {order.quantity}</p>
+              <div className="flex items-center gap-3">
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor(
+                    order.status
+                  )}`}
+                >
+                  {statusLabel(order.status)}
+                </span>
+                <span className="text-sm text-gray-600">
+                  Mode : {order.receptionMode === "livraison" ? "Livraison" : "Retrait"}
+                </span>
+              </div>
 
-            {order.shippingAddress && (
-              <p>Adresse : {order.shippingAddress}</p>
-            )}
+              <p>Quantité : {order.quantity}</p>
 
-            {order.phone && <p>Téléphone : {order.phone}</p>}
+              {order.shippingAddress && (
+                <p>Adresse : {order.shippingAddress}</p>
+              )}
 
-            {user?.role === "seller" && (
-              <div className="space-y-3 pt-4 border-t">
-                <p className="font-semibold">Informations client</p>
-                {order.clientId ? (
-                  <ClientCard clientId={order.clientId} padding="p-4" avatarSize={64} />
-                ) : (
-                  <p className="text-sm text-gray-600">Client introuvable.</p>
-                )}
+              {order.phone && <p>Téléphone : {order.phone}</p>}
 
-                <p className="font-semibold">Annonce commandée</p>
-                {listing ? (
-                  <ListingCard listing={listing} />
-                ) : (
-                  <p className="text-sm text-gray-600">Annonce introuvable.</p>
+              {user?.role === "seller" && (
+                <div className="space-y-3 pt-4 border-t">
+                  <p className="font-semibold">Informations client</p>
+                  {order.clientId ? (
+                    <ClientCard clientId={order.clientId} padding="p-4" avatarSize={64} />
+                  ) : (
+                    <p className="text-sm text-gray-600">Client introuvable.</p>
+                  )}
+
+                  <p className="font-semibold">Annonce commandée</p>
+                  {listing ? (
+                    <ListingCard listing={listing} />
+                  ) : (
+                    <p className="text-sm text-gray-600">Annonce introuvable.</p>
+                  )}
+                </div>
+              )}
+
+              <div className="pt-4 border-t space-y-2">
+                <p className="font-semibold">Actions disponibles</p>
+                {renderActions() ?? (
+                  <p className="text-sm text-gray-600">Aucune action disponible.</p>
                 )}
               </div>
-            )}
-
-            <div className="pt-4 border-t space-y-2">
-              <p className="font-semibold">Actions disponibles</p>
-              {renderActions() ?? (
-                <p className="text-sm text-gray-600">Aucune action disponible.</p>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      </main>
     </Protected>
   );
 }
