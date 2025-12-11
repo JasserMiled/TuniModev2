@@ -10,9 +10,20 @@ router.use(authRequired, requireRole("seller"));
 router.get("/users", async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT id, name, email, phone, role, business_name, business_id, created_at
-       FROM users
-       ORDER BY created_at DESC
+      `SELECT
+         u.id,
+         u.name,
+         u.email,
+         u.phone,
+         u.role,
+         COALESCE(s.store_name, u.business_name) AS business_name,
+         COALESCE(s.business_id, u.business_id) AS business_id,
+         COALESCE(c.date_of_birth, u.date_of_birth) AS date_of_birth,
+         u.created_at
+       FROM users u
+       LEFT JOIN sellers s ON s.user_id = u.id
+       LEFT JOIN clients c ON c.user_id = u.id
+       ORDER BY u.created_at DESC
        LIMIT 100`
     );
     res.json(result.rows);

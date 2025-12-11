@@ -7,10 +7,37 @@ CREATE TABLE IF NOT EXISTS users (
     avatar_url TEXT,
     address TEXT,
     role VARCHAR(20) NOT NULL CHECK (role IN ('seller','client')),
-    business_name VARCHAR(255),
-    business_id VARCHAR(100),
-    date_of_birth DATE,
+    business_name VARCHAR(255), -- DEPRECATED: use sellers.store_name
+    business_id VARCHAR(100), -- DEPRECATED: use sellers.business_id
+    date_of_birth DATE, -- DEPRECATED: use clients.date_of_birth
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Seller specific attributes are stored separately so that common identity data
+-- (email, password, phone...) remain in the users table. The legacy columns stay
+-- for backward compatibility during the migration.
+CREATE TABLE IF NOT EXISTS sellers (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    store_name VARCHAR(255),
+    business_id VARCHAR(100),
+    phone VARCHAR(30),
+    address TEXT,
+    avatar_url TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Client specific attributes are stored separately to decouple them from the
+-- shared identity information in users.
+CREATE TABLE IF NOT EXISTS clients (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    profile_name VARCHAR(255),
+    date_of_birth DATE,
+    phone VARCHAR(30),
+    address TEXT,
+    avatar_url TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- ⚠️ ATTENTION : ceci supprime complètement la table categories

@@ -2,7 +2,7 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const db = require("../db");
+const userModel = require("../models/userModel");
 require("dotenv").config();
 
 const router = express.Router();
@@ -66,35 +66,28 @@ router.post("/register", async (req, res) => {
   try {
     const normalizedEmail = String(email).toLowerCase();
 
-    const existingUser = await db.query(
-      "SELECT 1 FROM users WHERE email = $1",
-      [normalizedEmail]
-    );
+    const existingUser = await userModel.getUserByEmail(normalizedEmail);
 
-    if (existingUser.rows.length) {
+    if (existingUser) {
       return res.status(409).json({ message: "Email déjà utilisé" });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
     // ✅ INSERT COMPLET AVEC ROLE
-    const insertResult = await db.query(
-      `INSERT INTO users (name, email, password_hash, role, phone, address, business_name, date_of_birth)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING id, name, email, role, phone, address, business_name, date_of_birth`,
-      [
-        name,
-        normalizedEmail,
-        passwordHash,
-        role, // ✅ IMPORTANT
-        phone,
-        address || null,
-        businessName || null,
-        dateOfBirth || null,
-      ]
-    );
+    const user = await userModel.createUser({
+      name,
+      email: normalizedEmail,
+      passwordHash,
+      role,
+      phone,
+      address,
+      storeName: role === "seller" ? businessName : null,
+      businessId: null,
+      profileName: role === "client" ? name : null,
+      dateOfBirth: role === "client" ? dateOfBirth : null,
+    });
 
-    const user = insertResult.rows[0];
     return res.status(201).json(user);
   } catch (err) {
     console.error("Error during registration", err);
@@ -113,12 +106,7 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    const result = await db.query(
-      `SELECT id, name, email, phone, address, business_name, date_of_birth, password_hash, role
-       FROM users WHERE email = $1`,
-      [email]
-    );
-    const user = result.rows[0];
+    const user = await userModel.getUserByEmail(email, { includePassword: true });
 
     if (!user) {
       return res.status(401).json({ message: "Identifiants invalides" });
@@ -156,49 +144,12 @@ router.put("/me", verifyToken, async (req, res) => {
       date_of_birth,
     } = req.body;
 
-    const existingResult = await db.query(
-      "SELECT id, name, email, phone, avatar_url, address, password_hash, role FROM users WHERE id = $1",
-      [req.user.id]
-    );
-    const user = existingResult.rows[0];
+    const user = await userModel.getUserById(req.user.id, { includePassword: true });
     if (!user) {
       return res.status(404).json({ message: "Utilisateur introuvable" });
     }
 
-    const updates = [];
-    const values = [];
-    let index = 1;
-
-    if (name !== undefined) {
-      updates.push(`name = $${index++}`);
-      values.push(name);
-    }
-    if (address !== undefined) {
-      updates.push(`address = $${index++}`);
-      values.push(address || null);
-    }
-    if (email !== undefined) {
-      updates.push(`email = $${index++}`);
-      values.push(email);
-    }
-    if (phone !== undefined) {
-      updates.push(`phone = $${index++}`);
-      values.push(phone || null);
-    }
-    if (avatar_url !== undefined) {
-      updates.push(`avatar_url = $${index++}`);
-      values.push(avatar_url || null);
-    }
-
-    if (business_name !== undefined) {
-      updates.push(`business_name = $${index++}`);
-      values.push(business_name || null);
-    }
-
-    if (date_of_birth !== undefined) {
-      updates.push(`date_of_birth = $${index++}`);
-      values.push(date_of_birth || null);
-    }
+    let newPasswordHash;
 
     if (new_password) {
       if (!current_password) {
@@ -212,21 +163,20 @@ router.put("/me", verifyToken, async (req, res) => {
         return res.status(400).json({ message: "Mot de passe actuel incorrect" });
       }
 
-      const hashed = await bcrypt.hash(new_password, 10);
-      updates.push(`password_hash = $${index++}`);
-      values.push(hashed);
+      newPasswordHash = await bcrypt.hash(new_password, 10);
     }
 
-    if (!updates.length) {
-      const { password_hash, ...safeUser } = user;
-      return res.json({ user: safeUser });
-    }
-
-    values.push(req.user.id);
-
-    const updateQuery = `UPDATE users SET ${updates.join(", ")} WHERE id = $${index} RETURNING id, name, email, phone, avatar_url, address, role, business_name, date_of_birth`;
-    const updateResult = await db.query(updateQuery, values);
-    const updatedUser = updateResult.rows[0];
+    const updatedUser = await userModel.updateUser(req.user.id, req.user.role, {
+      name,
+      address,
+      email,
+      phone,
+      avatar_url,
+      password_hash: newPasswordHash,
+      business_name,
+      profile_name: name,
+      date_of_birth,
+    });
 
     return res.json({ user: updatedUser });
   } catch (err) {
@@ -248,13 +198,7 @@ router.get("/user/:id", async (req, res) => {
       return res.status(400).json({ message: "Identifiant utilisateur invalide" });
     }
 
-    const result = await db.query(
-      `SELECT id, name, email, phone, avatar_url, address, role, business_name, date_of_birth
-       FROM users WHERE id = $1`,
-      [userId]
-    );
-
-    const user = result.rows[0];
+    const user = await userModel.getUserById(userId);
     if (!user) {
       return res.status(404).json({ message: "Utilisateur introuvable" });
     }
@@ -270,7 +214,7 @@ router.get("/user/:id", async (req, res) => {
 // Permet à l'utilisateur connecté de supprimer définitivement son compte
 router.delete("/me", verifyToken, async (req, res) => {
   try {
-    await db.query("DELETE FROM users WHERE id = $1", [req.user.id]);
+    await userModel.deleteUserById(req.user.id);
     return res.json({ message: "Compte supprimé" });
   } catch (err) {
     console.error("Erreur lors de la suppression du compte", err);

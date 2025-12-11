@@ -11,9 +11,9 @@ const router = express.Router();
 router.get("/me", authRequired, async (req, res) => {
   try {
     const favoriteListings = await db.query(
-      `SELECT 
-         l.*, 
-         c.name AS category_name, 
+      `SELECT
+         l.*,
+         c.name AS category_name,
          u.name AS seller_name,
          COALESCE(
            (
@@ -36,9 +36,18 @@ router.get("/me", authRequired, async (req, res) => {
     );
 
     const favoriteSellers = await db.query(
-      `SELECT u.id, u.name, u.email, u.phone, u.address, u.role, u.business_name, u.avatar_url
+      `SELECT
+         u.id,
+         u.name,
+         u.email,
+         u.phone,
+         u.address,
+         u.role,
+         COALESCE(s.store_name, u.business_name) AS business_name,
+         COALESCE(s.avatar_url, u.avatar_url) AS avatar_url
        FROM favorite_sellers fs
        JOIN users u ON fs.seller_id = u.id
+       LEFT JOIN sellers s ON s.user_id = u.id
        WHERE fs.user_id = $1
        ORDER BY fs.created_at DESC`,
       [req.user.id]
