@@ -63,7 +63,12 @@ export default function NewListingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(true);
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    router.back();
+  };
 
   useEffect(() => {
     if (!user || !isSeller) return;
@@ -421,7 +426,7 @@ export default function NewListingPage() {
           </button>
           <button
             type="button"
-            onClick={() => setIsModalOpen(false)}
+            onClick={handleCloseModal}
             className="px-5 py-2 border border-neutral-300 rounded-full"
           >
             Annuler
@@ -435,77 +440,58 @@ export default function NewListingPage() {
     <main className="bg-gray-50 min-h-screen">
       <AppHeader />
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-semibold">Ajouter une interface</h1>
-            <p className="text-neutral-600">
-              Cliquez sur le bouton ci-dessous pour ouvrir le formulaire dans une fenêtre
-              modale.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow"
-          >
-            Ouvrir le formulaire
-          </button>
-        </div>
-
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 py-10 overflow-y-auto">
-            <div className="relative w-full max-w-5xl">
-              <div className="absolute -top-4 right-0">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="rounded-full bg-white shadow p-2 hover:bg-neutral-100"
-                  aria-label="Fermer la fenêtre"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 overflow-hidden">
-                <div className="max-h-[80vh] overflow-y-auto p-6">
-                  {!user && (
-                    <div className="space-y-3">
-                      <h1 className="text-2xl font-semibold">Espace réservé</h1>
-                      <p>Connectez-vous avec un compte vendeur pour créer une annonce.</p>
-                      <div className="flex gap-3">
-                        <Link
-                          href="/auth/login"
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-                        >
-                          Connexion
-                        </Link>
-                        <Link
-                          href="/auth/register"
-                          className="px-4 py-2 border border-neutral-300 rounded-lg"
-                        >
-                          Créer un compte
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-
-                  {user && !isSeller && (
-                    <div className="space-y-3">
-                      <h1 className="text-2xl font-semibold">Accès réservé</h1>
-                      <p>Seuls les vendeurs peuvent publier une annonce.</p>
-                      <Link href="/" className="text-blue-600 underline">
-                        Retour à l&apos;accueil
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 py-10 overflow-y-auto">
+          <div className="relative w-full max-w-5xl">
+            <div className="absolute -top-4 right-0">
+              <button
+                type="button"
+                onClick={handleCloseModal}
+                className="rounded-full bg-white shadow p-2 hover:bg-neutral-100"
+                aria-label="Fermer la fenêtre"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="bg-white rounded-xl shadow-2xl border border-neutral-200 overflow-hidden">
+              <div className="max-h-[80vh] overflow-y-auto p-6">
+                {!user && (
+                  <div className="space-y-3">
+                    <h1 className="text-2xl font-semibold">Espace réservé</h1>
+                    <p>Connectez-vous avec un compte vendeur pour créer une annonce.</p>
+                    <div className="flex gap-3">
+                      <Link
+                        href="/auth/login"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                      >
+                        Connexion
+                      </Link>
+                      <Link
+                        href="/auth/register"
+                        className="px-4 py-2 border border-neutral-300 rounded-lg"
+                      >
+                        Créer un compte
                       </Link>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {user && isSeller && renderFormContent()}
-                </div>
+                {user && !isSeller && (
+                  <div className="space-y-3">
+                    <h1 className="text-2xl font-semibold">Accès réservé</h1>
+                    <p>Seuls les vendeurs peuvent publier une annonce.</p>
+                    <Link href="/" className="text-blue-600 underline">
+                      Retour à l&apos;accueil
+                    </Link>
+                  </div>
+                )}
+
+                {user && isSeller && renderFormContent()}
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </main>
   );
 }
