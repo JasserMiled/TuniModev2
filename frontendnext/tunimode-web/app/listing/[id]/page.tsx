@@ -272,9 +272,9 @@ export default function ListingDetailPage() {
               }}
             >
               <img
-                src={selectedImage ?? "/placeholder-listing.svg"}
+                src={selectedImage || "/placeholder-listing.svg"}
                 alt={listing.title}
-className="w-full h-[450px] object-contain bg-transparent"
+                className="w-full h-[450px] object-contain bg-transparent"
               />
             </div>
 
