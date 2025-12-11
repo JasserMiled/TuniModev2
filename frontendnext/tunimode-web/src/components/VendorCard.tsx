@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { KeyboardEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiService } from "@/src/services/api";
 
@@ -64,46 +64,63 @@ export default function VendorCard({
     });
   }, [sellerId]);
 
+  const goToSellerProfile = () => {
+    router.push(`/profile/${sellerId}`);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      goToSellerProfile();
+    }
+  };
+
   return (
-<div
-  className={`bg-white rounded-xl shadow-md flex items-center justify-between ${padding}`}
->
-  <div className="flex items-center gap-4">
     <div
-      className="rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center"
-      style={{ width: avatarSize, height: avatarSize }}
+      role="button"
+      tabIndex={0}
+      onClick={goToSellerProfile}
+      onKeyDown={handleKeyDown}
+      className={`bg-white rounded-xl shadow-md flex items-center justify-between ${padding} cursor-pointer`}
     >
-      {avatar ? (
-        <img src={avatar} className="w-full h-full object-cover" />
-      ) : (
-        <span className="text-3xl">👤</span>
+      <div className="flex items-center gap-4">
+        <div
+          className="rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center"
+          style={{ width: avatarSize, height: avatarSize }}
+        >
+          {avatar ? (
+            <img src={avatar} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-3xl">👤</span>
+          )}
+        </div>
+
+        <div>
+          <h1 className="font-semibold">{sellerName}</h1>
+
+          {sellerRating !== null ? (
+            <p className="text-neutral-600">⭐ {sellerRating} / 5 ({sellerReviews} avis)</p>
+          ) : (
+            <p className="text-neutral-500">Aucun avis</p>
+          )}
+
+          <p className="text-neutral-500">
+            📍 {sellerAddress ?? "Adresse non renseignée"}
+          </p>
+        </div>
+      </div>
+
+      {showEditButton && (
+        <button
+          onClick={(event) => {
+            event.stopPropagation();
+            router.push("/account/settings");
+          }}
+          className="px-4 py-2 border rounded-lg text-blue-600 hover:bg-blue-50"
+        >
+          Modifier profil
+        </button>
       )}
     </div>
-
-    <div>
-      <h1 className="font-semibold">{sellerName}</h1>
-
-      {sellerRating !== null ? (
-        <p className="text-neutral-600">⭐ {sellerRating} / 5 ({sellerReviews} avis)</p>
-      ) : (
-        <p className="text-neutral-500">Aucun avis</p>
-      )}
-
-      <p className="text-neutral-500">
-        📍 {sellerAddress ?? "Adresse non renseignée"}
-      </p>
-    </div>
-  </div>
-
-  {showEditButton && (
-    <button
-      onClick={() => router.push("/account/settings")}
-      className="px-4 py-2 border rounded-lg text-blue-600 hover:bg-blue-50"
-    >
-      Modifier profil
-    </button>
-  )}
-</div>
-
   );
 }
