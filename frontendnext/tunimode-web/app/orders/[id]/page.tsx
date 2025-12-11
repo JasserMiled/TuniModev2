@@ -164,6 +164,23 @@ export default function OrderDetailPage() {
               >
                 Mettre à retirer
               </button>
+              <button
+                onClick={() => updateSellerStatus("cancelled")}
+                className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
+              >
+                Annuler
+              </button>
+            </div>
+          );
+        case "shipped":
+          return (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => updateSellerStatus("cancelled")}
+                className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
+              >
+                Annuler
+              </button>
             </div>
           );
         case "ready_for_pickup":
