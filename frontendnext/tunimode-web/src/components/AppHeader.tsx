@@ -152,6 +152,8 @@ export default function AppHeader() {
     return normalizedRole === "seller";
   }, [user?.role]);
 
+  const canManageListings = canCreateListing;
+
   return (
     <header className="border-b border-neutral-200 bg-white">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-2">
@@ -233,12 +235,14 @@ export default function AppHeader() {
                   >
                     Mes favoris
                   </Link>
-                  <Link
-                    href="/dashboard/listings"
-                    className="block px-4 py-2 text-sm hover:bg-neutral-50"
-                  >
-                    Mes annonces
-                  </Link>
+                  {canManageListings && (
+                    <Link
+                      href="/dashboard/listings"
+                      className="block px-4 py-2 text-sm hover:bg-neutral-50"
+                    >
+                      Mes annonces
+                    </Link>
+                  )}
                   <Link
                     href="/orders"
                     className="block px-4 py-2 text-sm hover:bg-neutral-50"
