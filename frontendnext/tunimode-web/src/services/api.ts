@@ -246,7 +246,15 @@ export const ApiService = {
     const res = await fetch(`${baseURL}/api/favorites/me`, {
       headers: jsonHeaders(true),
     });
-    return handleResponse<FavoriteCollections>(res, "Impossible de charger vos favoris");
+    const data = await handleResponse<FavoriteCollections>(
+      res,
+      "Impossible de charger vos favoris",
+    );
+
+    return {
+      listings: (data.listings ?? []).map(normalizeListing),
+      sellers: (data.sellers ?? []).map(normalizeUser),
+    };
   },
 
   async addFavoriteListing(listingId: number): Promise<boolean> {
