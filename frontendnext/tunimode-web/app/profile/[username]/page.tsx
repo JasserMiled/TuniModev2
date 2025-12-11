@@ -34,6 +34,7 @@ export default function ProfilePage() {
   const [avatarError, setAvatarError] = useState(false);
 
   const isCurrentUser = currentUser?.id === user?.id;
+  const isClient = user?.role === "client";
 
   useEffect(() => {
     if (!userId) return;
@@ -72,6 +73,12 @@ export default function ProfilePage() {
     setAvatarError(false);
   }, [avatarUrl]);
 
+  useEffect(() => {
+    if (isClient) {
+      setActiveTab("avis");
+    }
+  }, [isClient]);
+
   return (
     <main className="bg-gray-50 min-h-screen">
       {/* ✅ HEADER GLOBAL */}
@@ -104,7 +111,7 @@ export default function ProfilePage() {
           activeKey={activeTab}
           onChange={setActiveTab}
           tabs={[
-            { key: "annonces", label: "Annonces" },
+            { key: "annonces", label: "Annonces", hidden: isClient },
             { key: "avis", label: "Avis" },
           ]}
         />
@@ -112,7 +119,7 @@ export default function ProfilePage() {
         {/* ===================== */}
         {/* ✅ TAB ANNONCES */}
         {/* ===================== */}
-        {activeTab === "annonces" && (
+        {!isClient && activeTab === "annonces" && (
           <>
             {listings.length === 0 ? (
               <p className="text-neutral-500 py-6">
