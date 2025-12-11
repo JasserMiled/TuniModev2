@@ -209,6 +209,15 @@ export default function OrderDetailPage() {
               Terminer
             </button>
           );
+        case "received":
+          return (
+            <button
+              onClick={() => updateSellerStatus("completed")}
+              className="bg-emerald-600 text-white px-3 py-1 rounded-lg"
+            >
+              Terminer
+            </button>
+          );
         default:
           return null;
       }
