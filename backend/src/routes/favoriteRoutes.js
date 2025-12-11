@@ -11,7 +11,21 @@ const router = express.Router();
 router.get("/me", authRequired, async (req, res) => {
   try {
     const favoriteListings = await db.query(
-      `SELECT l.*, c.name AS category_name, u.name AS seller_name
+      `SELECT 
+         l.*, 
+         c.name AS category_name, 
+         u.name AS seller_name,
+         COALESCE(
+           (
+             SELECT json_agg(
+               json_build_object('url', li.url, 'sort_order', li.sort_order)
+               ORDER BY li.sort_order
+             )
+             FROM listing_images li
+             WHERE li.listing_id = l.id
+           ),
+           '[]'::json
+         ) AS images
        FROM favorites f
        JOIN listings l ON f.listing_id = l.id
        JOIN users u ON l.user_id = u.id
