@@ -8,6 +8,7 @@ import ImageUploader from "@/src/components/ImageUploader";
 import { useAuth } from "@/src/context/AuthContext";
 import { ApiService } from "@/src/services/api";
 import { uploadImage } from "@/src/services/uploadService";
+import { Listing } from "@/src/models/Listing";
 
 type Category = {
   id: number;
@@ -36,13 +37,20 @@ type NewListingModalProps = {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  listing?: Listing | null;
 };
 
-export default function NewListingModal({ open, onClose, onSuccess }: NewListingModalProps) {
+export default function NewListingModal({
+  open,
+  onClose,
+  onSuccess,
+  listing,
+}: NewListingModalProps) {
   const router = useRouter();
   const { user } = useAuth();
 
   const isSeller = useMemo(() => Boolean(user && user.role === "seller"), [user]);
+  const isEditMode = Boolean(listing);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -68,6 +76,27 @@ export default function NewListingModal({ open, onClose, onSuccess }: NewListing
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    if (listing) {
+      setTitle(listing.title ?? "");
+      setDescription(listing.description ?? "");
+      setPrice(listing.price ? String(listing.price) : "");
+      setCity(listing.city ?? "");
+      setCondition(listing.condition ?? "neuf");
+      setDeliveryAvailable(Boolean(listing.deliveryAvailable));
+      setCategoryId(listing.categoryId ?? null);
+      setSizes(listing.sizes ?? []);
+      setColors(listing.colors ?? []);
+      setImageUrls(listing.imageUrls ?? []);
+      setError(null);
+      setSuccess(null);
+    } else {
+      resetForm();
+    }
+  }, [listing, open]);
 
   useEffect(() => {
     if (!user || !isSeller || !open) return;
@@ -166,7 +195,7 @@ export default function NewListingModal({ open, onClose, onSuccess }: NewListing
       return;
     }
 
-    const ok = await ApiService.createListing({
+    const payload = {
       title: title.trim(),
       description: description.trim(),
       price: parsedPrice,
@@ -177,19 +206,32 @@ export default function NewListingModal({ open, onClose, onSuccess }: NewListing
       city: city.trim() || undefined,
       images: imageUrls,
       deliveryAvailable,
-    });
+    };
+
+    const ok = isEditMode && listing
+      ? await ApiService.updateListing({
+          id: listing.id,
+          ...payload,
+        })
+      : await ApiService.createListing(payload);
 
     if (!ok) {
-      setError("La création de l'annonce a échoué.");
+      setError(
+        isEditMode
+          ? "La mise à jour de l'annonce a échoué."
+          : "La création de l'annonce a échoué."
+      );
       setSubmitting(false);
       return;
     }
 
-    setSuccess("Annonce créée avec succès.");
+    setSuccess(
+      isEditMode ? "Annonce mise à jour avec succès." : "Annonce créée avec succès."
+    );
     setSubmitting(false);
     if (onSuccess) {
       onSuccess();
-    } else {
+    } else if (!isEditMode) {
       router.push("/dashboard/listings");
     }
     resetForm();
@@ -238,8 +280,12 @@ export default function NewListingModal({ open, onClose, onSuccess }: NewListing
     <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-sm text-neutral-500">Nouvelle annonce</p>
-          <h1 className="text-2xl font-semibold">Ajouter une annonce</h1>
+          <p className="text-sm text-neutral-500">
+            {isEditMode ? "Modifier l'annonce" : "Nouvelle annonce"}
+          </p>
+          <h1 className="text-2xl font-semibold">
+            {isEditMode ? "Mettre à jour l'annonce" : "Ajouter une annonce"}
+          </h1>
         </div>
       </div>
 
@@ -452,7 +498,13 @@ export default function NewListingModal({ open, onClose, onSuccess }: NewListing
             disabled={submitting}
             className="px-5 py-2 bg-blue-600 text-white rounded-full font-semibold disabled:opacity-60"
           >
-            {submitting ? "Publication..." : "Publier l'annonce"}
+            {submitting
+              ? isEditMode
+                ? "Mise à jour..."
+                : "Publication..."
+              : isEditMode
+                ? "Mettre à jour l'annonce"
+                : "Publier l'annonce"}
           </button>
           <button
             type="button"

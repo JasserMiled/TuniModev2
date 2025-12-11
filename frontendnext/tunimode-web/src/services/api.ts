@@ -128,6 +128,7 @@ const normalizeListing = (listing: ListingLike): Listing => {
     price: listing.price ?? 0,
     sizes: listing.sizes ?? [],
     colors: listing.colors ?? [],
+    categoryId: listing.categoryId ?? (listing as { category_id?: number | null })?.category_id ?? null,
     deliveryAvailable: listing.deliveryAvailable ?? listing.delivery_available ?? false,
     categoryName: listing.categoryName ?? listing.category_name ?? null,
     sellerName: listing.sellerName ?? listing.seller_name ?? null,
@@ -407,6 +408,7 @@ export const ApiService = {
     deliveryAvailable?: boolean;
     status?: string;
     stock?: number;
+    images?: string[];
   }): Promise<boolean> {
     const res = await fetch(`${baseURL}/api/listings/${payload.id}`, {
       method: "PUT",
@@ -423,6 +425,7 @@ export const ApiService = {
         delivery_available: payload.deliveryAvailable,
         status: payload.status,
         stock: payload.stock,
+        images: payload.images,
       }),
     });
     return res.status === 200;

@@ -9,6 +9,7 @@ export interface Listing {
   colors: string[];
   gender?: string | null;
   condition?: string | null;
+  categoryId?: number | null;
   city?: string | null;
   deliveryAvailable: boolean;
   categoryName?: string | null;
