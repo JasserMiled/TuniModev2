@@ -290,8 +290,8 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     const isSeller = found.seller_id === req.user.id;
     const isBuyer = found.buyer_id === req.user.id;
 
-    // Prevent cancelling orders that are already fully completed or refused
-    const cancellableStatuses = ["pending", "confirmed", "shipped", "received"];
+    // Prevent cancelling orders unless they are still pending
+    const cancellableStatuses = ["pending"];
     if (
       normalizedStatus === "cancelled" &&
       !cancellableStatuses.includes(found.current_status)
@@ -302,21 +302,21 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     }
 
     const workflow = {
-      pending: { seller: ["confirmed", "cancelled"], buyer: [] },
+      pending: { seller: ["confirmed", "cancelled"], buyer: ["cancelled"] },
       confirmed: {
         seller:
           normalizedReceptionMode === "retrait"
-            ? ["ready_for_pickup", "cancelled"]
-            : ["shipped", "cancelled"],
+            ? ["ready_for_pickup"]
+            : ["shipped"],
         buyer: [],
       },
       shipped: {
-        seller: ["received", "reception_refused", "cancelled"],
-        buyer: ["received", "reception_refused", "cancelled"],
+        seller: ["received", "reception_refused"],
+        buyer: ["received", "reception_refused"],
       },
       ready_for_pickup: { seller: ["picked_up"], buyer: [] },
       picked_up: { seller: ["completed"], buyer: [] },
-      received: { seller: ["completed"], buyer: ["reception_refused", "cancelled"] },
+      received: { seller: ["completed"], buyer: ["reception_refused"] },
       reception_refused: { seller: [], buyer: [] },
       cancelled: { seller: [], buyer: [] },
       completed: { seller: [], buyer: [] },
