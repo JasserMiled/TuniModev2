@@ -33,6 +33,7 @@ export default function OrderDetailPage() {
     switch (status) {
       case "confirmed": return "Confirmée";
       case "shipped": return "Expédiée";
+      case "delivred": return "Livrée";
       case "ready_for_pickup": return "À retirer";
       case "picked_up": return "Retirée";
       case "received": return "Reçue";
@@ -48,6 +49,7 @@ export default function OrderDetailPage() {
     switch (status) {
       case "confirmed": return "bg-blue-100 text-blue-700";
       case "shipped": return "bg-purple-100 text-purple-700";
+      case "delivred": return "bg-indigo-100 text-indigo-700";
       case "ready_for_pickup": return "bg-orange-100 text-orange-700";
       case "picked_up": return "bg-teal-100 text-teal-700";
       case "received": return "bg-green-100 text-green-700";
@@ -164,10 +166,10 @@ export default function OrderDetailPage() {
                 Confirmer
               </button>
               <button
-                onClick={() => updateSellerStatus("refused")}
+                onClick={() => updateSellerStatus("cancelled")}
                 className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
               >
-                Refuser
+                Annuler
               </button>
             </div>
           );
@@ -202,8 +204,8 @@ export default function OrderDetailPage() {
           return (
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => updateSellerStatus("received")}
-                className="bg-green-600 text-white px-3 py-1 rounded-lg"
+                onClick={() => updateSellerStatus("delivred")}
+                className="bg-indigo-600 text-white px-3 py-1 rounded-lg"
               >
                 Marquer livrée
               </button>
@@ -218,6 +220,17 @@ export default function OrderDetailPage() {
                 className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
               >
                 Annuler
+              </button>
+            </div>
+          );
+        case "delivred":
+          return (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => updateSellerStatus("reception_refused")}
+                className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
+              >
+                Refus de réception
               </button>
             </div>
           );
@@ -261,19 +274,19 @@ export default function OrderDetailPage() {
       }
     }
 
-    if (user.role === "client") {
-      if (order.status === "pending") {
-        return (
-          <button
-            onClick={cancelClientOrder}
+      if (user.role === "client") {
+        if (order.status === "pending") {
+          return (
+            <button
+              onClick={cancelClientOrder}
             className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
           >
             Annuler la commande
           </button>
-        );
-      }
+          );
+        }
 
-      if (["shipped", "received"].includes(order.status)) {
+      if (["shipped", "delivred", "received"].includes(order.status)) {
         return (
           <div className="flex flex-wrap gap-2">
             <button

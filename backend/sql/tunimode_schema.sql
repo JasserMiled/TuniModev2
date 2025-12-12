@@ -145,6 +145,7 @@ CREATE TABLE IF NOT EXISTS orders (
                 'pending',
                 'confirmed',
                 'shipped',
+                'delivred',
                 'ready_for_pickup',
                 'picked_up',
                 'received',
