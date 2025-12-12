@@ -314,26 +314,26 @@ router.patch("/:id/status", authRequired, async (req, res) => {
         .json({ message: "Vous ne pouvez pas annuler cette commande" });
     }
 
-    const workflow = {
-      pending: { seller: ["confirmed", "cancelled"], buyer: ["cancelled"] },
-      confirmed: {
-        seller:
-          normalizedReceptionMode === "retrait"
-            ? ["ready_for_pickup", "cancelled"]
-            : ["shipped", "cancelled"],
-        buyer: [],
-      },
-      shipped: {
-        seller: ["delivred", "reception_refused", "cancelled"],
-        buyer: ["received", "reception_refused"],
-      },
-      delivred: {
-        seller: ["reception_refused"],
-        buyer: ["received", "reception_refused"],
-      },
-      ready_for_pickup: { seller: ["picked_up", "cancelled"], buyer: [] },
-      picked_up: { seller: ["completed"], buyer: [] },
-      received: { seller: ["completed"], buyer: ["reception_refused"] },
+  const workflow = {
+    pending: { seller: ["confirmed", "cancelled"], buyer: ["cancelled"] },
+    confirmed: {
+      seller:
+        normalizedReceptionMode === "retrait"
+          ? ["ready_for_pickup", "cancelled"]
+          : ["shipped", "cancelled"],
+      buyer: [],
+    },
+    shipped: {
+      seller: ["delivred", "reception_refused", "cancelled"],
+      buyer: ["received", "reception_refused"],
+    },
+    delivred: {
+      seller: ["completed", "reception_refused"],
+      buyer: ["reception_refused"],
+    },
+    ready_for_pickup: { seller: ["picked_up", "cancelled"], buyer: [] },
+    picked_up: { seller: ["completed"], buyer: [] },
+    received: { seller: ["completed"], buyer: [] },
       reception_refused: { seller: [], buyer: [] },
       cancelled: { seller: [], buyer: [] },
       completed: { seller: [], buyer: [] },
