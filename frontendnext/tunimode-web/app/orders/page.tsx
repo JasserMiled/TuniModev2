@@ -55,6 +55,7 @@ export default function OrdersPage() {
     switch (status) {
       case "confirmed": return "Confirmée";
       case "shipped": return "Expédiée";
+      case "delivred": return "Livrée";
       case "ready_for_pickup": return "À retirer";
       case "picked_up": return "Retirée";
       case "received": return "Reçue";
@@ -70,6 +71,7 @@ export default function OrdersPage() {
     switch (status) {
       case "confirmed": return "bg-blue-100 text-blue-700";
       case "shipped": return "bg-purple-100 text-purple-700";
+      case "delivred": return "bg-indigo-100 text-indigo-700";
       case "ready_for_pickup": return "bg-orange-100 text-orange-700";
       case "picked_up": return "bg-teal-100 text-teal-700";
       case "received": return "bg-green-100 text-green-700";

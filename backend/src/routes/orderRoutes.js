@@ -216,6 +216,7 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       "pending",
       "confirmed",
       "shipped",
+      "delivred",
       "ready_for_pickup",
       "picked_up",
       "received",
@@ -237,14 +238,18 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       expedie: "shipped",
       expediee: "shipped",
       expédiee: "shipped",
+      delivered: "delivred",
+      delivery: "delivred",
+      livré: "delivred",
+      livree: "delivred",
+      livrée: "delivred",
+      livrer: "delivred",
+      livret: "delivred",
       recu: "received",
       reçu: "received",
       recue: "received",
       reçue: "received",
-      livré: "received",
-      livre: "received",
-      livrée: "received",
-      livree: "received",
+      livre: "delivred",
       refus_de_reception: "reception_refused",
       "refus de reception": "reception_refused",
       "refus_de_réception": "reception_refused",
@@ -291,7 +296,12 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     const isBuyer = found.buyer_id === req.user.id;
 
     // Prevent cancelling orders unless they are still pending or confirmed
-    const cancellableStatuses = ["pending", "confirmed"];
+    const cancellableStatuses = [
+      "pending",
+      "confirmed",
+      "shipped",
+      "ready_for_pickup",
+    ];
     if (
       normalizedStatus === "cancelled" &&
       !cancellableStatuses.includes(found.current_status)
@@ -311,10 +321,14 @@ router.patch("/:id/status", authRequired, async (req, res) => {
         buyer: [],
       },
       shipped: {
-        seller: ["received", "reception_refused"],
+        seller: ["delivred", "reception_refused", "cancelled"],
         buyer: ["received", "reception_refused"],
       },
-      ready_for_pickup: { seller: ["picked_up"], buyer: [] },
+      delivred: {
+        seller: ["reception_refused"],
+        buyer: ["received", "reception_refused"],
+      },
+      ready_for_pickup: { seller: ["picked_up", "cancelled"], buyer: [] },
       picked_up: { seller: ["completed"], buyer: [] },
       received: { seller: ["completed"], buyer: ["reception_refused"] },
       reception_refused: { seller: [], buyer: [] },
