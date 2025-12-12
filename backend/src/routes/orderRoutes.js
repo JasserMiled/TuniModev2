@@ -333,7 +333,7 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     },
     ready_for_pickup: { seller: ["picked_up", "cancelled"], buyer: [] },
     picked_up: { seller: ["completed"], buyer: [] },
-    received: { seller: ["completed"], buyer: [] },
+    received: { seller: ["completed", "reception_refused"], buyer: [] },
     reception_refused: { seller: [], buyer: [] },
     cancelled: { seller: [], buyer: [] },
     completed: { seller: [], buyer: [] },

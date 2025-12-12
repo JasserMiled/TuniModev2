@@ -268,12 +268,20 @@ export default function OrderDetailPage() {
           );
         case "received":
           return (
-            <button
-              onClick={() => updateSellerStatus("completed")}
-              className="bg-emerald-600 text-white px-3 py-1 rounded-lg"
-            >
-              Terminer
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => updateSellerStatus("completed")}
+                className="bg-emerald-600 text-white px-3 py-1 rounded-lg"
+              >
+                Terminer
+              </button>
+              <button
+                onClick={() => updateSellerStatus("reception_refused")}
+                className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
+              >
+                Refus de réception
+              </button>
+            </div>
           );
         default:
           return null;

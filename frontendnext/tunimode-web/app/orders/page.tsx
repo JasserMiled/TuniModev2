@@ -239,22 +239,37 @@ export default function OrdersPage() {
 
                   {/* ✅ SELLER ACTIONS */}
                   {activeTab === "seller" && order.status === "pending" && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        ApiService.updateSellerOrderStatus(order.id, "confirmed")
-                          .then(loadOrders);
-                      }}
-                      className="mt-2 bg-blue-600 text-white px-3 py-1 rounded-lg"
-                    >
-                      Confirmer la commande
-                    </button>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          ApiService.updateSellerOrderStatus(order.id, "confirmed")
+                            .then(loadOrders);
+                        }}
+                        className="bg-blue-600 text-white px-3 py-1 rounded-lg"
+                      >
+                        Confirmer la commande
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          ApiService.updateSellerOrderStatus(order.id, "cancelled")
+                            .then(loadOrders);
+                        }}
+                        className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
+                      >
+                        Annuler la commande
+                      </button>
+                    </div>
                   )}
 
                   {activeTab === "seller" &&
-                    ["confirmed", "shipped", "ready_for_pickup"].includes(
-                      order.status
-                    ) && (
+                    [
+                      "pending",
+                      "confirmed",
+                      "shipped",
+                      "ready_for_pickup",
+                    ].includes(order.status) && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
