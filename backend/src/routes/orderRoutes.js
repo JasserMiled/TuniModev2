@@ -30,7 +30,7 @@ router.post("/", authRequired, requireRole("client"), async (req, res) => {
     }
 
     const listingRes = await db.query(
-      "SELECT id, seller_id, price, title, colors, sizes FROM listings WHERE id = $1",
+      "SELECT id, seller_id, price, title, colors, sizes, reference_code FROM listings WHERE id = $1",
       [listing_id]
     );
     const listing = listingRes.rows[0];
@@ -90,7 +90,10 @@ router.post("/", authRequired, requireRole("client"), async (req, res) => {
       ]
     );
 
-    const order = addClientAlias(orderRes.rows[0]);
+    const order = addClientAlias({
+      ...orderRes.rows[0],
+      listing_reference_code: listing.reference_code,
+    });
 
     // Send notification emails (non-blocking but awaited for consistency)
     const buyerEmailRes = await db.query("SELECT email FROM clients WHERE id = $1", [req.user.id]);
@@ -115,7 +118,7 @@ router.post("/", authRequired, requireRole("client"), async (req, res) => {
 
 const getClientOrders = async (buyerId) => {
   const result = await db.query(
-      `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title
+      `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title, l.reference_code AS listing_reference_code
        FROM orders o
        LEFT JOIN listings l ON o.listing_id = l.id
        WHERE o.buyer_id = $1
@@ -169,7 +172,7 @@ router.get("/me/client", authRequired, requireRole("client"), async (req, res) =
   router.get("/seller", authRequired, requireRole("seller"), async (req, res) => {
     try {
       const result = await db.query(
-        `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title
+        `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title, l.reference_code AS listing_reference_code
          FROM orders o
          LEFT JOIN listings l ON o.listing_id = l.id
          WHERE o.seller_id = $1
@@ -189,7 +192,7 @@ router.get("/me/client", authRequired, requireRole("client"), async (req, res) =
 router.get("/me/seller", authRequired, requireRole("seller"), async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title
+      `SELECT o.*, COALESCE(l.title, 'Annonce supprimée') AS listing_title, l.reference_code AS listing_reference_code
        FROM orders o
        LEFT JOIN listings l ON o.listing_id = l.id
        WHERE o.seller_id = $1

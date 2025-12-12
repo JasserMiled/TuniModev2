@@ -18,4 +18,5 @@ export interface Listing {
   imageUrls: string[];
   status?: string | null;
   isDeleted: boolean;
+  referenceCode?: string | null;
 }

@@ -4,6 +4,7 @@ const db = require("../db");
 const { authRequired, requireRole } = require("../middleware/auth");
 const { getCategoryWithChildren } = require("../services/categoryService");
 const { normalizeColors } = require("../services/colorService");
+const { generateListingReference } = require("../services/listingReferenceService");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
@@ -353,10 +354,35 @@ router.post("/", authRequired, requireRole("seller"), async (req, res) => {
     const parsedSizes = normalizeStringArray(sizes);
     const parsedColors = await normalizeColors(normalizeStringArray(colors));
 
+    const sellerRes = await db.query(
+      "SELECT store_name, name, created_at FROM sellers WHERE id = $1",
+      [req.user.id]
+    );
+    const seller = sellerRes.rows[0];
+
+    if (!seller) {
+      return res.status(400).json({ message: "Vendeur introuvable" });
+    }
+
+    const countRes = await db.query("SELECT COUNT(*) FROM listings WHERE seller_id = $1", [req.user.id]);
+    const listingCount = Number(countRes.rows[0]?.count ?? 0);
+    let referenceCode;
+
+    try {
+      referenceCode = generateListingReference(
+        seller.store_name || seller.name || "",
+        req.user.id,
+        seller.created_at,
+        listingCount
+      );
+    } catch (err) {
+      return res.status(400).json({ message: "Impossible de générer la référence" });
+    }
+
     const listingRes = await db.query(
       `INSERT INTO listings
-       (seller_id, title, description, price, sizes, colors, gender, condition, category_id, city, delivery_available)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+       (seller_id, title, description, price, sizes, colors, gender, condition, category_id, city, delivery_available, reference_code)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
        RETURNING *`,
       [
         req.user.id,
@@ -370,6 +396,7 @@ router.post("/", authRequired, requireRole("seller"), async (req, res) => {
         category_id || null,
         city || null,
         Boolean(delivery_available),
+        referenceCode,
       ]
     );
 

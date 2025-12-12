@@ -7,6 +7,7 @@ export interface Order {
   status: string;
   receptionMode: string;
   createdAt: string;
+  listingReferenceCode?: string | null;
   sellerId?: number | null;
   sellerName?: string | null;
   clientId?: number | null;

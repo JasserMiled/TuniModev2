@@ -322,6 +322,7 @@ export default function ListingDetailPage() {
 
             {/* PRODUCT INFO */}
 <div className="bg-gray-100 rounded-xl p-5 shadow-inner border border-gray-200 space-y-2 text-sm">
+              <p className="flex justify-between"><span>Référence</span><span>{listing.referenceCode ?? "—"}</span></p>
               <p className="flex justify-between"><span>État</span><span>{listing.condition ?? "—"}</span></p>
               <p className="flex justify-between"><span>Tailles</span><span>{listing.sizes?.join(" / ") || "—"}</span></p>
               <p className="flex justify-between"><span>Couleurs</span><span>{listing.colors?.join(", ") || "—"}</span></p>
