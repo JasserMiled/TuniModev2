@@ -174,18 +174,22 @@ export default function OrderDetailPage() {
         case "confirmed":
           return (
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => updateSellerStatus("shipped")}
-                className="bg-purple-600 text-white px-3 py-1 rounded-lg"
-              >
-                Marquer expédiée
-              </button>
-              <button
-                onClick={() => updateSellerStatus("ready_for_pickup")}
-                className="border border-orange-500 text-orange-600 px-3 py-1 rounded-lg"
-              >
-                Mettre à retirer
-              </button>
+              {order.receptionMode === "livraison" && (
+                <button
+                  onClick={() => updateSellerStatus("shipped")}
+                  className="bg-purple-600 text-white px-3 py-1 rounded-lg"
+                >
+                  Marquer expédiée
+                </button>
+              )}
+              {order.receptionMode === "retrait" && (
+                <button
+                  onClick={() => updateSellerStatus("ready_for_pickup")}
+                  className="border border-orange-500 text-orange-600 px-3 py-1 rounded-lg"
+                >
+                  Mettre à retirer
+                </button>
+              )}
               <button
                 onClick={() => updateSellerStatus("cancelled")}
                 className="border border-red-500 text-red-600 px-3 py-1 rounded-lg"
