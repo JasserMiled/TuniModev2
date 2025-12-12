@@ -290,8 +290,8 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     const isSeller = found.seller_id === req.user.id;
     const isBuyer = found.buyer_id === req.user.id;
 
-    // Prevent cancelling orders unless they are still pending
-    const cancellableStatuses = ["pending"];
+    // Prevent cancelling orders unless they are still pending or confirmed
+    const cancellableStatuses = ["pending", "confirmed"];
     if (
       normalizedStatus === "cancelled" &&
       !cancellableStatuses.includes(found.current_status)
@@ -306,8 +306,8 @@ router.patch("/:id/status", authRequired, async (req, res) => {
       confirmed: {
         seller:
           normalizedReceptionMode === "retrait"
-            ? ["ready_for_pickup"]
-            : ["shipped"],
+            ? ["ready_for_pickup", "cancelled"]
+            : ["shipped", "cancelled"],
         buyer: [],
       },
       shipped: {
