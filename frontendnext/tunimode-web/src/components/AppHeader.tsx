@@ -18,9 +18,9 @@ export default function AppHeader() {
   const { setSearch, lastSearch } = useSearch();
   const { user, logout } = useAuth();
 
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [listingModalOpen, setListingModalOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
 
   const [query, setQuery] = useState(
     searchParams.get("q") ?? lastSearch.query ?? ""
@@ -134,18 +134,27 @@ export default function AppHeader() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false);
+      if (drawerRef.current && !drawerRef.current.contains(event.target as Node)) {
+        setDrawerOpen(false);
       }
     };
 
-    if (menuOpen) {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+      }
+    };
+
+    if (drawerOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
     }
 
-    return () =>
+    return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen]);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [drawerOpen]);
   const canCreateListing = useMemo(() => {
     if (!user?.role) return false;
     const normalizedRole = user.role.toLowerCase();
@@ -209,73 +218,15 @@ export default function AppHeader() {
             </button>
           )}
 
-          {user ? (
-            <div className="relative ml-2" ref={menuRef}>
-              <button
-                onClick={() => setMenuOpen((open) => !open)}
-                className="p-2 border border-neutral-200 rounded-full hover:bg-neutral-50"
-              >
-                <span className="block w-5 h-0.5 bg-neutral-900 mb-1" />
-                <span className="block w-5 h-0.5 bg-neutral-900 mb-1" />
-                <span className="block w-5 h-0.5 bg-neutral-900" />
-              </button>
-
-              {menuOpen && (
-                <div className="absolute right-0 top-12 w-56 rounded-2xl border border-neutral-200 bg-white shadow-lg py-2 z-20">
-                  <Link
-                    href={`/profile/${user.id}`}
-                    className="block px-4 py-2 text-sm hover:bg-neutral-50"
-                  >
-                    Mon profil
-                  </Link>
-
-                  <Link
-                    href="/favorites"
-                    className="block px-4 py-2 text-sm hover:bg-neutral-50"
-                  >
-                    Mes favoris
-                  </Link>
-                  {canManageListings && (
-                    <Link
-                      href="/dashboard/listings"
-                      className="block px-4 py-2 text-sm hover:bg-neutral-50"
-                    >
-                      Mes annonces
-                    </Link>
-                  )}
-                  <Link
-                    href="/orders"
-                    className="block px-4 py-2 text-sm hover:bg-neutral-50"
-                  >
-                    Mes commandes
-                  </Link>
-                  <Link
-                    href="/account/settings"
-                    className="block px-4 py-2 text-sm hover:bg-neutral-50"
-                  >
-                    Paramètres
-                  </Link>
-
-                  <button
-                    onClick={() => {
-                      logout();
-                      setMenuOpen(false);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-neutral-50"
-                  >
-                    Se déconnecter
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Link
-              href="/auth/login"
-              className="text-sm text-blue-600 font-semibold hover:underline ml-2"
-            >
-              Se connecter
-            </Link>
-          )}
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="p-2 border border-neutral-200 rounded-full hover:bg-neutral-50"
+            aria-label="Ouvrir le menu"
+          >
+            <span className="block w-5 h-0.5 bg-neutral-900 mb-1" />
+            <span className="block w-5 h-0.5 bg-neutral-900 mb-1" />
+            <span className="block w-5 h-0.5 bg-neutral-900" />
+          </button>
         </div>
       </div>
 
@@ -292,6 +243,113 @@ export default function AppHeader() {
         open={listingModalOpen}
         onClose={() => setListingModalOpen(false)}
       />
+
+      {drawerOpen && (
+        <div className="fixed inset-0 z-30">
+          <div
+            className="absolute inset-0 bg-black/30"
+            onClick={() => setDrawerOpen(false)}
+          />
+
+          <div
+            ref={drawerRef}
+            className="absolute right-0 top-0 h-full w-72 max-w-full bg-white shadow-2xl border-l border-neutral-200 flex flex-col"
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
+              <p className="text-lg font-semibold">Menu</p>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="p-2 rounded-full hover:bg-neutral-100"
+                aria-label="Fermer le menu"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+              <Link
+                href="/"
+                onClick={() => setDrawerOpen(false)}
+                className="block px-3 py-2 rounded-lg hover:bg-neutral-100"
+              >
+                Accueil
+              </Link>
+
+              <Link
+                href="/search/results"
+                onClick={() => setDrawerOpen(false)}
+                className="block px-3 py-2 rounded-lg hover:bg-neutral-100"
+              >
+                Découvrir
+              </Link>
+
+              {user ? (
+                <>
+                  <Link
+                    href={`/profile/${user.id}`}
+                    onClick={() => setDrawerOpen(false)}
+                    className="block px-3 py-2 rounded-lg hover:bg-neutral-100"
+                  >
+                    Mon profil
+                  </Link>
+
+                  <Link
+                    href="/favorites"
+                    onClick={() => setDrawerOpen(false)}
+                    className="block px-3 py-2 rounded-lg hover:bg-neutral-100"
+                  >
+                    Mes favoris
+                  </Link>
+
+                  {canManageListings && (
+                    <Link
+                      href="/dashboard/listings"
+                      onClick={() => setDrawerOpen(false)}
+                      className="block px-3 py-2 rounded-lg hover:bg-neutral-100"
+                    >
+                      Mes annonces
+                    </Link>
+                  )}
+
+                  <Link
+                    href="/orders"
+                    onClick={() => setDrawerOpen(false)}
+                    className="block px-3 py-2 rounded-lg hover:bg-neutral-100"
+                  >
+                    Mes commandes
+                  </Link>
+
+                  <Link
+                    href="/account/settings"
+                    onClick={() => setDrawerOpen(false)}
+                    className="block px-3 py-2 rounded-lg hover:bg-neutral-100"
+                  >
+                    Paramètres
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      logout();
+                      setDrawerOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-100 text-red-600"
+                  >
+                    Se déconnecter
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  onClick={() => setDrawerOpen(false)}
+                  className="block px-3 py-2 rounded-lg hover:bg-neutral-100 text-blue-600 font-semibold"
+                >
+                  Se connecter
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
