@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import ImageUploader from "@/src/components/ImageUploader";
 import { useAuth } from "@/src/context/AuthContext";
-import { ApiService } from "@/src/services/api";
+import { ApiService, type ColorOption } from "@/src/services/api";
 import { uploadImage } from "@/src/services/uploadService";
 import { Listing } from "@/src/models/Listing";
 
@@ -15,23 +15,6 @@ type Category = {
   name: string;
   children?: Category[];
 };
-
-const COLOR_OPTIONS: { name: string; hex: string }[] = [
-  { name: "Noir", hex: "#000000" },
-  { name: "Blanc", hex: "#FFFFFF" },
-  { name: "Gris", hex: "#808080" },
-  { name: "Rouge", hex: "#FF0000" },
-  { name: "Bordeaux", hex: "#800020" },
-  { name: "Rose", hex: "#FFC0CB" },
-  { name: "Orange", hex: "#FFA500" },
-  { name: "Jaune", hex: "#FFFF00" },
-  { name: "Vert", hex: "#008000" },
-  { name: "Bleu", hex: "#0000FF" },
-  { name: "Bleu ciel", hex: "#87CEEB" },
-  { name: "Turquoise", hex: "#40E0D0" },
-  { name: "Violet", hex: "#800080" },
-  { name: "Marron", hex: "#8B4513" },
-];
 
 type NewListingModalProps = {
   open: boolean;
@@ -61,6 +44,7 @@ export default function NewListingModal({
   const [categoryId, setCategoryId] = useState<number | null>(null);
   const [sizes, setSizes] = useState<string[]>([]);
   const [colors, setColors] = useState<string[]>([]);
+  const [colorOptions, setColorOptions] = useState<ColorOption[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -72,6 +56,9 @@ export default function NewListingModal({
   const [sizeOptions, setSizeOptions] = useState<string[]>([]);
   const [sizesLoading, setSizesLoading] = useState(false);
   const [sizesError, setSizesError] = useState<string | null>(null);
+
+  const [colorsLoading, setColorsLoading] = useState(false);
+  const [colorsError, setColorsError] = useState<string | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,6 +99,22 @@ export default function NewListingModal({
   }, [user, isSeller, open]);
 
   useEffect(() => {
+    if (!open) return;
+    if (colorOptions.length > 0) return;
+
+    setColorsLoading(true);
+    setColorsError(null);
+
+    ApiService.fetchColors()
+      .then((data) => {
+        setColorOptions(data);
+        setColors((prev) => prev.filter((color) => data.some((c) => c.name === color)));
+      })
+      .catch(() => setColorsError("Impossible de charger les couleurs."))
+      .finally(() => setColorsLoading(false));
+  }, [open, colorOptions.length]);
+
+  useEffect(() => {
     if (!categoryId) {
       setSizeOptions([]);
       setSizes([]);
@@ -129,6 +132,13 @@ export default function NewListingModal({
       .catch(() => setSizesError("Impossible de charger les tailles."))
       .finally(() => setSizesLoading(false));
   }, [categoryId]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (colorOptions.length === 0) return;
+
+    setColors((prev) => prev.filter((color) => colorOptions.some((c) => c.name === color)));
+  }, [open, colorOptions]);
 
   const flatCategories = useMemo(() => {
     const res: Category[] = [];
@@ -166,6 +176,7 @@ export default function NewListingModal({
     setCategoryId(null);
     setSizes([]);
     setColors([]);
+    setColorOptions([]);
     setImageUrls([]);
     setUploading(false);
     setUploadError(null);
@@ -175,6 +186,8 @@ export default function NewListingModal({
     setSizeOptions([]);
     setSizesLoading(false);
     setSizesError(null);
+    setColorsLoading(false);
+    setColorsError(null);
     setSubmitting(false);
     setError(null);
     setSuccess(null);
@@ -467,26 +480,34 @@ export default function NewListingModal({
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-neutral-700">Couleurs</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {COLOR_OPTIONS.map((color) => (
-                <button
-                  key={color.name}
-                  type="button"
-                  onClick={() => toggleColor(color.name)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${
-                    colors.includes(color.name)
-                      ? "border-blue-600 bg-blue-50"
-                      : "border-neutral-200"
-                  }`}
-                >
-                  <span
-                    className="w-4 h-4 rounded-full border"
-                    style={{ backgroundColor: color.hex }}
-                  />
-                  {color.name}
-                </button>
-              ))}
-            </div>
+            {colorsLoading ? (
+              <p className="text-xs text-neutral-500">Chargement des couleurs...</p>
+            ) : colorsError ? (
+              <p className="text-xs text-red-600">{colorsError}</p>
+            ) : colorOptions.length === 0 ? (
+              <p className="text-xs text-neutral-500">Aucune couleur disponible.</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {colorOptions.map((color) => (
+                  <button
+                    key={`${color.id}-${color.name}`}
+                    type="button"
+                    onClick={() => toggleColor(color.name)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${
+                      colors.includes(color.name)
+                        ? "border-blue-600 bg-blue-50"
+                        : "border-neutral-200"
+                    }`}
+                  >
+                    <span
+                      className="w-4 h-4 rounded-full border"
+                      style={{ backgroundColor: color.hex ?? "#f3f4f6" }}
+                    />
+                    {color.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
