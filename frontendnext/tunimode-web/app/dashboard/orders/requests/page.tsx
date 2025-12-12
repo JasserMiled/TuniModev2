@@ -35,13 +35,13 @@ export default function OrderRequestsPage() {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => updateStatus(order.id, "accepted")}
+                  onClick={() => updateStatus(order.id, "confirmed")}
                   className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm"
                 >
                   Accepter
                 </button>
                 <button
-                  onClick={() => updateStatus(order.id, "declined")}
+                  onClick={() => updateStatus(order.id, "cancelled")}
                   className="px-3 py-1 border rounded-lg text-sm"
                 >
                   Refuser
