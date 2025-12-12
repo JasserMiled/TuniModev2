@@ -318,6 +318,7 @@ export default function OrderDetailPage() {
   const eligibleForReviewStatuses = new Set([
     "confirmed",
     "shipped",
+    "delivred",
     "ready_for_pickup",
     "picked_up",
     "received",

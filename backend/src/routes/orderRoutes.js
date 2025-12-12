@@ -329,15 +329,15 @@ router.patch("/:id/status", authRequired, async (req, res) => {
     },
     delivred: {
       seller: ["completed", "reception_refused"],
-      buyer: ["reception_refused"],
+      buyer: ["received", "reception_refused"],
     },
     ready_for_pickup: { seller: ["picked_up", "cancelled"], buyer: [] },
     picked_up: { seller: ["completed"], buyer: [] },
     received: { seller: ["completed"], buyer: [] },
-      reception_refused: { seller: [], buyer: [] },
-      cancelled: { seller: [], buyer: [] },
-      completed: { seller: [], buyer: [] },
-    };
+    reception_refused: { seller: [], buyer: [] },
+    cancelled: { seller: [], buyer: [] },
+    completed: { seller: [], buyer: [] },
+  };
 
     const currentWorkflow = workflow[found.current_status];
 
