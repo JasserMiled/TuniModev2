@@ -11,6 +11,12 @@ import QuickFiltersDialog, {
 } from "@/src/components/QuickFiltersDialog";
 import { buildResultsUrl } from "@/src/utils/searchFilters";
 import NewListingModal from "./NewListingModal";
+import {
+  MdContactMail,
+  MdDescription,
+  MdHome,
+  MdInfo,
+} from "react-icons/md";
 
 export default function AppHeader() {
   const router = useRouter();
@@ -21,6 +27,8 @@ export default function AppHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [listingModalOpen, setListingModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
 
   const [query, setQuery] = useState(
     searchParams.get("q") ?? lastSearch.query ?? ""
@@ -146,6 +154,31 @@ export default function AppHeader() {
     return () =>
       document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (drawerRef.current && !drawerRef.current.contains(event.target as Node)) {
+        setDrawerOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+      }
+    };
+
+    if (drawerOpen) {
+      document.addEventListener("mousedown", handleOutsideClick);
+      document.addEventListener("keydown", handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [drawerOpen]);
+
   const canCreateListing = useMemo(() => {
     if (!user?.role) return false;
     const normalizedRole = user.role.toLowerCase();
@@ -154,49 +187,68 @@ export default function AppHeader() {
 
   const canManageListings = canCreateListing;
 
+  const drawerLinks = useMemo(
+    () => [
+      { href: "/", label: "Accueil", Icon: MdHome },
+      { href: "/about", label: "À propos", Icon: MdInfo },
+      {
+        href: "/terms",
+        label: "Conditions d'utilisation",
+        Icon: MdDescription,
+      },
+      { href: "/contact", label: "Contact", Icon: MdContactMail },
+    ],
+    []
+  );
+
   return (
-    <header className="border-b border-neutral-200 bg-white">
-      <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-2">
-        {/* ✅ GAUCHE — BURGER */}
-        <div className="flex items-center flex-shrink-0">
-          <button className="md:hidden p-2 border border-neutral-200 rounded-full">
-            <span className="block w-5 h-0.5 bg-neutral-900 mb-1" />
-            <span className="block w-5 h-0.5 bg-neutral-900 mb-1" />
-            <span className="block w-5 h-0.5 bg-neutral-900" />
-          </button>
-        </div>
+    <>
+      <header className="border-b border-neutral-200 bg-white">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-2">
+          {/* ✅ GAUCHE — BURGER */}
+          <div className="flex items-center flex-shrink-0">
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="p-2 border border-neutral-200 rounded-full hover:bg-neutral-50 transition"
+              aria-label="Ouvrir le menu"
+            >
+              <span className="block w-5 h-0.5 bg-neutral-900 mb-1" />
+              <span className="block w-5 h-0.5 bg-neutral-900 mb-1" />
+              <span className="block w-5 h-0.5 bg-neutral-900" />
+            </button>
+          </div>
 
-        {/* ✅ CENTRE — LOGO + SEARCH */}
-        <div className="flex-1 min-w-0 flex items-center gap-3">
-          {/* LOGO */}
-          <Link
-            href="/"
-            className="text-lg font-semibold text-blue-600 whitespace-nowrap flex-shrink-0"
-          >
-            Tuni<span className="text-neutral-900">Mode</span>
-          </Link>
+          {/* ✅ CENTRE — LOGO + SEARCH */}
+          <div className="flex-1 min-w-0 flex items-center gap-3">
+            {/* LOGO */}
+            <Link
+              href="/"
+              className="text-lg font-semibold text-blue-600 whitespace-nowrap flex-shrink-0"
+            >
+              Tuni<span className="text-neutral-900">Mode</span>
+            </Link>
 
-          {/* SEARCH */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 bg-neutral-50 border border-neutral-200 rounded-full px-4 py-2 shadow-sm">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="Recherche..."
-                className="flex-1 bg-transparent outline-none text-sm text-neutral-800 min-w-0"
+            {/* SEARCH */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 bg-neutral-50 border border-neutral-200 rounded-full px-4 py-2 shadow-sm">
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  placeholder="Recherche..."
+                  className="flex-1 bg-transparent outline-none text-sm text-neutral-800 min-w-0"
+                />
+              </div>
+            </div>
+
+            {/* ✅ FILTRES DESKTOP SEULEMENT */}
+            <div className="hidden md:block flex-shrink-0">
+              <SegmentedSearchButton
+                onSearch={handleSearch}
+                onOpenFilters={handleOpenFilters}
               />
             </div>
           </div>
-
-          {/* ✅ FILTRES DESKTOP SEULEMENT */}
-          <div className="hidden md:block flex-shrink-0">
-            <SegmentedSearchButton
-              onSearch={handleSearch}
-              onOpenFilters={handleOpenFilters}
-            />
-          </div>
-        </div>
 
         {/* ✅ DROITE — USER / LOGIN */}
         <div className="flex items-center gap-3 flex-shrink-0">
@@ -277,7 +329,48 @@ export default function AppHeader() {
             </Link>
           )}
         </div>
-      </div>
+      </header>
+
+      {drawerOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/30 z-30"
+            onClick={() => setDrawerOpen(false)}
+          />
+          <div
+            ref={drawerRef}
+            className="fixed inset-y-0 left-0 w-72 bg-white shadow-xl z-40 overflow-y-auto"
+          >
+            <div className="px-4 py-5 border-b border-neutral-200 flex items-center justify-between">
+              <span className="text-lg font-semibold text-neutral-900">Menu</span>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="p-2 rounded-full hover:bg-neutral-100"
+                aria-label="Fermer le menu"
+              >
+                ✕
+              </button>
+            </div>
+
+            <nav className="py-4">
+              <ul className="space-y-1">
+                {drawerLinks.map(({ href, label, Icon }) => (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className="flex items-center gap-3 px-4 py-3 text-neutral-800 hover:bg-neutral-100"
+                      onClick={() => setDrawerOpen(false)}
+                    >
+                      <Icon className="text-xl text-neutral-600" />
+                      <span className="text-sm font-medium">{label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+        </>
+      )}
 
       {filtersOpen && (
         <QuickFiltersDialog
@@ -292,6 +385,6 @@ export default function AppHeader() {
         open={listingModalOpen}
         onClose={() => setListingModalOpen(false)}
       />
-    </header>
+    </>
   );
 }
