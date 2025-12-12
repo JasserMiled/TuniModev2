@@ -156,6 +156,7 @@ const normalizeListing = (listing: ListingLike): Listing => {
     status: listing.status ?? null,
     isDeleted:
       listing.isDeleted ?? listing.is_deleted ?? (listing.status ? listing.status === "deleted" : false),
+    referenceCode: listing.referenceCode ?? (listing as { reference_code?: string | null }).reference_code ?? null,
     imageUrl: primaryImage ?? imageUrls[0] ?? "",
     imageUrls,
   };
@@ -164,6 +165,7 @@ const normalizeListing = (listing: ListingLike): Listing => {
 type OrderLike = Partial<Order> & {
   listing_id?: number;
   listing_title?: string | null;
+  listing_reference_code?: string | null;
   total_amount?: number;
   reception_mode?: string | null;
   created_at?: string;
@@ -182,6 +184,7 @@ const normalizeOrder = (order: OrderLike): Order => ({
   status: order.status ?? "pending",
   receptionMode: order.receptionMode ?? order.reception_mode ?? "retrait",
   createdAt: order.createdAt ?? order.created_at ?? new Date().toISOString(),
+  listingReferenceCode: order.listingReferenceCode ?? order.listing_reference_code ?? null,
   sellerId: order.sellerId ?? order.seller_id ?? null,
   clientId: order.clientId ?? order.client_id ?? null,
   color: order.color ?? null,

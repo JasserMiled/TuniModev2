@@ -1,0 +1,2 @@
+ALTER TABLE listings
+ADD COLUMN IF NOT EXISTS reference_code VARCHAR(100);

@@ -367,6 +367,9 @@ export default function OrderDetailPage() {
             <>
               <h1 className="text-2xl font-semibold">Commande #{order.id}</h1>
               <p className="text-neutral-600">{order.listingTitle}</p>
+              <p className="text-sm text-gray-700">
+                Référence annonce : {listing?.referenceCode ?? order.listingReferenceCode ?? "—"}
+              </p>
               <p className="font-semibold text-blue-600">{order.totalAmount} DT</p>
 
               <div className="flex items-center gap-3">
