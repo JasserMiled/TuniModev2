@@ -18,6 +18,9 @@ export default function OrdersPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [sellerStatusFilter, setSellerStatusFilter] = useState<string | null>(null);
+  const [sellerReferenceFilter, setSellerReferenceFilter] = useState<string>("");
+  const [sellerClientFilter, setSellerClientFilter] = useState<string>("");
+  const [sellerModeFilter, setSellerModeFilter] = useState<string>("");
   const [clientStatusFilter, setClientStatusFilter] = useState<string | null>(null);
 
   const router = useRouter();
@@ -83,13 +86,33 @@ export default function OrdersPage() {
   };
 
   // ✅ FILTER
-  const applyFilter = (orders: Order[], status: string | null) => {
+  const applySellerFilters = (orders: Order[]) => {
+    const referenceQuery = sellerReferenceFilter.trim().toLowerCase();
+    const clientQuery = sellerClientFilter.trim().toLowerCase();
+
+    return orders.filter((o) => {
+      const matchesStatus = !sellerStatusFilter || o.status === sellerStatusFilter;
+      const matchesReference =
+        !referenceQuery ||
+        (o.listingReferenceCode ?? "")
+          .toString()
+          .toLowerCase()
+          .includes(referenceQuery);
+      const matchesClient =
+        !clientQuery || (o.clientName ?? "").toLowerCase().includes(clientQuery);
+      const matchesMode = !sellerModeFilter || o.receptionMode === sellerModeFilter;
+
+      return matchesStatus && matchesReference && matchesClient && matchesMode;
+    });
+  };
+
+  const applyClientFilter = (orders: Order[], status: string | null) => {
     if (!status) return orders;
     return orders.filter((o) => o.status === status);
   };
 
-  const sellerFiltered = applyFilter(sellerOrders, sellerStatusFilter);
-  const clientFiltered = applyFilter(clientOrders, clientStatusFilter);
+  const sellerFiltered = applySellerFilters(sellerOrders);
+  const clientFiltered = applyClientFilter(clientOrders, clientStatusFilter);
 
   return (
     <Protected>
@@ -112,32 +135,63 @@ export default function OrdersPage() {
           />
 
           {/* ✅ FILTER */}
-          <div className="mb-4">
-            <select
-              className="border rounded-lg px-3 py-2 w-full"
-              value={
-                activeTab === "seller"
-                  ? sellerStatusFilter ?? ""
-                  : clientStatusFilter ?? ""
-              }
-              onChange={(e) =>
-                activeTab === "seller"
-                  ? setSellerStatusFilter(e.target.value || null)
-                  : setClientStatusFilter(e.target.value || null)
-              }
-            >
-              <option value="">Tous les statuts</option>
-              {[...new Set(
-                (activeTab === "seller" ? sellerOrders : clientOrders).map(
-                  (o) => o.status
-                )
-              )].map((status) => (
-                <option key={status} value={status}>
-                  {statusLabel(status)}
-                </option>
-              ))}
-            </select>
-          </div>
+          {activeTab === "seller" ? (
+            <div className="mb-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+              <select
+                className="border rounded-lg px-3 py-2 w-full"
+                value={sellerStatusFilter ?? ""}
+                onChange={(e) => setSellerStatusFilter(e.target.value || null)}
+              >
+                <option value="">Tous les statuts</option>
+                {[...new Set(sellerOrders.map((o) => o.status))].map((status) => (
+                  <option key={status} value={status}>
+                    {statusLabel(status)}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="text"
+                className="border rounded-lg px-3 py-2 w-full"
+                placeholder="Référence annonce"
+                value={sellerReferenceFilter}
+                onChange={(e) => setSellerReferenceFilter(e.target.value)}
+              />
+
+              <input
+                type="text"
+                className="border rounded-lg px-3 py-2 w-full"
+                placeholder="Nom du client"
+                value={sellerClientFilter}
+                onChange={(e) => setSellerClientFilter(e.target.value)}
+              />
+
+              <select
+                className="border rounded-lg px-3 py-2 w-full"
+                value={sellerModeFilter}
+                onChange={(e) => setSellerModeFilter(e.target.value)}
+              >
+                <option value="">Tous les modes</option>
+                <option value="livraison">Livraison</option>
+                <option value="retrait">Retrait sur place</option>
+              </select>
+            </div>
+          ) : (
+            <div className="mb-4">
+              <select
+                className="border rounded-lg px-3 py-2 w-full"
+                value={clientStatusFilter ?? ""}
+                onChange={(e) => setClientStatusFilter(e.target.value || null)}
+              >
+                <option value="">Tous les statuts</option>
+                {[...new Set(clientOrders.map((o) => o.status))].map((status) => (
+                  <option key={status} value={status}>
+                    {statusLabel(status)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* ✅ LIST */}
           {(activeTab === "seller" ? sellerFiltered : clientFiltered).map(
