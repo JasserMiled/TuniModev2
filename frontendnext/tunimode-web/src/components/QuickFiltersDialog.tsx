@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ApiService } from "@/src/services/api";
+import { ApiService, type ColorOption } from "@/src/services/api";
 
 export type QuickFiltersSelection = {
   city?: string | null;
@@ -29,23 +29,6 @@ type QuickFiltersDialogProps = {
   onReset: () => void;
 };
 
-const COLOR_OPTIONS: { name: string; hex: string }[] = [
-  { name: "Noir", hex: "#000000" },
-  { name: "Blanc", hex: "#FFFFFF" },
-  { name: "Gris", hex: "#808080" },
-  { name: "Rouge", hex: "#FF0000" },
-  { name: "Bordeaux", hex: "#800020" },
-  { name: "Rose", hex: "#FFC0CB" },
-  { name: "Orange", hex: "#FFA500" },
-  { name: "Jaune", hex: "#FFFF00" },
-  { name: "Vert", hex: "#008000" },
-  { name: "Bleu", hex: "#0000FF" },
-  { name: "Bleu ciel", hex: "#87CEEB" },
-  { name: "Turquoise", hex: "#40E0D0" },
-  { name: "Violet", hex: "#800080" },
-  { name: "Marron", hex: "#8B4513" },
-];
-
 export default function QuickFiltersDialog({
   open,
   onClose,
@@ -65,6 +48,7 @@ export default function QuickFiltersDialog({
   );
   const [sizes, setSizes] = useState<string[]>(initialSelection.sizes ?? []);
   const [colors, setColors] = useState<string[]>(initialSelection.colors ?? []);
+  const [colorOptions, setColorOptions] = useState<ColorOption[]>([]);
   const [delivery, setDelivery] = useState<boolean | null>(
     initialSelection.deliveryAvailable ?? null
   );
@@ -76,6 +60,9 @@ export default function QuickFiltersDialog({
   const [sizeOptions, setSizeOptions] = useState<string[]>([]);
   const [sizesLoading, setSizesLoading] = useState(false);
   const [sizesError, setSizesError] = useState<string | null>(null);
+
+  const [colorsLoading, setColorsLoading] = useState(false);
+  const [colorsError, setColorsError] = useState<string | null>(null);
 
   // Charger les catégories au premier open
   useEffect(() => {
@@ -91,6 +78,23 @@ export default function QuickFiltersDialog({
       .catch((e: any) => setCatError(e.message ?? "Erreur de chargement"))
       .finally(() => setCatLoading(false));
   }, [open, categories.length]);
+
+  // Charger les couleurs disponibles
+  useEffect(() => {
+    if (!open) return;
+    if (colorOptions.length > 0) return;
+
+    setColorsLoading(true);
+    setColorsError(null);
+
+    ApiService.fetchColors()
+      .then((data: ColorOption[]) => {
+        setColorOptions(data);
+        setColors((prev) => prev.filter((c) => data.some((color) => color.name === c)));
+      })
+      .catch(() => setColorsError("Impossible de charger les couleurs disponibles."))
+      .finally(() => setColorsLoading(false));
+  }, [open, colorOptions.length]);
 
   // Charger les tailles quand la catégorie change
   useEffect(() => {
@@ -115,6 +119,13 @@ export default function QuickFiltersDialog({
       )
       .finally(() => setSizesLoading(false));
   }, [open, categoryId]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (colorOptions.length === 0) return;
+
+    setColors((prev) => prev.filter((c) => colorOptions.some((color) => color.name === c)));
+  }, [open, colorOptions]);
 
   useEffect(() => {
     if (open) {
@@ -280,26 +291,34 @@ export default function QuickFiltersDialog({
             {/* Couleurs */}
             <div>
               <p className="text-sm font-semibold mb-1">Couleurs</p>
-              <div className="flex flex-wrap gap-2">
-                {COLOR_OPTIONS.map((c) => (
-                  <button
-                    key={c.name}
-                    type="button"
-                    onClick={() => toggleColor(c.name)}
-                    className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs ${
-                      colors.includes(c.name)
-                        ? "border-blue-600 bg-blue-50"
-                        : "border-neutral-300 bg-white"
-                    }`}
-                  >
-                    <span
-                      style={{ backgroundColor: c.hex }}
-                      className="w-3 h-3 rounded-full border border-neutral-300"
-                    />
-                    <span>{c.name}</span>
-                  </button>
-                ))}
-              </div>
+              {colorsLoading ? (
+                <p className="text-xs text-neutral-500">Chargement des couleurs...</p>
+              ) : colorsError ? (
+                <p className="text-xs text-red-600">{colorsError}</p>
+              ) : colorOptions.length === 0 ? (
+                <p className="text-xs text-neutral-500">Aucune couleur disponible.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {colorOptions.map((c) => (
+                    <button
+                      key={`${c.id}-${c.name}`}
+                      type="button"
+                      onClick={() => toggleColor(c.name)}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs ${
+                        colors.includes(c.name)
+                          ? "border-blue-600 bg-blue-50"
+                          : "border-neutral-300 bg-white"
+                      }`}
+                    >
+                      <span
+                        style={{ backgroundColor: c.hex ?? "#f3f4f6" }}
+                        className="w-3 h-3 rounded-full border border-neutral-300"
+                      />
+                      <span>{c.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Livraison */}

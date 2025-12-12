@@ -75,6 +75,12 @@ type ListingLike = Partial<Listing> & {
   status?: string | null;
 };
 
+export type ColorOption = {
+  id: number;
+  name: string;
+  hex?: string | null;
+};
+
 const extractImageUrls = (listing: ListingLike) => {
   if (Array.isArray(listing.imageUrls) && listing.imageUrls.length > 0) {
     return listing.imageUrls;
@@ -518,6 +524,21 @@ export const ApiService = {
     return data
       .map((item) => item.label?.toString() ?? "")
       .filter((label) => label.trim().length > 0);
+  },
+
+  async fetchColors(): Promise<ColorOption[]> {
+    const res = await fetch(`${baseURL}/api/colors`, { headers: jsonHeaders() });
+    const data = await handleResponse<
+      Array<{ id?: number; name?: string; hex_code?: string | null; hex?: string | null }>
+    >(res, "Impossible de charger les couleurs");
+
+    return data
+      .map((item, idx) => ({
+        id: item.id ?? idx,
+        name: item.name?.toString() ?? "",
+        hex: item.hex_code ?? item.hex ?? null,
+      }))
+      .filter((item) => item.name.trim().length > 0);
   },
 
   async uploadImage(file: File): Promise<string | null> {

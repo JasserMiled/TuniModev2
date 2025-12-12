@@ -3,6 +3,7 @@ const express = require("express");
 const db = require("../db");
 const { authRequired, requireRole } = require("../middleware/auth");
 const { getCategoryWithChildren } = require("../services/categoryService");
+const { normalizeColors } = require("../services/colorService");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
@@ -172,7 +173,9 @@ router.get("/", async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Erreur serveur" });
+    res
+      .status(err.statusCode && Number.isInteger(err.statusCode) ? err.statusCode : 500)
+      .json({ message: err.message || "Erreur serveur" });
   }
 });
 
@@ -215,7 +218,9 @@ router.get("/user/:userId", async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Erreur serveur" });
+    res
+      .status(err.statusCode && Number.isInteger(err.statusCode) ? err.statusCode : 500)
+      .json({ message: err.message || "Erreur serveur" });
   }
 });
 
@@ -266,7 +271,9 @@ router.get("/:id", async (req, res) => {
     res.json(listing);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Erreur serveur" });
+    res
+      .status(err.statusCode && Number.isInteger(err.statusCode) ? err.statusCode : 500)
+      .json({ message: err.message || "Erreur serveur" });
   }
 });
 
@@ -301,7 +308,9 @@ router.get("/me/mine", authRequired, requireRole("seller"), async (req, res) => 
     res.json(result.rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Erreur serveur" });
+    res
+      .status(err.statusCode && Number.isInteger(err.statusCode) ? err.statusCode : 500)
+      .json({ message: err.message || "Erreur serveur" });
   }
 });
 
@@ -342,7 +351,7 @@ router.post("/", authRequired, requireRole("seller"), async (req, res) => {
     const resolvedGender = await deriveGenderFromCategory(category_id);
 
     const parsedSizes = normalizeStringArray(sizes);
-    const parsedColors = normalizeStringArray(colors);
+    const parsedColors = await normalizeColors(normalizeStringArray(colors));
 
     const listingRes = await db.query(
       `INSERT INTO listings
@@ -388,7 +397,9 @@ router.post("/", authRequired, requireRole("seller"), async (req, res) => {
     res.status(201).json(listing);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Erreur serveur" });
+    res
+      .status(err.statusCode && Number.isInteger(err.statusCode) ? err.statusCode : 500)
+      .json({ message: err.message || "Erreur serveur" });
   }
 });
 
@@ -447,7 +458,8 @@ router.put("/:id", authRequired, requireRole("seller"), async (req, res) => {
       delivery_available === undefined ? null : Boolean(delivery_available);
 
     const parsedSizes = normalizeStringArray(sizes);
-    const parsedColors = normalizeStringArray(colors);
+    const parsedColors =
+      colors === undefined ? null : await normalizeColors(normalizeStringArray(colors));
 
     const result = await db.query(
       `UPDATE listings
@@ -485,7 +497,9 @@ router.put("/:id", authRequired, requireRole("seller"), async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Erreur serveur" });
+    res
+      .status(err.statusCode && Number.isInteger(err.statusCode) ? err.statusCode : 500)
+      .json({ message: err.message || "Erreur serveur" });
   }
 });
 

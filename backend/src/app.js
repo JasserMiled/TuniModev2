@@ -13,6 +13,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const sizeRoutes = require("./routes/sizeRoutes");
+const colorRoutes = require("./routes/colorRoutes");
 const adRoutes = require("./routes/adRoutes");
 
 const app = express();
@@ -36,6 +37,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/sizes", sizeRoutes);
+app.use("/api/colors", colorRoutes);
 app.use("/api/ads", adRoutes);
 
 module.exports = app;
