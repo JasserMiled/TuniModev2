@@ -44,7 +44,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
           </h3>
         </div>
 
-        <p className="text-blue-700 font-semibold text-base mt-1">
+        <p className="text-[#036BC3] font-semibold text-base mt-1">
           {listing.price} DT
         </p>
       </div>

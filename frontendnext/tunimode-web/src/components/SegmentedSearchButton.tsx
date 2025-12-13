@@ -39,7 +39,7 @@ export default function SegmentedSearchButton({
       {/* Zone Chercher */}
       <button
         onClick={onSearch}
-        className="px-12 py-2.5 bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"
+        className="px-12 py-2.5 bg-[#036BC3] text-white text-sm font-semibold hover:bg-[#025a9f] transition"
       >
         Chercher
       </button>

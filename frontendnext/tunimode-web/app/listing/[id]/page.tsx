@@ -322,7 +322,7 @@ const [showFullDescription, setShowFullDescription] = useState(false);
 
 
             <h1 className="text-2xl font-semibold">{listing.title}</h1>
-            <p className="text-blue-600 font-semibold text-2xl">
+            <p className="text-[#036BC3] font-semibold text-2xl">
               {listing.price} DT
             </p>
 
@@ -353,7 +353,7 @@ const [showFullDescription, setShowFullDescription] = useState(false);
   {listing.description && (
     <button
       onClick={() => setShowFullDescription((v) => !v)}
-      className="text-blue-600 font-semibold mt-1 hover:underline"
+      className="text-[#036BC3] font-semibold mt-1 hover:underline"
     >
       {showFullDescription ? "Voir moins" : "Voir plus"}
     </button>
@@ -401,7 +401,7 @@ const [showFullDescription, setShowFullDescription] = useState(false);
     variant="primary"
     onClick={openOrderModal}
     disabled={Boolean(user && !isClient)}
-    className="w-[240px] py-3"
+    className="w-[360px] py-3"
     style={{ opacity: user && !isClient ? 0.5 : 1 }}
   >
     {isSeller ? "Seuls les clients peuvent commander" : "Commander"}

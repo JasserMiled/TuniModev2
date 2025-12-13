@@ -25,7 +25,7 @@ const getStyles = (variant: ButtonVariant, size: ButtonSize, hover: boolean) => 
 
   const variants = {
     primary: {
-      backgroundColor: hover ? "#07349C" : colors.primary,
+      backgroundColor: hover ? "#025a9f" : colors.primary,
       color: "#fff",
       border: "none",
     },
