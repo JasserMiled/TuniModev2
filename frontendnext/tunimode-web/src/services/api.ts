@@ -54,6 +54,10 @@ const normalizeUser = (user: UserLike): User => ({
   businessName: (user as { businessName?: string | null }).businessName ??
     (user as { business_name?: string | null }).business_name ??
     null,
+  description:
+    (user as { description?: string | null }).description ??
+    (user as { account_description?: string | null }).account_description ??
+    null,
   dateOfBirth: (user as { dateOfBirth?: string | null }).dateOfBirth ??
     (user as { date_of_birth?: string | null }).date_of_birth ??
     null,
@@ -247,6 +251,7 @@ export const ApiService = {
     phone: string;
     address?: string;
     businessName?: string;
+    description?: string;
     dateOfBirth?: string;
   }): Promise<boolean> {
     const res = await fetch(`${baseURL}/api/auth/register`, {
@@ -297,6 +302,7 @@ export const ApiService = {
     newPassword?: string;
     avatarUrl?: string;
     businessName?: string | null;
+    description?: string | null;
     dateOfBirth?: string | null;
   }): Promise<User> {
     const res = await fetch(`${baseURL}/api/auth/me`, {
@@ -311,6 +317,7 @@ export const ApiService = {
         new_password: payload.newPassword,
         avatar_url: payload.avatarUrl,
         business_name: payload.businessName,
+        description: payload.description,
         date_of_birth: payload.dateOfBirth,
       }),
     });

@@ -17,6 +17,7 @@ const accountCte = `
       'seller' AS role,
       s.store_name AS business_name,
       s.business_id,
+      s.description,
       NULL::DATE AS date_of_birth,
       s.created_at
     FROM sellers s
@@ -31,6 +32,7 @@ const accountCte = `
       'client' AS role,
       NULL::TEXT AS business_name,
       NULL::TEXT AS business_id,
+      NULL::TEXT AS description,
       c.date_of_birth,
       c.created_at
     FROM clients c
@@ -51,6 +53,7 @@ router.get("/users", async (req, res) => {
          a.role,
          a.business_name,
          a.business_id,
+        a.description,
          a.date_of_birth,
          a.created_at
        FROM accounts a

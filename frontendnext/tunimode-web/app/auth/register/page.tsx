@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [role, setRole] = useState("client");
   const [name, setName] = useState("");
   const [businessName, setBusinessName] = useState("");
+  const [description, setDescription] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
@@ -26,6 +27,7 @@ export default function RegisterPage() {
       role,
       phone,
       businessName: role === "seller" ? businessName : undefined,
+      description: role === "seller" ? description : undefined,
       dateOfBirth: role === "client" ? dateOfBirth : undefined,
     });
     if (!ok) {
@@ -54,12 +56,22 @@ export default function RegisterPage() {
       </div>
       <form onSubmit={handleSubmit} className="space-y-3">
         {role === "seller" && (
-          <input
-            className="w-full border rounded-lg px-3 py-2"
-            placeholder="Nom de la boutique"
-            value={businessName}
-            onChange={(e) => setBusinessName(e.target.value)}
-          />
+          <div className="space-y-3">
+            <input
+              className="w-full border rounded-lg px-3 py-2"
+              placeholder="Nom de la boutique"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+            />
+
+            <textarea
+              className="w-full border rounded-lg px-3 py-2"
+              placeholder="Description de votre boutique"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+            />
+          </div>
         )}
         <input
           className="w-full border rounded-lg px-3 py-2"

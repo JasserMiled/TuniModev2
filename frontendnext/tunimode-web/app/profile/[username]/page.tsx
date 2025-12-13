@@ -90,19 +90,26 @@ export default function ProfilePage() {
         {/* ===================== */}
         {/* ✅ HEADER PROFIL */}
         {/* ===================== */}
-{user && (
-  <VendorCard
-  sellerId={userId}  
-    name={user.name}
-    avatarUrl={avatarUrl}
-    rating={averageRating ? Number(averageRating) : null}
-    reviewsCount={reviews.length}
-    address={user.address}
-    showEditButton={isCurrentUser}
-    avatarSize={80}        // tu peux ajuster !
-    padding="p-5"          // tu peux réduire si tu veux une version compacte
-  />
-)}
+        {user && (
+          <VendorCard
+            sellerId={userId}
+            name={user.name}
+            avatarUrl={avatarUrl}
+            rating={averageRating ? Number(averageRating) : null}
+            reviewsCount={reviews.length}
+            address={user.address}
+            showEditButton={isCurrentUser}
+            avatarSize={80} // tu peux ajuster !
+            padding="p-5" // tu peux réduire si tu veux une version compacte
+          />
+        )}
+
+        {user?.description && (
+          <div className="bg-white border rounded-xl p-4 shadow-sm">
+            <h2 className="text-lg font-semibold mb-2">À propos de la boutique</h2>
+            <p className="text-neutral-700 whitespace-pre-line">{user.description}</p>
+          </div>
+        )}
 
         {/* ===================== */}
         {/* ✅ TAB BAR */}

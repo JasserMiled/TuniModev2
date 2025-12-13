@@ -17,6 +17,7 @@ type AuthState = {
     phone: string;
     address?: string;
     businessName?: string;
+    description?: string;
     dateOfBirth?: string;
   }) => Promise<boolean>;
   logout: () => void;
@@ -46,6 +47,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     role: "seller" | "client";
     phone?: string;
     address?: string;
+    businessName?: string;
+    description?: string;
+    dateOfBirth?: string;
   }) => {
     setLoading(true);
     const ok = await ApiService.register(payload);
