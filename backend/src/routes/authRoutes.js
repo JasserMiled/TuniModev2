@@ -142,6 +142,8 @@ router.put("/me", verifyToken, async (req, res) => {
       avatar_url,
       business_name,
       date_of_birth,
+      description,
+      show_description_on_card,
     } = req.body;
 
     const user = await userModel.getUserById(req.user.id, { includePassword: true });
@@ -174,6 +176,8 @@ router.put("/me", verifyToken, async (req, res) => {
       avatar_url,
       password_hash: newPasswordHash,
       business_name,
+      description,
+      show_description_on_card,
       profile_name: name,
       date_of_birth,
     });
