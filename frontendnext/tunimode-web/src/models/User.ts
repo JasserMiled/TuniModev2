@@ -7,5 +7,6 @@ export interface User {
   avatarUrl?: string | null;
   address?: string | null;
   businessName?: string | null;
+  description?: string | null;
   dateOfBirth?: string | null;
 }

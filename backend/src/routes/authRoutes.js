@@ -38,6 +38,7 @@ router.post("/register", async (req, res) => {
     phone,
     address,
     businessName,
+    description,
     dateOfBirth,
   } = req.body || {};
 
@@ -84,6 +85,7 @@ router.post("/register", async (req, res) => {
       address,
       storeName: role === "seller" ? businessName : null,
       businessId: null,
+      description: role === "seller" ? description : null,
       profileName: role === "client" ? name : null,
       dateOfBirth: role === "client" ? dateOfBirth : null,
     });
@@ -141,6 +143,7 @@ router.put("/me", verifyToken, async (req, res) => {
       new_password,
       avatar_url,
       business_name,
+      description,
       date_of_birth,
     } = req.body;
 
@@ -174,6 +177,7 @@ router.put("/me", verifyToken, async (req, res) => {
       avatar_url,
       password_hash: newPasswordHash,
       business_name,
+      description,
       profile_name: name,
       date_of_birth,
     });

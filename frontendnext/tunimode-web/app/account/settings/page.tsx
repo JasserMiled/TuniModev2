@@ -11,6 +11,7 @@ export default function AccountSettingsPage() {
 
   const [name, setName] = useState(user?.name ?? "");
   const [address, setAddress] = useState(user?.address ?? "");
+  const [description, setDescription] = useState(user?.description ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -41,6 +42,7 @@ export default function AccountSettingsPage() {
       const updated = await ApiService.updateProfile({
         name,
         address,
+        description: user?.role === "seller" ? description : undefined,
         avatarUrl: resolvedAvatarUrl,
       });
       refreshUser(updated);
@@ -116,6 +118,14 @@ export default function AccountSettingsPage() {
   useEffect(() => {
     setAvatarError(false);
   }, [avatarUrl]);
+
+  useEffect(() => {
+    setName(user?.name ?? "");
+    setAddress(user?.address ?? "");
+    setEmail(user?.email ?? "");
+    setPhone(user?.phone ?? "");
+    setDescription(user?.description ?? "");
+  }, [user]);
 
   return (
     <Protected>
@@ -217,6 +227,19 @@ export default function AccountSettingsPage() {
                 onChange={(e) => setAddress(e.target.value)}
               />
             </div>
+
+            {user?.role === "seller" && (
+              <div>
+                <label className="text-sm text-neutral-600">Description</label>
+                <textarea
+                  className="w-full border rounded-lg px-3 py-2 mt-1 bg-white"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={4}
+                  placeholder="Parlez de votre boutique, de vos produits ou de vos valeurs."
+                />
+              </div>
+            )}
 
             <button
               className="px-4 py-2 bg-blue-600 text-white rounded-lg"
