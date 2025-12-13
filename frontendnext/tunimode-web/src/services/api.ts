@@ -41,6 +41,8 @@ const resolveImageUrl = (url?: string | null) => {
 
 type UserLike = Partial<User> & {
   avatar_url?: string | null;
+  description?: string | null;
+  show_description_on_card?: boolean;
 };
 
 const normalizeUser = (user: UserLike): User => ({
@@ -57,6 +59,10 @@ const normalizeUser = (user: UserLike): User => ({
   dateOfBirth: (user as { dateOfBirth?: string | null }).dateOfBirth ??
     (user as { date_of_birth?: string | null }).date_of_birth ??
     null,
+  description: user.description ?? null,
+  showDescriptionOnCard: user.showDescriptionOnCard ??
+    (user as { show_description_on_card?: boolean | null }).show_description_on_card ??
+    false,
 });
 
 type ListingLike = Partial<Listing> & {
@@ -298,6 +304,8 @@ export const ApiService = {
     avatarUrl?: string;
     businessName?: string | null;
     dateOfBirth?: string | null;
+    description?: string | null;
+    showDescriptionOnCard?: boolean;
   }): Promise<User> {
     const res = await fetch(`${baseURL}/api/auth/me`, {
       method: "PUT",
@@ -312,6 +320,8 @@ export const ApiService = {
         avatar_url: payload.avatarUrl,
         business_name: payload.businessName,
         date_of_birth: payload.dateOfBirth,
+        description: payload.description,
+        show_description_on_card: payload.showDescriptionOnCard,
       }),
     });
     const data = await handleResponse<{ user?: User } & Record<string, unknown>>(res, "Mise à jour impossible");

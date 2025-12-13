@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS sellers (
     phone VARCHAR(30),
     address TEXT,
     avatar_url TEXT,
+    description TEXT,
+    show_description_on_card BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

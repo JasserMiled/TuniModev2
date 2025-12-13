@@ -13,6 +13,10 @@ export default function AccountSettingsPage() {
   const [address, setAddress] = useState(user?.address ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
+  const [description, setDescription] = useState(user?.description ?? "");
+  const [showDescriptionOnCard, setShowDescriptionOnCard] = useState(
+    user?.showDescriptionOnCard ?? false
+  );
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
@@ -22,6 +26,8 @@ export default function AccountSettingsPage() {
   const [tab, setTab] = useState<"general" | "security">("general");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const isSeller = user?.role === "seller";
 
   const activeTab =
     "pb-2 border-b-2 border-blue-600 text-blue-600 font-semibold";
@@ -38,11 +44,18 @@ export default function AccountSettingsPage() {
         resolvedAvatarUrl = ApiService.resolveImageUrl(url) ?? url;
       }
 
-      const updated = await ApiService.updateProfile({
+      const payload: Parameters<typeof ApiService.updateProfile>[0] = {
         name,
         address,
         avatarUrl: resolvedAvatarUrl,
-      });
+      };
+
+      if (isSeller) {
+        payload.description = description.trim() || null;
+        payload.showDescriptionOnCard = showDescriptionOnCard;
+      }
+
+      const updated = await ApiService.updateProfile(payload);
       refreshUser(updated);
       setAvatarFile(null);
       setMessage("Informations mises à jour");
@@ -116,6 +129,15 @@ export default function AccountSettingsPage() {
   useEffect(() => {
     setAvatarError(false);
   }, [avatarUrl]);
+
+  useEffect(() => {
+    setName(user?.name ?? "");
+    setAddress(user?.address ?? "");
+    setEmail(user?.email ?? "");
+    setPhone(user?.phone ?? "");
+    setDescription(user?.description ?? "");
+    setShowDescriptionOnCard(user?.showDescriptionOnCard ?? false);
+  }, [user]);
 
   return (
     <Protected>
@@ -217,6 +239,33 @@ export default function AccountSettingsPage() {
                 onChange={(e) => setAddress(e.target.value)}
               />
             </div>
+
+            {isSeller && (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm text-neutral-600">Description</label>
+                  <textarea
+                    className="w-full border rounded-lg px-3 py-2 mt-1 bg-white min-h-[100px]"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Présentez votre boutique et vos valeurs"
+                  />
+                </div>
+
+                <label className="flex items-center gap-2 text-sm text-neutral-700">
+                  <input
+                    type="checkbox"
+                    checked={showDescriptionOnCard}
+                    onChange={(e) => setShowDescriptionOnCard(e.target.checked)}
+                  />
+                  <span>Afficher cette description sur ma carte vendeur</span>
+                </label>
+
+                <p className="text-xs text-neutral-500">
+                  Cette description sera visible sur votre carte vendeur si vous l'activez.
+                </p>
+              </div>
+            )}
 
             <button
               className="px-4 py-2 bg-blue-600 text-white rounded-lg"

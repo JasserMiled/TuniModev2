@@ -34,12 +34,16 @@ export default function VendorCard({
   const [sellerReviews, setSellerReviews] = useState<number>(reviewsCount ?? 0);
   const [sellerAddress, setSellerAddress] = useState<string | null>(address ?? null);
   const [sellerName, setSellerName] = useState<string>(name ?? "");
+  const [sellerDescription, setSellerDescription] = useState<string | null>(null);
+  const [showDescriptionOnCard, setShowDescriptionOnCard] = useState<boolean>(false);
 
   // Fetch basic profile + avatar
   useEffect(() => {
     ApiService.fetchUserProfile(sellerId).then((profile) => {
       setSellerName(profile.name);
       setSellerAddress(profile.address ?? null);
+      setSellerDescription(profile.description ?? null);
+      setShowDescriptionOnCard(profile.showDescriptionOnCard ?? false);
 
       const resolved = ApiService.resolveImageUrl(profile.avatarUrl ?? null);
       setAvatar(resolved);
@@ -107,6 +111,12 @@ export default function VendorCard({
           <p className="text-neutral-500">
             📍 {sellerAddress ?? "Adresse non renseignée"}
           </p>
+
+          {showDescriptionOnCard && sellerDescription && (
+            <p className="text-neutral-700 text-sm mt-2 line-clamp-2 whitespace-pre-line">
+              {sellerDescription}
+            </p>
+          )}
         </div>
       </div>
 

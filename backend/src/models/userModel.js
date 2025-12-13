@@ -13,6 +13,8 @@ const accountCte = `
       'seller' AS role,
       s.store_name AS business_name,
       s.business_id,
+      s.description,
+      s.show_description_on_card,
       NULL::DATE AS date_of_birth,
       s.created_at
     FROM sellers s
@@ -28,6 +30,8 @@ const accountCte = `
       'client' AS role,
       NULL::TEXT AS business_name,
       NULL::TEXT AS business_id,
+      NULL::TEXT AS description,
+      FALSE AS show_description_on_card,
       c.date_of_birth,
       c.created_at
     FROM clients c
@@ -45,6 +49,8 @@ const baseUserFields = [
   "a.created_at",
   "a.business_name",
   "a.business_id",
+  "a.description",
+  "a.show_description_on_card",
   "a.date_of_birth",
 ].join(", ");
 
@@ -81,6 +87,8 @@ async function createUser({
   avatarUrl,
   storeName,
   businessId,
+  description,
+  showDescriptionOnCard,
   profileName,
   dateOfBirth,
 }) {
@@ -88,8 +96,8 @@ async function createUser({
 
   if (role === "seller") {
     const { rows } = await db.query(
-      `INSERT INTO sellers (name, email, password_hash, phone, address, avatar_url, store_name, business_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO sellers (name, email, password_hash, phone, address, avatar_url, store_name, business_id, description, show_description_on_card)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id`,
       [
         name,
@@ -100,6 +108,8 @@ async function createUser({
         avatarUrl || null,
         storeName || null,
         businessId || null,
+        description || null,
+        showDescriptionOnCard ?? false,
       ]
     );
 
@@ -134,6 +144,8 @@ async function updateUser(userId, role, {
   password_hash,
   business_name,
   business_id,
+  description,
+  show_description_on_card,
   profile_name,
   date_of_birth,
 }) {
@@ -166,10 +178,6 @@ async function updateUser(userId, role, {
     values.push(password_hash);
   }
 
-  if (!updates.length) {
-    return getUserById(userId);
-  }
-
   const tableName = role === "seller" ? "sellers" : "clients";
   const roleSpecificUpdates = [...updates];
 
@@ -182,6 +190,14 @@ async function updateUser(userId, role, {
       roleSpecificUpdates.push(`business_id = $${idx++}`);
       values.push(business_id || null);
     }
+    if (description !== undefined) {
+      roleSpecificUpdates.push(`description = $${idx++}`);
+      values.push(description || null);
+    }
+    if (show_description_on_card !== undefined) {
+      roleSpecificUpdates.push(`show_description_on_card = $${idx++}`);
+      values.push(Boolean(show_description_on_card));
+    }
   } else if (role === "client") {
     if (profile_name !== undefined) {
       roleSpecificUpdates.push(`profile_name = $${idx++}`);
@@ -191,6 +207,10 @@ async function updateUser(userId, role, {
       roleSpecificUpdates.push(`date_of_birth = $${idx++}`);
       values.push(date_of_birth || null);
     }
+  }
+
+  if (!roleSpecificUpdates.length) {
+    return getUserById(userId);
   }
 
   values.push(userId);
