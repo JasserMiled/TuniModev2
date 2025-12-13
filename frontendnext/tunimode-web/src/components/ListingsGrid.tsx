@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import ListingCard from "./ListingCard";
 import { Listing } from "@/src/models/Listing";
+import clsx from "clsx";
 
 type BreakpointConfig = {
   base?: number;
@@ -15,46 +15,29 @@ type BreakpointConfig = {
 type ListingsGridProps = {
   listings: Listing[];
   columns: BreakpointConfig;
-  rows: BreakpointConfig;
-  renderOverlay?: (listing: Listing) => React.ReactNode;
 };
 
-export default function ListingsGrid({
-  listings,
-  columns,
-  rows,
-  renderOverlay,
-}: ListingsGridProps) {
-  const router = useRouter();
+const COL_MAP: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+  5: "grid-cols-5",
+  6: "grid-cols-6",
+};
 
-  // Generate grid classes dynamically
-  const gridClasses = `
-    grid gap-4
-    grid-cols-${columns.base ?? 2}
-    sm:grid-cols-${columns.sm ?? columns.base ?? 2}
-    md:grid-cols-${columns.md ?? columns.sm ?? columns.base ?? 2}
-    lg:grid-cols-${columns.lg ?? columns.md ?? columns.sm ?? columns.base ?? 2}
-  `;
+export default function ListingsGrid({ listings }: ListingsGridProps) {
+  const gridClassName = clsx(
+    "grid gap-y-2 gap-x-4 justify-items-stretch",
+    "[grid-template-columns:repeat(auto-fill,minmax(180px,1fr))]"
+  );
 
   return (
-    <div className={gridClasses}>
+    <div className={gridClassName}>
       {listings.map((listing) => (
-        <div
-          key={listing.id}
-          className="relative cursor-pointer"
-          onClick={() => router.push(`/listing/${listing.id}`)}
-        >
-          {/* The actual card */}
-          <ListingCard listing={listing} />
-
-          {/* ❤️ Overlay button if provided */}
-          {renderOverlay && (
-            <div className="absolute top-2 right-2 z-20">
-              {renderOverlay(listing)}
-            </div>
-          )}
-        </div>
+        <ListingCard key={listing.id} listing={listing} />
       ))}
     </div>
   );
 }
+

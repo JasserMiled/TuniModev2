@@ -11,7 +11,7 @@ import OrderModal from "@/src/components/OrderModal";
 import { FaHeart } from "react-icons/fa";
 import VendorCard from "@/src/components/VendorCard";
 import NewListingModal from "@/src/components/NewListingModal";
-
+import Button from "@/src/components/Button";
 export default function ListingDetailPage() {
   const params = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -39,6 +39,7 @@ export default function ListingDetailPage() {
   const [useProfileContact, setUseProfileContact] = useState(false);
   const [isOrdering, setIsOrdering] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+const [showFullDescription, setShowFullDescription] = useState(false);
 
   const isClient = user?.role === "client";
   const isSeller = user?.role === "seller";
@@ -252,7 +253,7 @@ export default function ListingDetailPage() {
       <AppHeader />
 
 
-	  <div className="max-w-6xl mx-auto px-4 pt-8 pb-20 scale-[1.15] origin-top transition-transform">
+	  <div className="max-w-6xl mx-auto px-4 pt-8 pb-20 scale-[1] origin-top transition-transform">
 
 
         {/* ---------------------------------------------------
@@ -261,44 +262,49 @@ export default function ListingDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
           {/* ---------------------- LEFT BIG CONTAINER ---------------------- */}
-<div className="bg-gray-50 p-4 rounded-2xl shadow-md hover:shadow-lg transition border border-gray-200 space-y-4">
+<div className="bg-gray-50 p-4 rounded-2xl shadow-md hover:shadow-lg transition border border-gray-200 space-y-4 self-start min-h-[650px]">
 
             {/* MAIN IMAGE */}
-            <div
+           <div
   className="rounded-xl overflow-hidden bg-transparent cursor-zoom-in border border-gray-300"
-              onClick={() => {
-                setPopupImage(selectedImage);
-                setIsOpen(true);
-              }}
-            >
-              <img
-                src={selectedImage || "/placeholder-listing.svg"}
-                alt={listing.title}
-                className="w-full h-[450px] object-contain bg-transparent"
-              />
-            </div>
+  onClick={() => {
+    setPopupImage(selectedImage);
+    setIsOpen(true);
+  }}
+>
+  <img
+    src={selectedImage || "/placeholder-listing.svg"}
+    alt={listing.title}
+    className="w-full h-[520px] object-contain bg-transparent"
+  />
+</div>
 
-            {/* MINIATURES */}
-            <div className="flex gap-3">
-              {listing.imageUrls?.map((img) => (
-                <button
-                  key={img}
-                  onClick={() => setSelectedImage(img)}
-                  className={`w-20 h-20 border rounded-lg overflow-hidden ${
-                    selectedImage === img
-                      ? "border-blue-600"
-                      : "border-neutral-300"
-                  }`}
-                >
-                  <img src={img} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
+{/* MINIATURES */}
+<div className="flex gap-4 mt-2">
+  {listing.imageUrls?.map((img) => (
+    <button
+      key={img}
+      onClick={() => setSelectedImage(img)}
+      className={`w-24 h-24 border-2 rounded-xl overflow-hidden transition ${
+        selectedImage === img
+          ? "border-blue-600"
+          : "border-neutral-300 hover:border-neutral-400"
+      }`}
+    >
+      <img
+        src={img}
+        alt=""
+        className="w-full h-full object-cover"
+      />
+    </button>
+  ))}
+</div>
+
 
           </div>
 
           {/* ---------------------- RIGHT BIG CONTAINER ---------------------- */}
-          <div className="bg-gray-50 p-6 rounded-2xl shadow-md hover:shadow-lg transition border border-gray-200 relative space-y-4">
+<div className="bg-gray-50 p-6 rounded-2xl shadow-md hover:shadow-lg transition border border-gray-200 relative space-y-4 max-w-[420px] w-full">
 
             {/* ❤️ Favorite Button for ARTICLE */}
             <button
@@ -321,7 +327,7 @@ export default function ListingDetailPage() {
             </p>
 
             {/* PRODUCT INFO */}
-<div className="bg-gray-100 rounded-xl p-5 shadow-inner border border-gray-200 space-y-2 text-sm">
+<div className="bg-gray-60 rounded-xl p-5  border border-gray-200 space-y-2 text-sm">
               <p className="flex justify-between"><span>Référence</span><span>{listing.referenceCode ?? "—"}</span></p>
               <p className="flex justify-between"><span>État</span><span>{listing.condition ?? "—"}</span></p>
               <p className="flex justify-between"><span>Tailles</span><span>{listing.sizes?.join(" / ") || "—"}</span></p>
@@ -331,16 +337,36 @@ export default function ListingDetailPage() {
             </div>
 
             {/* DESCRIPTION */}
-            <div>
-              <h3 className="font-semibold mb-1">Description</h3>
-              <p className="text-neutral-700 whitespace-pre-line">
-                {listing.description}
-              </p>
-            </div>
+ {/* DESCRIPTION */}
+<div>
+  <h3 className="font-semibold mb-1">Description</h3>
+
+  <p
+    className={`text-neutral-700 whitespace-pre-line break-words transition-all ${
+      showFullDescription ? "" : "line-clamp-2"
+    }`}
+  >
+    {listing.description}
+  </p>
+
+  {/* VOIR PLUS / MOINS */}
+  {listing.description && (
+    <button
+      onClick={() => setShowFullDescription((v) => !v)}
+      className="text-blue-600 font-semibold mt-1 hover:underline"
+    >
+      {showFullDescription ? "Voir moins" : "Voir plus"}
+    </button>
+  )}
+</div>
+
+
 
             {actionError && (
               <p className="text-red-600 text-sm">{actionError}</p>
             )}
+       {/* SELLER BOX */}
+
 
             {/* BUTTONS */}
             {isOwner ? (
@@ -369,18 +395,22 @@ export default function ListingDetailPage() {
                 </div>
               )
             ) : (
-              <button
-                onClick={openOrderModal}
-                disabled={Boolean(user && !isClient)}
-                className="px-5 py-3 bg-blue-600 text-white font-medium rounded-lg w-full disabled:opacity-50"
-              >
-                {isSeller ? "Seuls les clients peuvent commander" : "Commander"}
-              </button>
+<div className="flex justify-center mt-5">
+  <Button
+    size="md"
+    variant="primary"
+    onClick={openOrderModal}
+    disabled={Boolean(user && !isClient)}
+    className="w-[240px] py-3"
+    style={{ opacity: user && !isClient ? 0.5 : 1 }}
+  >
+    {isSeller ? "Seuls les clients peuvent commander" : "Commander"}
+  </Button>
+  
+</div>
+
             )}
-
-            {/* SELLER BOX */}
-
-<div className="relative">
+<div className="relative  mt-7">
   {/* ❤️ Favorite Seller Button */}
   <button
     onClick={toggleFavoriteSeller}
@@ -401,6 +431,7 @@ export default function ListingDetailPage() {
     showEditButton={false}
   />
 </div>
+     
 
           </div>
 
@@ -414,12 +445,12 @@ export default function ListingDetailPage() {
             </h2>
 
 <div className="w-full flex justify-center">
-  <div className="scale-[0.82] origin-top">
-    <ListingsGrid
-      listings={sellerListings}
-      columns={{ base: 2, sm: 3, md: 4, lg: 5 }}
-      rows={{ base: 1, md: 1, lg: 1 }}
-    />
+  <div className="scale-[1] origin-top">
+<ListingsGrid
+  listings={sellerListings}
+  columns={{ base: 2, sm: 2, md: 4, lg: 4 }}
+  rows={{ base: 1, md: 1, lg: 1 }}
+/>
   </div>
 </div>
 

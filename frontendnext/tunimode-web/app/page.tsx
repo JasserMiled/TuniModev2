@@ -109,25 +109,46 @@ export default function HomePage() {
       </section>
 
       {/* ✅ LISTINGS */}
-      <section className="max-w-6xl mx-auto px-4 pt-16 pb-12">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-neutral-900">
-            Derniers articles mis en ligne
-          </h2>
-          <p className="text-sm text-neutral-600 mt-1">
-            Choisis tes prochaines trouvailles parmi des milliers de vêtements et accessoires.
-          </p>
-        </div>
+<section className="w-full px-6 pt-16 pb-12">
+<div className="max-w-6xl mx-auto">
+    <div className="mb-6">
+      <h2 className="text-2xl font-bold text-neutral-900">
+        Derniers articles mis en ligne
+      </h2>
+      <p className="text-sm text-neutral-600 mt-1">
+        Choisis tes prochaines trouvailles parmi des milliers de vêtements et accessoires.
+      </p>
+    </div>
 
-        {loading && <div className="py-6 text-neutral-600">Chargement...</div>}
-        {error && <div className="py-6 text-red-600">{error}</div>}
+    {loading && (
+      <div className="py-6 text-neutral-600">
+        Chargement...
+      </div>
+    )}
 
-        <ListingsGrid
-          listings={latest}
-          columns={{ base: 2, sm: 3, md: 4, lg: 5 }}
-          rows={{ base: 2, md: 2, lg: 2 }}
-        />
-      </section>
+    {error && (
+      <div className="py-6 text-red-600">
+        {error}
+      </div>
+    )}
+
+<ListingsGrid
+  listings={latest}
+  columns={{
+    base: 2,
+    sm: 2,
+    md: 3,
+    lg: 5,
+    xl: 5,
+  }}
+/>
+
+  </div>
+</section>
+
+
+
+
     </main>
   );
 }
